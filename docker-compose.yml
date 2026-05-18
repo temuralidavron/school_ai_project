@@ -80,7 +80,7 @@ services:
       - insightface_models:/root/.insightface
       - ./logs:/app/logs
     ports:
-      - "127.0.0.1:8000:8000"   # nginx shu portga proxy qiladi
+      - "127.0.0.1:8000:8000"   # faqat server'ning o'zidan (panel tashqariga ochilmaydi)
     deploy:
       resources:
         reservations:

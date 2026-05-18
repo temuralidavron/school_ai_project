@@ -10,4 +10,7 @@
 # Har 5 daqiqada — muvaffaqiyatsiz SKUD push larni qayta yuborish
 */5 * * * * cd /app && /usr/bin/python3.14 manage.py retry_skud_push --limit 200 >> /app/logs/cron.log 2>&1
 
+# Har 15 daqiqada — eskirgan lock/track/frontal store tozalash (bloat oldini olish)
+*/15 * * * * cd /app && /usr/bin/python3.14 manage.py maintenance >> /app/logs/cron.log 2>&1
+
 # Bo'sh qator (cron talab qiladi)

@@ -153,6 +153,16 @@ AI_MAX_PITCH_DEG           = config('AI_MAX_PITCH_DEG',           default=40.0, 
 # review natija ham davomatga yozilsinmi (1-kun: True = ko'proq ushlaydi;
 #   threshold oshirilgach: False = faqat aniq accepted)
 AI_REVIEW_RECORDS_ATTENDANCE = config('AI_REVIEW_RECORDS_ATTENDANCE', default=False, cast=bool)
+# Event rasmi base64 Postgres'ga ham yozilsinmi (False = DB bloat kamayadi,
+#   rasm baribir MinIO'da). Default True = hozirgi xatti-harakat.
+AI_SAVE_EVENT_BASE64       = config('AI_SAVE_EVENT_BASE64',       default=True,  cast=bool)
+# SKUD push bounded pool — cheksiz thread o'rniga (sinf kirganda)
+AI_SKUD_PUSH_WORKERS       = config('AI_SKUD_PUSH_WORKERS',       default=8,    cast=int)
+# Track student'ga qulflanганда o'tkazib yuborilsinmi. Default True = hozirgi.
+#   Patrul rejimida False tavsiya (boshqa o'quvchi bir katakda — ushlanadi)
+AI_SKIP_LOCKED_TRACK       = config('AI_SKIP_LOCKED_TRACK',       default=True, cast=bool)
+# Inference shu ms'dan uzoq cho'zilsa WARNING (jim sekinlashuvni ko'rsatadi)
+AI_INFERENCE_WARN_MS       = config('AI_INFERENCE_WARN_MS',       default=2000, cast=int)
 
 # ─── Kamera patrul (aylanish) ─────────────────────────────────────────────────
 # Global rejim: off | preset | sweep | hybrid

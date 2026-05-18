@@ -4,6 +4,7 @@ import logging
 import os
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -38,6 +39,28 @@ try:
 except Exception:
     _MIN_FRONTAL_FRAMES = 1
 _MAX_FRONTAL_STORE = max(3, _MIN_FRONTAL_FRAMES)
+
+
+# SKUD push uchun bounded pool — cheksiz daemon thread o'rniga (sinf kirganda
+# thread bo'roni bo'lmaydi). Lazy yaratiladi.
+_skud_push_pool = None
+_skud_push_pool_lock = threading.Lock()
+
+
+def _get_skud_push_pool() -> ThreadPoolExecutor:
+    global _skud_push_pool
+    if _skud_push_pool is None:
+        with _skud_push_pool_lock:
+            if _skud_push_pool is None:
+                try:
+                    from django.conf import settings as _s
+                    workers = int(getattr(_s, "AI_SKUD_PUSH_WORKERS", 8))
+                except Exception:
+                    workers = 8
+                _skud_push_pool = ThreadPoolExecutor(
+                    max_workers=max(2, workers), thread_name_prefix="skud-push"
+                )
+    return _skud_push_pool
 
 
 def _cleanup_frontal_store():
@@ -913,8 +936,7 @@ class RecognitionEventService:
                     pass
                 logger.error("SKUD push xatosi: pinfl=%s event_id=%s: %s", pinfl, event_id, exc)
 
-        t = threading.Thread(target=_do_push, daemon=True, name=f"skud-push-{event_id}")
-        t.start()
+        _get_skud_push_pool().submit(_do_push)
         return {"status": "async_started", "event_id": event_id}
 
     def _to_base64(self, image_path: str) -> str:
@@ -999,15 +1021,23 @@ class FaceTrackService:
                 camera_id=track.camera_id,
             )
             if lock:
-                track.status = TrackSession.STATUS_SKIPPED_LOCKED
+                from django.conf import settings as _lk_s
+                _skip_locked = getattr(_lk_s, "AI_SKIP_LOCKED_TRACK", True)
                 track.last_seen_at = now
-                track.save(update_fields=["status", "last_seen_at", "updated_at"])
-                logger.debug(
-                    "TRACK skip (locked) | key=%s student_id=%s until=%s",
-                    track.track_key, track.student_id,
-                    lock.locked_until.strftime("%H:%M:%S"),
-                )
-                return True, "student_locked"
+                if _skip_locked:
+                    # Default: shu track qulflangan o'quvchiniki — o'tkazib yuboramiz
+                    track.status = TrackSession.STATUS_SKIPPED_LOCKED
+                    track.save(update_fields=["status", "last_seen_at", "updated_at"])
+                    logger.debug(
+                        "TRACK skip (locked) | key=%s student_id=%s until=%s",
+                        track.track_key, track.student_id,
+                        lock.locked_until.strftime("%H:%M:%S"),
+                    )
+                    return True, "student_locked"
+                # AI_SKIP_LOCKED_TRACK=False (patrul): bir katakka boshqa o'quvchi
+                # kelgan bo'lishi mumkin — qulflangan bo'lsa ham tanishni davom
+                # ettiramiz (per-student AttendanceLock dublikatdan saqlaydi)
+                track.save(update_fields=["last_seen_at", "updated_at"])
 
         if track.recognized_at:
             delta = (now - track.recognized_at).total_seconds()
@@ -1318,6 +1348,7 @@ class LiveFrameProcessorService:
                     bbox=(x1, y1, x2, y2),
                     accept_threshold=accept_threshold,
                     review_threshold=review_threshold,
+                    save_base64=getattr(settings, "AI_SAVE_EVENT_BASE64", True),
                     frontal_frames_used=len(stored),
                 )
                 rec_result["bbox"] = bbox

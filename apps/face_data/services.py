@@ -1,6 +1,7 @@
 import logging
 import os
 import threading
+import time
 import cv2
 import numpy as np
 
@@ -49,8 +50,24 @@ def get_face_app() -> FaceAnalysis:
 def detect_faces(img: np.ndarray) -> list:
     """Thread-safe InsightFace yuz aniqlash — barcha threadlar shu orqali o'tadi."""
     app = get_face_app()
+    _wait0 = time.monotonic()
     with _face_app_inference_lock:
-        return app.get(img)
+        _t0 = time.monotonic()
+        faces = app.get(img)
+        _dur_ms = int((time.monotonic() - _t0) * 1000)
+    _wait_ms = int((_t0 - _wait0) * 1000)
+    try:
+        from django.conf import settings as _s
+        _warn = int(getattr(_s, "AI_INFERENCE_WARN_MS", 2000))
+    except Exception:
+        _warn = 2000
+    if _dur_ms + _wait_ms > _warn:
+        logger.warning(
+            "INFERENCE SEKIN | inference=%dms lock_kutish=%dms (jami=%dms > %dms) "
+            "— GPU yuklangan yoki kamera ko'p",
+            _dur_ms, _wait_ms, _dur_ms + _wait_ms, _warn,
+        )
+    return faces
 
 
 class EnrollmentAuditService:
