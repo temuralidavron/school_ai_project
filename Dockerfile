@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1
 # ─── school_attendace_v1 — GPU (NVIDIA RTX 5080) uchun ────────────────────────
 # onnxruntime-gpu 1.25 → CUDA 12.x + cuDNN 9.x talab qiladi.
 # Hostda nvidia-container-toolkit o'rnatilgan bo'lishi shart.
@@ -45,11 +44,9 @@ WORKDIR /app
 # ─── Python kutubxonalar ──────────────────────────────────────────────────────
 # Avval requirements (Docker layer cache uchun)
 COPY requirements.txt .
-# --ignore-installed: bazaviy image'dagi apt-cryptography (no RECORD) ni
+# --ignore-installed: bazaviy image'dagi apt-cryptography (RECORD yo'q) ni
 #   o'chirmasdan, bizning versiyani Python 3.14 site-packages'ga o'rnatadi.
-# cache mount: build qayta urilsa paketlar qayta yuklanmaydi.
-RUN --mount=type=cache,target=/root/.cache/pip \
-    python3.14 -m pip install --upgrade pip setuptools wheel \
+RUN python3.14 -m pip install --upgrade pip setuptools wheel \
     && python3.14 -m pip install --ignore-installed -r requirements.txt \
     # CPU onnxruntime ni GPU versiyasiga almashtirish
     && python3.14 -m pip uninstall -y onnxruntime \
