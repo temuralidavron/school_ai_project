@@ -1,20 +1,24 @@
 # school_attendace_v1 — rejalashtirilgan vazifalar
 # Vaqt: Asia/Tashkent (konteyner TZ shu qilib o'rnatilgan)
+#
+# MUHIM: cron demoni docker-compose env (DB_HOST=db) ni meros olmaydi —
+# shuning uchun har buyruqda DB_HOST=db MINIO_HOST=minio aniq beriladi
+# (web/cameras konteynerlaridagidek). Qolgani .env dan o'qiladi.
 
 # Har kuni 00:30 — bugungi VA ertangi kun jadvalini SKUD dan olib kelish
-30 0 * * * cd /app && /usr/bin/python3.14 manage.py sync_schedule --today-and-tomorrow >> /app/logs/cron.log 2>&1
+30 0 * * * cd /app && DB_HOST=db MINIO_HOST=minio /usr/bin/python3.14 manage.py sync_schedule --today-and-tomorrow >> /app/logs/cron.log 2>&1
 
 # Har 10 daqiqada — tugagan darslarda kelmaganlarni 'absent' belgilash
-*/10 * * * * cd /app && /usr/bin/python3.14 manage.py mark_absent >> /app/logs/cron.log 2>&1
+*/10 * * * * cd /app && DB_HOST=db MINIO_HOST=minio /usr/bin/python3.14 manage.py mark_absent >> /app/logs/cron.log 2>&1
 
 # Har 5 daqiqada — muvaffaqiyatsiz SKUD push larni qayta yuborish
-*/5 * * * * cd /app && /usr/bin/python3.14 manage.py retry_skud_push --limit 200 >> /app/logs/cron.log 2>&1
+*/5 * * * * cd /app && DB_HOST=db MINIO_HOST=minio /usr/bin/python3.14 manage.py retry_skud_push --limit 200 >> /app/logs/cron.log 2>&1
 
 # Har 15 daqiqada — eskirgan lock/track/frontal store tozalash (bloat oldini olish)
-*/15 * * * * cd /app && /usr/bin/python3.14 manage.py maintenance >> /app/logs/cron.log 2>&1
+*/15 * * * * cd /app && DB_HOST=db MINIO_HOST=minio /usr/bin/python3.14 manage.py maintenance >> /app/logs/cron.log 2>&1
 
 # Har 3 kunda 01:00 — threshold tahlili (FAQAT tavsiya, avtomatik o'zgartmaydi).
 # Natija logs/calibration.log da — odam ko'rib .env da qo'llaydi.
-0 1 */3 * * cd /app && /usr/bin/python3.14 manage.py calibrate_threshold --org-id 16 --days 3 >> /app/logs/calibration.log 2>&1
+0 1 */3 * * cd /app && DB_HOST=db MINIO_HOST=minio /usr/bin/python3.14 manage.py calibrate_threshold --org-id 16 --days 3 >> /app/logs/calibration.log 2>&1
 
 # Bo'sh qator (cron talab qiladi)
