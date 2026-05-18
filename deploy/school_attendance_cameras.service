@@ -1,0 +1,32 @@
+# Kamera stream systemd service
+# /etc/systemd/system/school_attendance_cameras.service ga ko'chiring
+# sudo systemctl enable school_attendance_cameras
+# sudo systemctl start school_attendance_cameras
+
+[Unit]
+Description=School Attendance Camera Stream Service
+After=school_attendance_web.service
+Requires=school_attendance_web.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/school_attendace_v1
+
+EnvironmentFile=/home/ubuntu/school_attendace_v1/.env
+
+ExecStart=/home/ubuntu/school_attendace_v1/.venv/bin/python \
+    manage.py run_camera_stream \
+    --all \
+    --accept-threshold 0.55 \
+    --review-threshold 0.42 \
+    --frame-interval 1.0
+
+Restart=on-failure
+RestartSec=15
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

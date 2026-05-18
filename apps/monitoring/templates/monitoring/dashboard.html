@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Davomat Monitoring</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.7/dist/hls.min.js"></script>
+  <style>
+    body { background:#0f172a; }
+    .card { background:#1e293b; border:1px solid #334155; }
+    .badge-accepted { background:#166534; color:#bbf7d0; }
+    .badge-review   { background:#854d0e; color:#fef08a; }
+    .badge-rejected { background:#7f1d1d; color:#fecaca; }
+    .pulse { animation:pulse 2s infinite; }
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    ::-webkit-scrollbar{width:4px;height:4px}
+    ::-webkit-scrollbar-track{background:#1e293b}
+    ::-webkit-scrollbar-thumb{background:#475569;border-radius:2px}
+    tr:hover td{background:#1e3a5f22}
+    .tab-btn{transition:all .15s}
+    .tab-btn.active{background:#2563eb;color:#fff}
+    .tab-btn:not(.active){color:#94a3b8}
+    .tab-btn:not(.active):hover{background:#1e293b;color:#e2e8f0}
+    video{background:#000;display:block;width:100%}
+    .cam-card{background:#1e293b;border:1px solid #334155;border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .15s}
+    .cam-card:hover{border-color:#3b82f6}
+    .dot-on{background:#22c55e}
+    .dot-off{background:#ef4444}
+    .att-tab.active{border-bottom:2px solid #3b82f6;color:#fff}
+    .att-tab:not(.active){color:#64748b}
+  </style>
+</head>
+<body class="text-slate-200 min-h-screen">
+
+<!-- NAVBAR -->
+<nav class="bg-slate-900 border-b border-slate-700 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
+  <div class="flex items-center gap-3">
+    <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">D</div>
+    <span class="font-semibold text-lg">Davomat Monitoring</span>
+  </div>
+  <div class="flex items-center gap-4">
+    <div id="clock" class="text-slate-400 text-sm font-mono"></div>
+    <div class="flex items-center gap-1.5">
+      <div class="w-2 h-2 rounded-full bg-green-400 pulse"></div>
+      <span class="text-xs text-slate-400">Jonli</span>
+    </div>
+  </div>
+</nav>
+
+<!-- FILTERS -->
+<div class="px-6 py-3 bg-slate-900 border-b border-slate-800 flex flex-wrap items-end gap-4">
+  <div>
+    <label class="block text-xs text-slate-400 mb-1">Sana</label>
+    <input id="filter-date" type="date"
+      class="bg-slate-800 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500"/>
+  </div>
+  <div>
+    <label class="block text-xs text-slate-400 mb-1">Tashkilot</label>
+    <select id="filter-org"
+      class="bg-slate-800 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500 min-w-[200px]">
+      <option value="">— Barchasi —</option>
+      {% for org in organizations %}
+      <option value="{{ org.organization_id }}">{{ org.organization_name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button onclick="refresh()"
+    class="bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-lg px-4 py-1.5 transition-colors">
+    Yangilash
+  </button>
+</div>
+
+<!-- TABS -->
+<div class="px-6 pt-4 flex gap-2">
+  <button id="tab-stats"   class="tab-btn active text-sm font-medium px-4 py-2 rounded-lg" onclick="switchTab('stats')">Statistika</button>
+  <button id="tab-cameras" class="tab-btn text-sm font-medium px-4 py-2 rounded-lg" onclick="switchTab('cameras')">
+    Kameralar <span id="cam-count-badge" class="ml-1 text-xs bg-slate-600 px-1.5 py-0.5 rounded-full">0</span>
+  </button>
+</div>
+
+<!-- ══════════════════ STATISTIKA TAB ══════════════════ -->
+<div id="page-stats">
+  <div class="px-6 py-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="card rounded-xl p-4"><div class="text-xs text-slate-400 mb-1">Jami</div><div id="stat-total" class="text-3xl font-bold text-white">—</div></div>
+    <div class="card rounded-xl p-4 border-l-4 border-green-500"><div class="text-xs text-slate-400 mb-1">Qabul qilindi</div><div id="stat-accepted" class="text-3xl font-bold text-green-400">—</div></div>
+    <div class="card rounded-xl p-4 border-l-4 border-yellow-500"><div class="text-xs text-slate-400 mb-1">Ko'rib chiqish</div><div id="stat-review" class="text-3xl font-bold text-yellow-400">—</div></div>
+    <div class="card rounded-xl p-4 border-l-4 border-red-500"><div class="text-xs text-slate-400 mb-1">Rad etildi</div><div id="stat-rejected" class="text-3xl font-bold text-red-400">—</div></div>
+  </div>
+
+  <div class="px-6 pb-4 grid grid-cols-1 xl:grid-cols-3 gap-4">
+    <div class="xl:col-span-2 card rounded-xl overflow-hidden">
+      <div class="px-4 py-3 border-b border-slate-700 flex items-center justify-between">
+        <span class="font-medium text-sm">Oxirgi hodisalar</span>
+        <span id="events-count" class="text-xs text-slate-500"></span>
+      </div>
+      <div class="overflow-x-auto max-h-80">
+        <table class="w-full text-sm">
+          <thead class="sticky top-0 bg-slate-800">
+            <tr class="text-xs text-slate-400 border-b border-slate-700">
+              <th class="px-4 py-2 text-left">Davomat</th>
+              <th class="px-4 py-2 text-left">Asl rasm</th>
+              <th class="px-4 py-2 text-left">Ism</th>
+              <th class="px-4 py-2 text-left">PINFL</th><th class="px-4 py-2 text-left">Kamera</th>
+              <th class="px-4 py-2 text-left">Vaqt</th><th class="px-4 py-2 text-left">O'xshashlik</th>
+              <th class="px-4 py-2 text-left">Qaror</th>
+            </tr>
+          </thead>
+          <tbody id="live-table-body"><tr><td colspan="8" class="px-4 py-8 text-center text-slate-500">Yuklanmoqda...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card rounded-xl overflow-hidden">
+      <div class="px-4 py-3 border-b border-slate-700"><span class="font-medium text-sm">Soatlik davomat</span></div>
+      <div class="p-4"><canvas id="hourly-chart" height="280"></canvas></div>
+    </div>
+  </div>
+
+  <div class="px-6 pb-6">
+    <div class="card rounded-xl overflow-hidden">
+      <div class="px-4 py-3 border-b border-slate-700 flex items-center gap-2">
+        <div class="w-2 h-2 rounded-full bg-yellow-400"></div>
+        <span class="font-medium text-sm">Ko'rib chiqish kutmoqda</span>
+        <span id="review-count" class="ml-1 bg-yellow-500 text-black text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-xs text-slate-400 border-b border-slate-700">
+              <th class="px-4 py-2 text-left">Davomat</th>
+              <th class="px-4 py-2 text-left">Asl rasm</th>
+              <th class="px-4 py-2 text-left">Ism</th>
+              <th class="px-4 py-2 text-left">PINFL</th><th class="px-4 py-2 text-left">Kamera</th>
+              <th class="px-4 py-2 text-left">Vaqt</th><th class="px-4 py-2 text-left">O'xshashlik</th>
+              <th class="px-4 py-2 text-left">Amal</th>
+            </tr>
+          </thead>
+          <tbody id="review-table-body"><tr><td colspan="8" class="px-4 py-8 text-center text-slate-500">Yo'q</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ KAMERALAR TAB ══════════════════ -->
+<div id="page-cameras" class="hidden px-6 py-4">
+
+  <!-- Kamera grid ko'rinishi -->
+  <div id="cameras-view">
+    <div class="flex items-center justify-between mb-4">
+      <span id="cam-total-label" class="text-sm text-slate-400">Yuklanmoqda...</span>
+      <div class="flex items-center gap-2 text-xs text-slate-400">
+        <span>Ko'rinish:</span>
+        <button onclick="setCols(2)" class="col-btn px-2 py-1 rounded bg-slate-700 hover:bg-slate-600">2</button>
+        <button onclick="setCols(3)" class="col-btn px-2 py-1 rounded bg-blue-600 text-white">3</button>
+        <button onclick="setCols(4)" class="col-btn px-2 py-1 rounded bg-slate-700 hover:bg-slate-600">4</button>
+      </div>
+    </div>
+    <div id="cameras-grid" class="grid gap-4 grid-cols-3">
+      <div class="col-span-3 text-center text-slate-500 py-16">Kameralar yuklanmoqda...</div>
+    </div>
+  </div>
+
+  <!-- Xona davomati detail ko'rinishi -->
+  <div id="cam-detail-view" class="hidden">
+    <!-- Yuqori qism: video + jadval ma'lumoti -->
+    <div class="flex items-center gap-3 mb-4">
+      <button onclick="backToGrid()"
+        class="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Kameralar
+      </button>
+      <span class="text-slate-600">/</span>
+      <span id="detail-cam-name" class="font-semibold"></span>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-4">
+      <!-- Video -->
+      <div class="xl:col-span-1 card rounded-xl overflow-hidden">
+        <div style="aspect-ratio:16/9;background:#000;position:relative;">
+          <video id="detail-video" autoplay muted playsinline
+            style="width:100%;height:100%;object-fit:cover;"></video>
+          <div id="detail-video-err" class="hidden absolute inset-0 flex items-center justify-center text-slate-500 text-sm">
+            Stream ulanmadi
+          </div>
+        </div>
+      </div>
+
+      <!-- Jadval ma'lumoti + statistika -->
+      <div class="xl:col-span-2 card rounded-xl p-5 flex flex-col justify-between">
+        <div>
+          <div class="text-xs text-slate-400 uppercase tracking-wider mb-3">Dars jadvali</div>
+          <div id="schedule-block" class="space-y-2">
+            <div class="text-slate-500 text-sm">Jadval ma'lumoti topilmadi</div>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-slate-700">
+          <div>
+            <div class="text-xs text-slate-400 mb-1">Jami o'quvchi</div>
+            <div id="detail-total" class="text-2xl font-bold text-white">—</div>
+          </div>
+          <div>
+            <div class="text-xs text-slate-400 mb-1">Kelganlar</div>
+            <div id="detail-arrived" class="text-2xl font-bold text-green-400">—</div>
+          </div>
+          <div>
+            <div class="text-xs text-slate-400 mb-1">Kelmaganlar</div>
+            <div id="detail-not-arrived" class="text-2xl font-bold text-red-400">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Davomat jadvali -->
+    <div class="card rounded-xl overflow-hidden">
+      <div class="border-b border-slate-700 flex">
+        <button id="att-tab-arrived" class="att-tab active px-6 py-3 text-sm font-medium border-b-2 border-blue-500 text-white transition-colors"
+          onclick="switchAttTab('arrived')">
+          Kelganlar <span id="arrived-badge" class="ml-1 text-xs bg-green-800 text-green-300 px-2 py-0.5 rounded-full">0</span>
+        </button>
+        <button id="att-tab-not-arrived" class="att-tab px-6 py-3 text-sm font-medium transition-colors"
+          onclick="switchAttTab('not-arrived')">
+          Kelmaganlar <span id="not-arrived-badge" class="ml-1 text-xs bg-red-900 text-red-300 px-2 py-0.5 rounded-full">0</span>
+        </button>
+      </div>
+
+      <!-- Kelganlar jadvali -->
+      <div id="arrived-section" class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-800">
+            <tr class="text-xs text-slate-400 border-b border-slate-700">
+              <th class="px-4 py-2 text-left">Davomat rasmi</th>
+              <th class="px-4 py-2 text-left">Asl rasmi (front)</th>
+              <th class="px-4 py-2 text-left">Ism Familiya</th>
+              <th class="px-4 py-2 text-left">PINFL</th>
+              <th class="px-4 py-2 text-left">Kelish vaqti</th>
+              <th class="px-4 py-2 text-left">O'xshashlik</th>
+            </tr>
+          </thead>
+          <tbody id="arrived-tbody">
+            <tr><td colspan="6" class="px-4 py-8 text-center text-slate-500">Yuklanmoqda...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Kelmaganlar jadvali -->
+      <div id="not-arrived-section" class="hidden overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-800">
+            <tr class="text-xs text-slate-400 border-b border-slate-700">
+              <th class="px-4 py-2 text-left">Rasmi (front)</th>
+              <th class="px-4 py-2 text-left">Ism Familiya</th>
+              <th class="px-4 py-2 text-left">PINFL</th>
+            </tr>
+          </thead>
+          <tbody id="not-arrived-tbody">
+            <tr><td colspan="3" class="px-4 py-8 text-center text-slate-500">Yuklanmoqda...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- RASM MODAL -->
+<div id="img-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden items-center justify-center z-50 cursor-pointer"
+  onclick="this.classList.add('hidden');this.classList.remove('flex')">
+  <img id="img-modal-src" class="max-h-[85vh] max-w-[90vw] rounded-xl shadow-2xl"/>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="fixed bottom-4 right-4 hidden z-50">
+  <div id="toast-inner" class="rounded-lg px-4 py-3 text-sm font-medium shadow-lg"></div>
+</div>
+
+<script>
+const BASE = window.location.pathname.replace(/\/$/, '');
+let currentTab = 'stats';
+let currentCols = 3;
+let hlsInstances = {};
+let detailHls = null;
+let statsTimer = null;
+
+const dateInput = document.getElementById('filter-date');
+const orgInput  = document.getElementById('filter-org');
+dateInput.value = new Date().toISOString().split('T')[0];
+
+function getParams() {
+  const p = new URLSearchParams();
+  if (dateInput.value) p.set('date', dateInput.value);
+  if (orgInput.value)  p.set('org', orgInput.value);
+  return p.toString() ? '?' + p.toString() : '';
+}
+
+// --- Soat ---
+function updateClock() {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('uz-UZ');
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// --- Toast ---
+function showToast(msg, type='success') {
+  const inner = document.getElementById('toast-inner');
+  inner.textContent = msg;
+  inner.className = 'rounded-lg px-4 py-3 text-sm font-medium shadow-lg ' +
+    (type==='success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white');
+  const t = document.getElementById('toast');
+  t.classList.remove('hidden');
+  setTimeout(()=>t.classList.add('hidden'), 3000);
+}
+
+// --- Rasm modal ---
+function openImg(url) {
+  if (!url) return;
+  document.getElementById('img-modal-src').src = url;
+  const m = document.getElementById('img-modal');
+  m.classList.remove('hidden'); m.classList.add('flex');
+}
+
+function imgThumb(url, size='w-12 h-12') {
+  if (!url) return `<div class="${size} rounded bg-slate-700 flex items-center justify-center text-slate-500 text-xs">—</div>`;
+  return `<img src="${url}" class="${size} rounded object-cover cursor-pointer hover:opacity-80 hover:ring-2 ring-blue-500"
+    onclick="openImg('${url}')"/>`;
+}
+
+function simCell(val) {
+  if (val===null||val===undefined) return '<span class="text-slate-500">—</span>';
+  const c = val>=70?'text-green-400':val>=55?'text-yellow-400':'text-red-400';
+  return `<span class="${c} font-mono font-semibold">${val}%</span>`;
+}
+
+function decisionBadge(d) {
+  const map={accepted:['badge-accepted','Qabul'],review:['badge-review','Review'],rejected:['badge-rejected','Rad']};
+  const [cls,label]=map[d]||['bg-slate-700 text-slate-300',d];
+  return `<span class="inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${cls}">${label}</span>`;
+}
+
+function getCsrf() {
+  return document.cookie.split(';').find(c=>c.trim().startsWith('csrftoken='))?.split('=')[1]||'';
+}
+
+// ══════════════════════════════════════════════════════════
+// TAB BOSHQARUVI
+// ══════════════════════════════════════════════════════════
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('page-stats').classList.toggle('hidden', tab!=='stats');
+  document.getElementById('page-cameras').classList.toggle('hidden', tab!=='cameras');
+  document.getElementById('tab-stats').classList.toggle('active', tab==='stats');
+  document.getElementById('tab-cameras').classList.toggle('active', tab==='cameras');
+
+  if (tab === 'stats') {
+    destroyAllHls();
+    startStatsTimer();
+    loadStats(); loadLive(); loadHourly(); loadReview();
+  } else {
+    stopStatsTimer();
+    loadCameras();
+  }
+}
+
+function startStatsTimer() {
+  stopStatsTimer();
+  statsTimer = setInterval(()=>{
+    if (currentTab==='stats') {
+      loadStats(); loadLive(); loadHourly(); loadReview();
+    }
+  }, 10000);
+}
+
+function stopStatsTimer() {
+  if (statsTimer) { clearInterval(statsTimer); statsTimer=null; }
+}
+
+// ══════════════════════════════════════════════════════════
+// STATISTIKA
+// ══════════════════════════════════════════════════════════
+
+async function loadStats() {
+  try {
+    const r = await fetch(`${BASE}/api/stats/${getParams()}`);
+    const d = await r.json();
+    document.getElementById('stat-total').textContent    = d.total    ??'—';
+    document.getElementById('stat-accepted').textContent = d.accepted ??'—';
+    document.getElementById('stat-review').textContent   = d.review   ??'—';
+    document.getElementById('stat-rejected').textContent = d.rejected ??'—';
+  } catch {}
+}
+
+async function loadLive() {
+  try {
+    const r = await fetch(`${BASE}/api/live/${getParams()}`);
+    const data = await r.json();
+    const tbody = document.getElementById('live-table-body');
+    document.getElementById('events-count').textContent = data.length + ' ta hodisa';
+    if (!data.length) { tbody.innerHTML=`<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500">Bugun hodisa yo'q</td></tr>`; return; }
+    tbody.innerHTML = data.map(e=>`
+      <tr class="border-b border-slate-800">
+        <td class="px-4 py-2">${imgThumb(e.image,'w-10 h-10')}</td>
+        <td class="px-4 py-2">${imgThumb(e.reference_image,'w-10 h-10')}</td>
+        <td class="px-4 py-2 font-medium text-sm">${e.full_name}</td>
+        <td class="px-4 py-2 font-mono text-slate-400 text-xs">${e.pinfl}</td>
+        <td class="px-4 py-2 text-slate-400 text-xs">${e.camera}</td>
+        <td class="px-4 py-2 font-mono text-xs text-slate-300">${e.recognized_at}</td>
+        <td class="px-4 py-2">${simCell(e.similarity)}</td>
+        <td class="px-4 py-2">${decisionBadge(e.decision)}</td>
+      </tr>`).join('');
+  } catch {}
+}
+
+let hourlyChart = null;
+async function loadHourly() {
+  try {
+    const r = await fetch(`${BASE}/api/hourly/${getParams()}`);
+    const d = await r.json();
+    const ctx = document.getElementById('hourly-chart').getContext('2d');
+    if (hourlyChart) hourlyChart.destroy();
+    hourlyChart = new Chart(ctx, {
+      type:'bar',
+      data:{labels:d.labels,datasets:[
+        {label:'Qabul', data:d.accepted, backgroundColor:'#16a34a99',borderColor:'#16a34a',borderWidth:1,borderRadius:4},
+        {label:'Review',data:d.review,   backgroundColor:'#ca8a0499',borderColor:'#ca8a04',borderWidth:1,borderRadius:4},
+        {label:'Rad',   data:d.rejected, backgroundColor:'#dc262699',borderColor:'#dc2626',borderWidth:1,borderRadius:4},
+      ]},
+      options:{responsive:true,plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}}},
+        scales:{x:{ticks:{color:'#64748b',font:{size:10}},grid:{color:'#1e293b'}},
+                y:{ticks:{color:'#64748b',font:{size:10}},grid:{color:'#334155'},beginAtZero:true}}},
+    });
+  } catch {}
+}
+
+async function loadReview() {
+  try {
+    const r = await fetch(`${BASE}/api/review/${getParams()}`);
+    const data = await r.json();
+    document.getElementById('review-count').textContent = data.length;
+    const tbody = document.getElementById('review-table-body');
+    if (!data.length) { tbody.innerHTML=`<tr><td colspan="7" class="px-4 py-8 text-center text-slate-500">Yo'q</td></tr>`; return; }
+    tbody.innerHTML = data.map(e=>`
+      <tr class="border-b border-slate-800" id="review-row-${e.id}">
+        <td class="px-4 py-2">${imgThumb(e.image,'w-10 h-10')}</td>
+        <td class="px-4 py-2">${imgThumb(e.reference_image,'w-10 h-10')}</td>
+        <td class="px-4 py-2 font-medium text-sm">${e.full_name}</td>
+        <td class="px-4 py-2 font-mono text-slate-400 text-xs">${e.pinfl}</td>
+        <td class="px-4 py-2 text-slate-400 text-xs">${e.camera}</td>
+        <td class="px-4 py-2 font-mono text-xs">${e.recognized_at}</td>
+        <td class="px-4 py-2">${simCell(e.similarity)}</td>
+        <td class="px-4 py-2 flex gap-2">
+          <button onclick="confirmEvent(${e.id})" class="bg-green-700 hover:bg-green-600 text-white text-xs px-3 py-1 rounded">Tasdiqlash</button>
+          <button onclick="rejectEvent(${e.id})"  class="bg-red-800 hover:bg-red-700 text-white text-xs px-3 py-1 rounded">Rad etish</button>
+        </td>
+      </tr>`).join('');
+  } catch {}
+}
+
+async function confirmEvent(id) {
+  const r = await fetch(`/api/attendance/review/${id}/confirm/`,{method:'POST',headers:{'X-CSRFToken':getCsrf()}});
+  if (r.ok) { document.getElementById(`review-row-${id}`)?.remove(); showToast('Tasdiqlandi'); loadStats(); }
+  else { const d=await r.json(); showToast(d.error||'Xato','error'); }
+}
+async function rejectEvent(id) {
+  const r = await fetch(`/api/attendance/review/${id}/reject/`,{method:'POST',headers:{'X-CSRFToken':getCsrf()}});
+  if (r.ok) { document.getElementById(`review-row-${id}`)?.remove(); showToast('Rad etildi'); loadStats(); }
+  else { const d=await r.json(); showToast(d.error||'Xato','error'); }
+}
+
+// ══════════════════════════════════════════════════════════
+// KAMERALAR GRID
+// ══════════════════════════════════════════════════════════
+
+function setCols(n) {
+  currentCols = n;
+  document.getElementById('cameras-grid').className = `grid gap-4 grid-cols-${n}`;
+  document.querySelectorAll('.col-btn').forEach((b,i)=>{
+    const cols=[2,3,4];
+    b.className='col-btn px-2 py-1 rounded '+(cols[i]===n?'bg-blue-600 text-white':'bg-slate-700 hover:bg-slate-600');
+  });
+}
+
+function destroyAllHls() {
+  Object.values(hlsInstances).forEach(h=>{try{h.destroy()}catch{}});
+  hlsInstances={};
+}
+
+function attachHls(videoEl, url, key) {
+  if (hlsInstances[key]) { try{hlsInstances[key].destroy()}catch{} }
+  if (Hls.isSupported()) {
+    const hls = new Hls({maxBufferLength:5,maxMaxBufferLength:10,liveSyncDuration:3});
+    hls.loadSource(url); hls.attachMedia(videoEl);
+    hls.on(Hls.Events.MANIFEST_PARSED,()=>videoEl.play().catch(()=>{}));
+    hlsInstances[key] = hls;
+  } else if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
+    videoEl.src=url; videoEl.play().catch(()=>{});
+  }
+}
+
+async function loadCameras() {
+  destroyAllHls();
+  const grid = document.getElementById('cameras-grid');
+  grid.innerHTML = `<div class="col-span-4 text-center text-slate-500 py-16">Yuklanmoqda...</div>`;
+
+  try {
+    const r = await fetch(`${BASE}/api/cameras/${getParams()}`);
+    const cameras = await r.json();
+
+    document.getElementById('cam-count-badge').textContent = cameras.length;
+    document.getElementById('cam-total-label').textContent = `${cameras.length} ta kamera`;
+
+    if (!cameras.length) {
+      grid.innerHTML=`<div class="col-span-4 text-center text-slate-500 py-16">Kameralar topilmadi</div>`;
+      return;
+    }
+
+    grid.className = `grid gap-4 grid-cols-${currentCols}`;
+    grid.innerHTML = cameras.map(cam=>`
+      <div class="cam-card" onclick="openCameraDetail(${cam.id}, '${cam.stream_url}', '${cam.name.replace(/'/g,"\\'")}')">
+        <div style="aspect-ratio:16/9;background:#000;position:relative;">
+          <video id="gridvid-${cam.id}" autoplay muted playsinline
+            style="width:100%;height:100%;object-fit:cover;border-radius:12px 12px 0 0;"></video>
+        </div>
+        <div class="px-3 py-2 flex items-center justify-between">
+          <span class="text-sm font-medium truncate" title="${cam.name}">${cam.name}</span>
+          <div class="flex items-center gap-1.5 shrink-0 ml-2">
+            <div class="w-2 h-2 rounded-full ${cam.is_active?'dot-on pulse':'dot-off'}"></div>
+            <span class="text-xs text-slate-400">${cam.is_active?'Jonli':'Offline'}</span>
+          </div>
+        </div>
+      </div>`).join('');
+
+    cameras.forEach(cam=>{
+      const vid = document.getElementById(`gridvid-${cam.id}`);
+      if (vid) attachHls(vid, cam.stream_url, cam.id);
+    });
+
+  } catch(e) {
+    grid.innerHTML=`<div class="col-span-4 text-center text-red-400 py-16">Xato: ${e.message}</div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// KAMERA DETAIL — DAVOMAT
+// ══════════════════════════════════════════════════════════
+
+function backToGrid() {
+  if (detailHls) { try{detailHls.destroy()}catch{} detailHls=null; }
+  document.getElementById('cameras-view').classList.remove('hidden');
+  document.getElementById('cam-detail-view').classList.add('hidden');
+}
+
+function openCameraDetail(camId, streamUrl, camName) {
+  window.location.href = `/monitoring/room/${camId}/`;
+}
+
+async function loadCameraAttendance(camId) {
+  try {
+    const params = getParams();
+    const r = await fetch(`${BASE}/api/cameras/${camId}/attendance/${params}`);
+    const d = await r.json();
+
+    // Statistika
+    document.getElementById('detail-total').textContent       = d.total_students ?? '—';
+    document.getElementById('detail-arrived').textContent     = d.arrived_count   ?? '—';
+    document.getElementById('detail-not-arrived').textContent = d.not_arrived_count ?? '—';
+    document.getElementById('arrived-badge').textContent      = d.arrived_count   ?? 0;
+    document.getElementById('not-arrived-badge').textContent  = d.not_arrived_count ?? 0;
+
+    // Jadval ma'lumoti
+    const sched = d.schedule || {};
+    if (sched.teacher || sched.subject) {
+      document.getElementById('schedule-block').innerHTML = `
+        ${sched.teacher ? `<div class="flex items-center gap-2">
+          <span class="text-slate-400 text-sm w-24">O'qituvchi:</span>
+          <span class="font-semibold text-white">${sched.teacher}</span>
+        </div>` : ''}
+        ${sched.subject ? `<div class="flex items-center gap-2">
+          <span class="text-slate-400 text-sm w-24">Fan:</span>
+          <span class="text-slate-200">${sched.subject}</span>
+        </div>` : ''}
+        ${sched.group ? `<div class="flex items-center gap-2">
+          <span class="text-slate-400 text-sm w-24">Guruh:</span>
+          <span class="text-slate-200">${sched.group}</span>
+        </div>` : ''}
+        ${sched.lesson_pair ? `<div class="flex items-center gap-2">
+          <span class="text-slate-400 text-sm w-24">Juft:</span>
+          <span class="text-slate-400 text-sm">${JSON.stringify(sched.lesson_pair)}</span>
+        </div>` : ''}
+      `;
+    } else {
+      document.getElementById('schedule-block').innerHTML =
+        `<div class="text-slate-500 text-sm">Bugun uchun jadval topilmadi</div>`;
+    }
+
+    // Kelganlar jadvali
+    const arrivedTbody = document.getElementById('arrived-tbody');
+    if (!d.arrived.length) {
+      arrivedTbody.innerHTML=`<tr><td colspan="6" class="px-4 py-10 text-center text-slate-500">Hech kim kelmagan</td></tr>`;
+    } else {
+      arrivedTbody.innerHTML = d.arrived.map((s,i)=>`
+        <tr class="border-b border-slate-800">
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-1">
+              <div class="relative">
+                ${imgThumb(s.recognition_image, 'w-14 h-14')}
+                <div class="absolute -bottom-1 -right-1 bg-blue-500 text-white text-xs rounded px-1">Davomat</div>
+              </div>
+            </div>
+          </td>
+          <td class="px-4 py-3">${imgThumb(s.front_photo, 'w-14 h-14')}</td>
+          <td class="px-4 py-3 font-medium">${s.full_name}</td>
+          <td class="px-4 py-3 font-mono text-slate-400 text-xs">${s.pinfl}</td>
+          <td class="px-4 py-3 font-mono text-sm text-slate-300">${s.recognized_at}</td>
+          <td class="px-4 py-3">${simCell(s.similarity)}</td>
+        </tr>`).join('');
+    }
+
+    // Kelmaganlar jadvali
+    const notArrivedTbody = document.getElementById('not-arrived-tbody');
+    if (!d.not_arrived.length) {
+      notArrivedTbody.innerHTML=`<tr><td colspan="3" class="px-4 py-10 text-center text-slate-500">Hammasi kelgan!</td></tr>`;
+    } else {
+      notArrivedTbody.innerHTML = d.not_arrived.map(s=>`
+        <tr class="border-b border-slate-800">
+          <td class="px-4 py-3">${imgThumb(s.front_photo, 'w-14 h-14')}</td>
+          <td class="px-4 py-3 font-medium">${s.full_name}</td>
+          <td class="px-4 py-3 font-mono text-slate-400 text-xs">${s.pinfl}</td>
+        </tr>`).join('');
+    }
+
+  } catch(e) {
+    document.getElementById('arrived-tbody').innerHTML =
+      `<tr><td colspan="6" class="px-4 py-8 text-center text-red-400">Xato: ${e.message}</td></tr>`;
+  }
+}
+
+function switchAttTab(tab) {
+  const isArrived = tab === 'arrived';
+  document.getElementById('arrived-section').classList.toggle('hidden', !isArrived);
+  document.getElementById('not-arrived-section').classList.toggle('hidden', isArrived);
+  document.getElementById('att-tab-arrived').classList.toggle('active', isArrived);
+  document.getElementById('att-tab-arrived').style.borderBottom = isArrived ? '2px solid #3b82f6' : 'none';
+  document.getElementById('att-tab-arrived').style.color = isArrived ? '#fff' : '#64748b';
+  document.getElementById('att-tab-not-arrived').style.borderBottom = !isArrived ? '2px solid #3b82f6' : 'none';
+  document.getElementById('att-tab-not-arrived').style.color = !isArrived ? '#fff' : '#64748b';
+}
+
+// ══════════════════════════════════════════════════════════
+// UMUMIY REFRESH
+// ══════════════════════════════════════════════════════════
+
+async function refresh() {
+  if (currentTab === 'stats') {
+    loadStats(); loadLive(); loadHourly(); loadReview();
+  } else {
+    const detail = document.getElementById('cam-detail-view');
+    if (!detail.classList.contains('hidden')) {
+      // Detail ko'rinishida — faqat jadval yangilanadi, video emas
+    } else {
+      loadCameras();
+    }
+  }
+}
+
+// Birinchi yuklanish
+loadStats(); loadLive(); loadHourly(); loadReview();
+startStatsTimer();
+
+// Faqat statistika tabida avtomatik yangilanadi
+dateInput.addEventListener('change', refresh);
+orgInput.addEventListener('change', refresh);
+</script>
+</body>
+</html>

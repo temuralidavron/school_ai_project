@@ -1,0 +1,13 @@
+# school_attendace_v1 — rejalashtirilgan vazifalar
+# Vaqt: Asia/Tashkent (konteyner TZ shu qilib o'rnatilgan)
+
+# Har kuni 00:30 — bugungi VA ertangi kun jadvalini SKUD dan olib kelish
+30 0 * * * cd /app && /usr/bin/python3.14 manage.py sync_schedule --today-and-tomorrow >> /app/logs/cron.log 2>&1
+
+# Har 10 daqiqada — tugagan darslarda kelmaganlarni 'absent' belgilash
+*/10 * * * * cd /app && /usr/bin/python3.14 manage.py mark_absent >> /app/logs/cron.log 2>&1
+
+# Har 5 daqiqada — muvaffaqiyatsiz SKUD push larni qayta yuborish
+*/5 * * * * cd /app && /usr/bin/python3.14 manage.py retry_skud_push --limit 200 >> /app/logs/cron.log 2>&1
+
+# Bo'sh qator (cron talab qiladi)

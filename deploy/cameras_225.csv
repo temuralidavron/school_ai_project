@@ -1,0 +1,15 @@
+# 225-maktab (org_id=16) — 10 kamera
+# Format: name;stream_url;skud_device_id
+# stream_url: 71-maktab cam32_X konvensiyasidan → cam16_X (TEKSHIRILSIN!)
+# skud_device_id = SKUD classroom deviceId → sync_classrooms avtomatik bog'laydi
+#
+1-xona;https://edu-api.devel.uz/cam16_1;d_10
+2-xona;https://edu-api.devel.uz/cam16_2;d_11
+9-xona;https://edu-api.devel.uz/cam16_9;d_12
+10-xona;https://edu-api.devel.uz/cam16_10;d_13
+11-xona;https://edu-api.devel.uz/cam16_11;d_14
+13-xona;https://edu-api.devel.uz/cam16_13;d_15
+4-xona;https://edu-api.devel.uz/cam16_4;dev_225_4
+3-xona;https://edu-api.devel.uz/cam16_3;dev_225_3
+3a-xona;https://edu-api.devel.uz/cam16_3a;dev_225_3a
+12-xona;https://edu-api.devel.uz/cam16_12;dev_225_12

@@ -1,0 +1,33 @@
+# Django & REST
+Django==6.0.4
+djangorestframework==3.17.1
+
+# Database
+psycopg2-binary==2.9.12
+pgvector==0.4.2
+
+# AI / Face recognition
+insightface==0.7.3
+onnxruntime==1.25.0
+opencv-python-headless==4.13.0.92
+numpy==2.4.4
+
+# Storage (MinIO / S3)
+django-storages==1.14.6
+boto3==1.43.7
+
+# Security / Encryption
+cryptography==48.0.0
+
+# PTZ / ONVIF kamera boshqaruv
+onvif-zeep==0.2.12
+
+# HTTP
+requests==2.33.1
+urllib3==2.6.3
+
+# Config
+python-decouple==3.8
+
+# Server (Ubuntu deploy uchun)
+gunicorn==23.0.0

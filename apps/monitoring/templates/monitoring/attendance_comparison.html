@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Davomat Qiyosi — Rasm Taqqoslash</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #0f172a; }
+    .card { background: #1e293b; border: 1px solid #334155; }
+    .badge-accepted { background: #166534; color: #bbf7d0; }
+    .badge-review   { background: #854d0e; color: #fef08a; }
+    .badge-rejected { background: #7f1d1d; color: #fecaca; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: #1e293b; }
+    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 2px; }
+    tr:hover td { background: #1e3a5f22; }
+    .photo-box {
+      width: 80px; height: 80px;
+      border-radius: 8px; overflow: hidden;
+      background: #0f172a;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; border: 2px solid transparent;
+      transition: border-color .15s;
+      flex-shrink: 0;
+    }
+    .photo-box:hover { border-color: #3b82f6; }
+    .photo-box img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-label {
+      font-size: 10px; font-weight: 600; text-align: center;
+      margin-top: 2px; letter-spacing: .3px;
+    }
+  </style>
+</head>
+<body class="text-slate-200 min-h-screen">
+
+<!-- NAVBAR -->
+<nav class="bg-slate-900 border-b border-slate-700 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
+  <div class="flex items-center gap-3">
+    <a href="/monitoring/" class="text-slate-400 hover:text-white text-sm flex items-center gap-1">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      Dashboard
+    </a>
+    <span class="text-slate-600">/</span>
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-xs">Q</div>
+      <span class="font-semibold text-base">Davomat Rasmi Qiyosi</span>
+    </div>
+  </div>
+  <div id="clock" class="text-slate-400 text-sm font-mono"></div>
+</nav>
+
+<!-- FILTERS -->
+<div class="px-6 py-3 bg-slate-900 border-b border-slate-800 flex flex-wrap items-end gap-4">
+  <div>
+    <label class="block text-xs text-slate-400 mb-1">Sana</label>
+    <input id="filter-date" type="date"
+      class="bg-slate-800 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500"/>
+  </div>
+  <div>
+    <label class="block text-xs text-slate-400 mb-1">Tashkilot</label>
+    <select id="filter-org"
+      class="bg-slate-800 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500 min-w-[200px]">
+      <option value="">— Barchasi —</option>
+      {% for org in organizations %}
+      <option value="{{ org.organization_id }}">{{ org.organization_name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label class="block text-xs text-slate-400 mb-1">Qaror</label>
+    <select id="filter-decision"
+      class="bg-slate-800 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500">
+      <option value="">— Barchasi —</option>
+      <option value="accepted">Qabul qilindi</option>
+      <option value="review">Ko'rib chiqish</option>
+      <option value="rejected">Rad etildi</option>
+    </select>
+  </div>
+  <div>
+    <label class="block text-xs text-slate-400 mb-1">Miqdor</label>
+    <select id="filter-limit"
+      class="bg-slate-800 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-500">
+      <option value="30">30 ta</option>
+      <option value="50" selected>50 ta</option>
+      <option value="100">100 ta</option>
+      <option value="200">200 ta</option>
+    </select>
+  </div>
+  <button onclick="loadData()"
+    class="bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-lg px-4 py-1.5 transition-colors">
+    Yuklash
+  </button>
+  <div id="result-info" class="text-slate-400 text-sm self-end ml-2"></div>
+</div>
+
+<!-- LEGEND -->
+<div class="px-6 pt-4 pb-2 flex items-center gap-6 text-xs text-slate-400">
+  <div class="flex items-center gap-2">
+    <div class="w-3 h-3 rounded border-2 border-blue-400"></div>
+    <span>Davomat rasmi — kamera surati</span>
+  </div>
+  <div class="flex items-center gap-2">
+    <div class="w-3 h-3 rounded border-2 border-emerald-400"></div>
+    <span>Asl rasm — bazadagi ro'yxatga olish rasmi</span>
+  </div>
+  <div class="flex items-center gap-2">
+    <svg class="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+    </svg>
+    <span>Rasmga bosib kattalashtiring</span>
+  </div>
+</div>
+
+<!-- TABLE -->
+<div class="px-6 pb-8">
+  <div class="card rounded-xl overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-800 sticky top-0">
+          <tr class="text-xs text-slate-400 border-b border-slate-700">
+            <th class="px-4 py-3 text-left w-8">#</th>
+            <th class="px-4 py-3 text-left">
+              <span class="text-blue-400">Davomat rasmi</span>
+            </th>
+            <th class="px-4 py-3 text-left">
+              <span class="text-emerald-400">Asl rasm (front)</span>
+            </th>
+            <th class="px-4 py-3 text-left">Ism Familiya</th>
+            <th class="px-4 py-3 text-left">PINFL</th>
+            <th class="px-4 py-3 text-left">Kamera</th>
+            <th class="px-4 py-3 text-left">Vaqt</th>
+            <th class="px-4 py-3 text-left">O'xshashlik</th>
+            <th class="px-4 py-3 text-left">Qaror</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <tr><td colspan="9" class="px-4 py-16 text-center text-slate-500">Ma'lumot yuklanmagan. "Yuklash" tugmasini bosing.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- RASM MODAL -->
+<div id="img-modal"
+  class="fixed inset-0 bg-black bg-opacity-90 hidden items-center justify-center z-50 cursor-zoom-out"
+  onclick="closeModal()">
+  <div class="flex flex-col items-center gap-3" onclick="event.stopPropagation()">
+    <div class="flex items-center gap-2 text-slate-400 text-xs mb-1">
+      <span id="modal-label"></span>
+    </div>
+    <img id="modal-img" class="max-h-[80vh] max-w-[90vw] rounded-xl shadow-2xl border border-slate-600"/>
+    <div id="modal-name" class="text-slate-300 text-sm font-medium"></div>
+    <button onclick="closeModal()" class="text-slate-400 hover:text-white text-xs mt-2">✕ Yopish</button>
+  </div>
+</div>
+
+<script>
+const dateInput     = document.getElementById('filter-date');
+const orgInput      = document.getElementById('filter-org');
+const decisionInput = document.getElementById('filter-decision');
+const limitInput    = document.getElementById('filter-limit');
+
+dateInput.value = new Date().toISOString().split('T')[0];
+
+function updateClock() {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('uz-UZ');
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+function openModal(url, label, name) {
+  if (!url) return;
+  document.getElementById('modal-img').src    = url;
+  document.getElementById('modal-label').textContent = label;
+  document.getElementById('modal-name').textContent  = name;
+  const m = document.getElementById('img-modal');
+  m.classList.remove('hidden');
+  m.classList.add('flex');
+}
+
+function closeModal() {
+  const m = document.getElementById('img-modal');
+  m.classList.add('hidden');
+  m.classList.remove('flex');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+function photoCell(url, borderColor, label, name) {
+  if (!url) {
+    return `<div class="flex flex-col items-center">
+      <div class="photo-box" style="border-color:#475569;cursor:default;">
+        <span class="text-slate-600 text-xs">Yo'q</span>
+      </div>
+      <div class="photo-label" style="color:#475569;">${label}</div>
+    </div>`;
+  }
+  return `<div class="flex flex-col items-center">
+    <div class="photo-box" style="border-color:${borderColor};"
+      onclick="openModal('${url}','${label}','${name.replace(/'/g,"\\'")}')">
+      <img src="${url}" alt="${label}" loading="lazy"/>
+    </div>
+    <div class="photo-label" style="color:${borderColor};">${label}</div>
+  </div>`;
+}
+
+function simCell(val) {
+  if (val === null || val === undefined) return '<span class="text-slate-500">—</span>';
+  const c = val >= 70 ? 'text-green-400' : val >= 55 ? 'text-yellow-400' : 'text-red-400';
+  return `<span class="${c} font-mono font-bold">${val}%</span>`;
+}
+
+function decisionBadge(d) {
+  const map = {
+    accepted: ['badge-accepted', 'Qabul'],
+    review:   ['badge-review',   'Review'],
+    rejected: ['badge-rejected', 'Rad'],
+  };
+  const [cls, label] = map[d] || ['bg-slate-700 text-slate-300', d];
+  return `<span class="inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${cls}">${label}</span>`;
+}
+
+async function loadData() {
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = `<tr><td colspan="9" class="px-4 py-16 text-center text-slate-500">
+    <div class="flex items-center justify-center gap-2">
+      <svg class="animate-spin w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
+      Yuklanmoqda...
+    </div>
+  </td></tr>`;
+
+  const params = new URLSearchParams();
+  if (dateInput.value)      params.set('date', dateInput.value);
+  if (orgInput.value)       params.set('org', orgInput.value);
+  if (decisionInput.value)  params.set('decision', decisionInput.value);
+  if (limitInput.value)     params.set('limit', limitInput.value);
+
+  try {
+    const resp = await fetch('/monitoring/api/comparison/?' + params.toString());
+    const data = await resp.json();
+
+    document.getElementById('result-info').textContent =
+      `${data.count} ta hodisa topildi (${data.date})`;
+
+    if (!data.results.length) {
+      tbody.innerHTML = `<tr><td colspan="9" class="px-4 py-16 text-center text-slate-500">
+        Bu sana uchun hodisalar topilmadi.
+      </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.results.map((row, i) => `
+      <tr class="border-b border-slate-800">
+        <td class="px-4 py-3 text-slate-500 text-xs">${i + 1}</td>
+        <td class="px-4 py-3">
+          ${photoCell(row.attendance_image, '#60a5fa', 'Davomat', row.full_name)}
+        </td>
+        <td class="px-4 py-3">
+          ${photoCell(row.reference_image, '#34d399', 'Asl rasm', row.full_name)}
+        </td>
+        <td class="px-4 py-3 font-medium max-w-[180px]">
+          <div class="truncate" title="${row.full_name}">${row.full_name}</div>
+        </td>
+        <td class="px-4 py-3 font-mono text-slate-400 text-xs whitespace-nowrap">${row.pinfl}</td>
+        <td class="px-4 py-3 text-slate-400 text-xs max-w-[140px]">
+          <div class="truncate" title="${row.camera}">${row.camera}</div>
+        </td>
+        <td class="px-4 py-3 font-mono text-xs text-slate-300 whitespace-nowrap">${row.recognized_at}</td>
+        <td class="px-4 py-3">${simCell(row.similarity)}</td>
+        <td class="px-4 py-3">${decisionBadge(row.decision)}</td>
+      </tr>
+    `).join('');
+
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="9" class="px-4 py-8 text-center text-red-400">
+      Xato yuz berdi: ${e.message}
+    </td></tr>`;
+  }
+}
+
+// Sahifa ochilganda avtomatik yuklash
+loadData();
+</script>
+</body>
+</html>

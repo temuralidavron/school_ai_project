@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ camera.name }} — Jonli Davomat</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.7/dist/hls.min.js"></script>
+  <style>
+    body { background: #0f172a; font-family: 'Segoe UI', system-ui, sans-serif; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; }
+
+    /* Camera panels */
+    .cam-panel { position: relative; background: #000; border-radius: 10px; overflow: hidden; }
+    .cam-panel video,
+    .cam-panel img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cam-label {
+      position: absolute; top: 8px; left: 8px; z-index: 5;
+      background: rgba(0,0,0,.65); backdrop-filter: blur(4px);
+      color: #fff; font-size: 11px; font-weight: 600;
+      padding: 3px 8px; border-radius: 5px; letter-spacing:.4px;
+    }
+    .cam-dot {
+      position: absolute; top: 10px; right: 10px; z-index: 5;
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+    .dot-green { background: #22c55e; animation: blink 1.5s infinite; }
+    .dot-orange { background: #f97316; animation: blink 1.5s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+    /* Attendance */
+    .arrived-card {
+      display: flex; align-items: center; gap: 10px;
+      background: #0f2d1f; border: 1px solid #166534;
+      border-radius: 8px; padding: 8px 10px; margin-bottom: 6px;
+      animation: slideIn .35s ease;
+    }
+    .absent-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 8px; border-radius: 7px;
+      background: #1e293b; margin-bottom: 5px;
+      font-size: 13px; color: #94a3b8;
+    }
+    @keyframes slideIn {
+      from { opacity:0; transform:translateY(-6px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    .face-thumb {
+      width: 52px; height: 52px; border-radius: 7px;
+      object-fit: cover; border: 2px solid #166534;
+      background: #0f2d1f; flex-shrink: 0;
+    }
+    .face-ph {
+      width: 52px; height: 52px; border-radius: 7px;
+      background: #1e3a5f; display:flex; align-items:center;
+      justify-content:center; color:#475569; font-size:20px;
+      border: 2px solid #334155; flex-shrink:0;
+    }
+    .abs-avatar {
+      width: 44px; height: 44px; border-radius: 6px;
+      object-fit: cover; border:1px solid #334155; flex-shrink:0;
+    }
+    .abs-ph {
+      width:44px; height:44px; border-radius:6px; background:#1e293b;
+      border:1px solid #334155; display:flex; align-items:center;
+      justify-content:center; color:#475569; font-size:18px; flex-shrink:0;
+    }
+    .badge-on  { background:#14532d; color:#86efac; }
+    .badge-late{ background:#78350f; color:#fde68a; }
+
+    #progress-bar { transition: width .6s ease; }
+
+    ::-webkit-scrollbar { width:4px; }
+    ::-webkit-scrollbar-track { background:#1e293b; }
+    ::-webkit-scrollbar-thumb { background:#475569; border-radius:2px; }
+  </style>
+</head>
+<body class="text-slate-200 min-h-screen flex flex-col" style="height:100vh; overflow:hidden;">
+
+<!-- NAVBAR -->
+<nav class="bg-slate-900 border-b border-slate-700 px-5 py-2.5 flex items-center justify-between flex-shrink-0">
+  <div class="flex items-center gap-3">
+    <a href="/monitoring/" class="text-slate-400 hover:text-white text-sm">&#8592; Monitoring</a>
+    <span class="text-slate-600">|</span>
+    <span class="font-semibold text-sm">{{ camera.name }}</span>
+  </div>
+  <div class="flex items-center gap-4">
+    <div id="schedule-info" class="hidden items-center gap-3 text-sm">
+      <span class="text-blue-400 font-semibold" id="bar-class"></span>
+      <span class="text-slate-500 font-mono" id="bar-time"></span>
+      <span class="text-slate-600" id="bar-lesson"></span>
+    </div>
+    <div id="clock" class="text-slate-400 text-xs font-mono"></div>
+    <div class="flex items-center gap-1.5">
+      <div class="cam-dot dot-green" style="position:static;width:8px;height:8px;"></div>
+      <span class="text-xs text-slate-400">Jonli</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ASOSIY QISM -->
+<div class="flex flex-1 min-h-0 overflow-hidden">
+
+  <!-- SOL: IKKITA KAMERA -->
+  <div class="flex flex-col gap-3 p-3 border-r border-slate-700 flex-shrink-0" style="width:58%;">
+
+    <!-- Kameralar yon-yon -->
+    <div class="flex gap-3 flex-shrink-0" style="height: 48%;">
+
+      <!-- 1. ASL TASVIR (HLS) -->
+      <div class="cam-panel flex-1">
+        <span class="cam-label">Asl tasvir</span>
+        <div class="cam-dot dot-green"></div>
+        {% if stream_url %}
+          <video id="original-video" autoplay muted playsinline></video>
+        {% else %}
+          <div class="flex items-center justify-center h-full text-slate-600 text-sm">
+            Stream URL topilmadi
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- 2. ANNOTATSIYALANGAN (MJPEG) -->
+      <div class="cam-panel flex-1">
+        <span class="cam-label" style="background:rgba(22,101,52,.75);">Yuz tanish</span>
+        <div class="cam-dot dot-orange"></div>
+        <img id="annotated-feed"
+             src="/monitoring/room/{{ camera_id }}/mjpeg/"
+             alt="Face detection stream"
+             style="width:100%;height:100%;object-fit:cover;"
+             onerror="setTimeout(()=>{ this.src='/monitoring/room/{{ camera_id }}/mjpeg/?t='+Date.now() }, 2000)"/>
+      </div>
+
+    </div>
+
+    <!-- Progress va statistika -->
+    <div class="card p-3 flex-shrink-0">
+      <div class="flex justify-between text-xs text-slate-400 mb-1.5">
+        <span>Davomat</span>
+        <span>
+          <span id="prog-arrived" class="text-green-400 font-bold">0</span>
+          / <span id="prog-total" class="text-slate-300 font-bold">0</span>
+          o'quvchi
+        </span>
+      </div>
+      <div class="w-full bg-slate-700 rounded-full h-2.5 overflow-hidden mb-1.5">
+        <div id="progress-bar" class="bg-green-500 h-2.5 rounded-full" style="width:0%"></div>
+      </div>
+      <div class="flex justify-between text-xs">
+        <span class="text-green-400"><span id="prog-present">0</span> keldi</span>
+        <span class="text-slate-500"><span id="prog-pct">0</span>%</span>
+        <span class="text-red-400"><span id="prog-absent">0</span> kelmagan</span>
+      </div>
+    </div>
+
+    <!-- Bugungi darslar jadvali -->
+    <div class="card p-3 flex-1 min-h-0 overflow-y-auto" id="today-card">
+      <div class="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-2">Bugungi darslar</div>
+      <div id="today-lessons" class="text-sm text-slate-500 text-center py-3">Yuklanmoqda...</div>
+    </div>
+
+    <!-- Dars yo'q xabari -->
+    <div id="no-schedule-msg" class="hidden card p-3 border-amber-800 flex items-center justify-between gap-3" style="background:#451a03;">
+      <span id="no-schedule-text" class="text-sm text-amber-300">Hozir bu xonada aktiv dars yo'q</span>
+      <button onclick="syncSkud()" id="sync-btn"
+        class="shrink-0 bg-amber-700 hover:bg-amber-600 text-white text-xs font-semibold px-3 py-1.5 rounded transition-colors">
+        SKUD sync
+      </button>
+    </div>
+
+  </div>
+
+  <!-- O'NG: DAVOMAT JADVALI -->
+  <div class="flex flex-col flex-1 min-w-0 overflow-hidden">
+
+    <!-- KELGANLAR -->
+    <div class="flex-1 overflow-y-auto p-3 border-b border-slate-700 min-h-0">
+      <div class="flex items-center justify-between mb-2 sticky top-0 bg-slate-900 py-1 z-10">
+        <div class="flex items-center gap-2">
+          <span class="text-green-400 font-bold text-xs uppercase tracking-wider">Kelganlar</span>
+          <span id="arrived-badge"
+                class="text-xs bg-green-900 text-green-300 font-bold px-2 py-0.5 rounded-full">0</span>
+        </div>
+        <span class="text-xs text-slate-600">Vaqt</span>
+      </div>
+      <div id="arrived-list">
+        <div id="arrived-empty" class="text-center text-slate-600 text-sm py-6">
+          Hali hech kim kelmadi
+        </div>
+      </div>
+    </div>
+
+    <!-- KELMAGANLAR -->
+    <div class="flex-1 overflow-y-auto p-3 min-h-0">
+      <div class="flex items-center justify-between mb-2 sticky top-0 bg-slate-900 py-1 z-10">
+        <div class="flex items-center gap-2">
+          <span class="text-red-400 font-bold text-xs uppercase tracking-wider">Kelmaganlar</span>
+          <span id="absent-badge"
+                class="text-xs bg-red-950 text-red-300 font-bold px-2 py-0.5 rounded-full">0</span>
+        </div>
+      </div>
+      <div id="absent-list">
+        <div id="absent-empty" class="text-center text-slate-600 text-sm py-6">
+          Yuklanmoqda...
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const CAMERA_ID  = {{ camera_id }};
+const STREAM_URL = "{{ stream_url|escapejs }}";
+const API_URL    = `/monitoring/room/${CAMERA_ID}/api/`;
+
+// ── HLS original stream ───────────────────────────────────────────────────
+const video = document.getElementById('original-video');
+if (video && STREAM_URL) {
+  if (Hls.isSupported()) {
+    const hls = new Hls({ liveSyncDuration: 2, liveMaxLatencyDuration: 5 });
+    hls.loadSource(STREAM_URL);
+    hls.attachMedia(video);
+  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = STREAM_URL;
+  }
+}
+
+// ── Soat ──────────────────────────────────────────────────────────────────
+function updateClock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('uz-UZ', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── Attendance polling ────────────────────────────────────────────────────
+const arrivedPinfls = new Set();
+let currentOrgId = null;
+
+async function fetchAttendance() {
+  try {
+    const res = await fetch(API_URL);
+    if (!res.ok) return;
+    render(await res.json());
+  } catch(e) { console.warn(e); }
+}
+
+function render(data) {
+  // Xona nomini navbar da ko'rsatamiz
+  if (data.classroom && data.classroom.name) {
+    document.title = `${data.classroom.name} — Jonli Davomat`;
+  }
+
+  if (data.no_schedule) {
+    document.getElementById('no-schedule-msg').classList.remove('hidden');
+    if (data.classroom && data.classroom.org_id) currentOrgId = data.classroom.org_id;
+    document.getElementById('schedule-info').classList.add('hidden');
+    document.getElementById('today-card').classList.remove('hidden');
+
+    const txt = document.getElementById('no-schedule-text');
+    if (data.schedule_date && !data.is_today) {
+      txt.textContent = `Bugun jadval yo'q. Ko'rsatilayotgan: ${data.schedule_date}`;
+    } else {
+      txt.textContent = "Hozir bu xonada aktiv dars yo'q";
+    }
+    renderTodayLessons(data.today || [], data.schedule_date);
+    return;
+  }
+
+  if (data.classroom && data.classroom.org_id) currentOrgId = data.classroom.org_id;
+  document.getElementById('no-schedule-msg').classList.add('hidden');
+  document.getElementById('today-card').classList.add('hidden');
+
+  // Navbar schedule info
+  const si = document.getElementById('schedule-info');
+  si.classList.remove('hidden');
+  si.classList.add('flex');
+  document.getElementById('bar-class').textContent  = data.schedule.class_name;
+  document.getElementById('bar-time').textContent   = `${data.schedule.start_at}–${data.schedule.end_at}`;
+  document.getElementById('bar-lesson').textContent = `${data.schedule.lesson_number}-dars`;
+
+  // Progress
+  const pct = data.total > 0 ? +(data.arrived_count / data.total * 100).toFixed(1) : 0;
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('prog-arrived').textContent = data.arrived_count;
+  document.getElementById('prog-total').textContent   = data.total;
+  document.getElementById('prog-present').textContent = data.arrived_count;
+  document.getElementById('prog-absent').textContent  = data.not_arrived_count;
+  document.getElementById('prog-pct').textContent     = pct;
+  document.getElementById('arrived-badge').textContent = data.arrived_count;
+  document.getElementById('absent-badge').textContent  = data.not_arrived_count;
+
+  renderArrived(data.arrived || []);
+  renderAbsent(data.not_arrived || []);
+}
+
+function imgOrPh(src, cls, phCls, alt) {
+  if (src) return `<img src="${src}" class="${cls}" alt="${alt}"
+    onerror="this.outerHTML='<div class=${phCls}>👤</div>'">`;
+  return `<div class="${phCls}">👤</div>`;
+}
+
+function renderArrived(list) {
+  const box   = document.getElementById('arrived-list');
+  const empty = document.getElementById('arrived-empty');
+  if (!list.length) { empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+
+  list.forEach(s => {
+    if (arrivedPinfls.has(s.pinfl)) return;
+    arrivedPinfls.add(s.pinfl);
+
+    const lateBadge = s.is_late
+      ? `<span class="text-xs badge-late rounded px-1.5 py-0.5">Kech</span>`
+      : `<span class="text-xs badge-on rounded px-1.5 py-0.5">O'z vaqtida</span>`;
+
+    const attImg = imgOrPh(s.recognition_image, 'face-thumb', 'face-ph', s.full_name);
+    const refImg = imgOrPh(s.front_photo, 'face-thumb', 'face-ph', s.full_name);
+
+    const card = document.createElement('div');
+    card.className = 'arrived-card';
+    card.dataset.pinfl = s.pinfl;
+    card.innerHTML = `
+      <div class="flex flex-col items-center gap-0.5 shrink-0">
+        ${attImg}
+        <span style="font-size:9px;color:#60a5fa;font-weight:600;">Davomat</span>
+      </div>
+      <div class="flex flex-col items-center gap-0.5 shrink-0">
+        ${refImg}
+        <span style="font-size:9px;color:#34d399;font-weight:600;">Asl rasm</span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="font-semibold text-sm text-white truncate">${s.full_name}</div>
+        <div class="font-mono text-xs text-slate-500 mb-1">${s.pinfl}</div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-green-400 font-mono text-xs">${s.arrived_at || ''}</span>
+          ${lateBadge}
+        </div>
+      </div>`;
+
+    const firstCard = box.querySelector('.arrived-card');
+    box.insertBefore(card, firstCard || null);
+  });
+}
+
+function renderAbsent(list) {
+  const box   = document.getElementById('absent-list');
+  const empty = document.getElementById('absent-empty');
+
+  box.querySelectorAll('.absent-row').forEach(el => el.remove());
+
+  if (!list.length) {
+    empty.textContent = 'Hammasi keldi!';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  list.forEach(s => {
+    const av = imgOrPh(s.front_photo, 'abs-avatar', 'abs-ph', s.full_name);
+    const row = document.createElement('div');
+    row.className = 'absent-row';
+    row.innerHTML = `
+      ${av}
+      <div class="flex-1 min-w-0">
+        <div class="truncate text-slate-300 text-sm">${s.full_name}</div>
+        <div class="font-mono text-xs text-slate-600">${s.pinfl}</div>
+      </div>`;
+    box.appendChild(row);
+  });
+}
+
+function renderTodayLessons(lessons, schedDate) {
+  const box = document.getElementById('today-lessons');
+  if (!lessons.length) {
+    box.innerHTML = '<span class="text-slate-600">Jadval ma\'lumoti yo\'q</span>';
+    return;
+  }
+  const dateLabel = schedDate ? `<span class="text-xs text-amber-500 mb-2 block">${schedDate} kuni jadvali</span>` : '';
+  box.innerHTML = dateLabel + lessons.map(l => `
+    <div class="flex justify-between items-center py-1.5 border-b border-slate-700 last:border-0 text-sm">
+      <div>
+        <span class="text-blue-300 font-semibold">${l.class_name}</span>
+        <span class="text-slate-500 ml-1">${l.lesson_number}-dars</span>
+      </div>
+      <span class="text-slate-400 font-mono text-xs">${l.start_at}–${l.end_at}</span>
+    </div>`).join('');
+}
+
+async function syncSkud() {
+  const btn = document.getElementById('sync-btn');
+  if (!currentOrgId) { alert("Tashkilot ID aniqlanmadi"); return; }
+  btn.textContent = 'Kutilmoqda...';
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/integrations/full-sync/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+      body: JSON.stringify({ organization_id: currentOrgId, date: new Date().toISOString().split('T')[0] }),
+    });
+    const d = await r.json();
+    btn.textContent = r.ok ? 'Sinxronlandi ✓' : 'Xato';
+    if (!r.ok) console.error(d);
+    setTimeout(() => { btn.textContent = 'SKUD sync'; btn.disabled = false; }, 4000);
+  } catch(e) {
+    btn.textContent = 'Xato';
+    setTimeout(() => { btn.textContent = 'SKUD sync'; btn.disabled = false; }, 3000);
+  }
+}
+
+function getCsrf() {
+  return document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='))?.split('=')[1] || '';
+}
+
+fetchAttendance();
+setInterval(fetchAttendance, 3000);
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+# Django + Gunicorn systemd service
+# /etc/systemd/system/school_attendance_web.service ga ko'chiring
+# sudo systemctl daemon-reload
+# sudo systemctl enable school_attendance_web
+# sudo systemctl start school_attendance_web
+
+[Unit]
+Description=School Attendance Django Web Server
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/school_attendace_v1
+
+# .env avtomatik yuklanadi
+EnvironmentFile=/home/ubuntu/school_attendace_v1/.env
+
+ExecStart=/home/ubuntu/school_attendace_v1/.venv/bin/gunicorn \
+    -c deploy/gunicorn.conf.py \
+    config.wsgi:application
+
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

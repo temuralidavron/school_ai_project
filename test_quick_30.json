@@ -1,0 +1,6031 @@
+{
+  "video": "Dars-Yun-71-11G-23B-Hona-Astranomiya-2-soat.mp4",
+  "camera_id": 5,
+  "org_id": 32,
+  "accept_threshold": 0.55,
+  "review_threshold": 0.42,
+  "frame_skip": 90,
+  "fps": 29.66,
+  "total_video_frames": 95400,
+  "duration_sec": 3216.0,
+  "with_skud": false,
+  "started_at": "2026-05-16T09:35:40.826504+00:00",
+  "frames_processed": 30,
+  "recognized": [
+    {
+      "frame": 90,
+      "video_ts": 3.03,
+      "status": "recorded_and_locked",
+      "pinfl": "52608080005002",
+      "full_name": "YULDASHEV MEHRIDDIN OYBEK O‘G‘LI",
+      "similarity": 0.5523,
+      "bbox": [
+        1045,
+        405,
+        1094,
+        456
+      ],
+      "face_size": "49x51"
+    },
+    {
+      "frame": 90,
+      "video_ts": 3.03,
+      "status": "recorded_and_locked",
+      "pinfl": "50103096600019",
+      "full_name": "ZULUNOV DIYOR DILSHODOVICH",
+      "similarity": 0.5918,
+      "bbox": [
+        908,
+        404,
+        959,
+        459
+      ],
+      "face_size": "51x55"
+    },
+    {
+      "frame": 90,
+      "video_ts": 3.03,
+      "status": "recorded_and_locked",
+      "pinfl": "62910086570057",
+      "full_name": "KIRAKOSYAN LILIT SAMVELOVNA",
+      "similarity": 0.5958,
+      "bbox": [
+        494,
+        359,
+        530,
+        401
+      ],
+      "face_size": "36x42"
+    },
+    {
+      "frame": 180,
+      "video_ts": 6.07,
+      "status": "recorded_and_locked",
+      "pinfl": "62810086580015",
+      "full_name": "MORDOVINA POLINA LEONIDOVNA",
+      "similarity": 0.5647,
+      "bbox": [
+        251,
+        489,
+        305,
+        551
+      ],
+      "face_size": "54x62"
+    },
+    {
+      "frame": 360,
+      "video_ts": 12.14,
+      "status": "recorded_and_locked",
+      "pinfl": "62709086600019",
+      "full_name": "PAVLENKO KAROLINA NIKOLAYEVNA",
+      "similarity": 0.5934,
+      "bbox": [
+        1046,
+        465,
+        1106,
+        529
+      ],
+      "face_size": "60x64"
+    },
+    {
+      "frame": 450,
+      "video_ts": 15.17,
+      "status": "recorded_and_locked",
+      "pinfl": "62105086490012",
+      "full_name": "TURSUNYULDASHEVA LAZIZAXON TURSUNPULAT QIZI",
+      "similarity": 0.584,
+      "bbox": [
+        -9,
+        673,
+        78,
+        771
+      ],
+      "face_size": "87x98"
+    },
+    {
+      "frame": 540,
+      "video_ts": 18.2,
+      "status": "recorded_and_locked",
+      "pinfl": "51006085220128",
+      "full_name": "UMIDJONOV NURMUHAMMAD UMIDJONOVICH",
+      "similarity": 0.5563,
+      "bbox": [
+        547,
+        292,
+        584,
+        334
+      ],
+      "face_size": "37x42"
+    },
+    {
+      "frame": 810,
+      "video_ts": 27.31,
+      "status": "recorded_and_locked",
+      "pinfl": "60710086600138",
+      "full_name": "FADEYEVA LEYA ALEKSANDROVNA",
+      "similarity": 0.579,
+      "bbox": [
+        1037,
+        278,
+        1070,
+        318
+      ],
+      "face_size": "33x40"
+    },
+    {
+      "frame": 1080,
+      "video_ts": 36.41,
+      "status": "recorded_and_locked",
+      "pinfl": "61112086600016",
+      "full_name": "AFANASEVA MARIYA DMITRIYEVNA",
+      "similarity": 0.6157,
+      "bbox": [
+        894,
+        489,
+        954,
+        557
+      ],
+      "face_size": "60x68"
+    },
+    {
+      "frame": 1080,
+      "video_ts": 36.41,
+      "status": "recorded_and_locked",
+      "pinfl": "52001096600032",
+      "full_name": "MIRMAXMUDOV MIRZIYOD ZOHIDJON O‘G‘LI",
+      "similarity": 0.5778,
+      "bbox": [
+        211,
+        409,
+        262,
+        468
+      ],
+      "face_size": "51x59"
+    },
+    {
+      "frame": 2430,
+      "video_ts": 81.92,
+      "status": "recorded_and_locked",
+      "pinfl": "60905096600027",
+      "full_name": "INAGAMOVA ZULFIYA SHARAFIDDIN QIZI",
+      "similarity": 0.5558,
+      "bbox": [
+        1472,
+        319,
+        1506,
+        359
+      ],
+      "face_size": "34x40"
+    }
+  ],
+  "reviewed": [
+    {
+      "frame": 90,
+      "video_ts": 3.03,
+      "status": "review_recorded",
+      "pinfl": "62810086580015",
+      "full_name": "MORDOVINA POLINA LEONIDOVNA",
+      "similarity": 0.5218,
+      "bbox": [
+        204,
+        506,
+        266,
+        573
+      ],
+      "face_size": "62x67"
+    },
+    {
+      "frame": 90,
+      "video_ts": 3.03,
+      "status": "review_recorded",
+      "pinfl": "60105086600022",
+      "full_name": "GAZIYEVA YASMINA DILSHODOVNA",
+      "similarity": 0.4928,
+      "bbox": [
+        1004,
+        365,
+        1042,
+        416
+      ],
+      "face_size": "38x51"
+    },
+    {
+      "frame": 90,
+      "video_ts": 3.03,
+      "status": "review_recorded",
+      "pinfl": "60905096600027",
+      "full_name": "INAGAMOVA ZULFIYA SHARAFIDDIN QIZI",
+      "similarity": 0.5254,
+      "bbox": [
+        1484,
+        312,
+        1516,
+        351
+      ],
+      "face_size": "32x39"
+    },
+    {
+      "frame": 180,
+      "video_ts": 6.07,
+      "status": "review_recorded",
+      "pinfl": "62709086600019",
+      "full_name": "PAVLENKO KAROLINA NIKOLAYEVNA",
+      "similarity": 0.4526,
+      "bbox": [
+        1038,
+        501,
+        1099,
+        559
+      ],
+      "face_size": "61x58"
+    },
+    {
+      "frame": 180,
+      "video_ts": 6.07,
+      "status": "review_updated",
+      "pinfl": "60105086600022",
+      "full_name": "GAZIYEVA YASMINA DILSHODOVNA",
+      "similarity": 0.5496,
+      "bbox": [
+        1014,
+        376,
+        1054,
+        420
+      ],
+      "face_size": "40x44"
+    },
+    {
+      "frame": 270,
+      "video_ts": 9.1,
+      "status": "review_updated",
+      "pinfl": "62709086600019",
+      "full_name": "PAVLENKO KAROLINA NIKOLAYEVNA",
+      "similarity": 0.458,
+      "bbox": [
+        1033,
+        503,
+        1094,
+        560
+      ],
+      "face_size": "61x57"
+    },
+    {
+      "frame": 270,
+      "video_ts": 9.1,
+      "status": "review_recorded",
+      "pinfl": "60801096600017",
+      "full_name": "SALIXOVA SAFINA NODIROVNA",
+      "similarity": 0.4268,
+      "bbox": [
+        1125,
+        292,
+        1157,
+        327
+      ],
+      "face_size": "32x35"
+    },
+    {
+      "frame": 360,
+      "video_ts": 12.14,
+      "status": "review_recorded",
+      "pinfl": "62512086600013",
+      "full_name": "AVAKOVA AREVIK EDUARDOVNA",
+      "similarity": 0.4498,
+      "bbox": [
+        35,
+        509,
+        90,
+        568
+      ],
+      "face_size": "55x59"
+    },
+    {
+      "frame": 360,
+      "video_ts": 12.14,
+      "status": "review_recorded",
+      "pinfl": "62105086490012",
+      "full_name": "TURSUNYULDASHEVA LAZIZAXON TURSUNPULAT QIZI",
+      "similarity": 0.5306,
+      "bbox": [
+        1,
+        663,
+        85,
+        751
+      ],
+      "face_size": "84x88"
+    },
+    {
+      "frame": 360,
+      "video_ts": 12.14,
+      "status": "review_recorded",
+      "pinfl": "51408096600041",
+      "full_name": "NURMUXAMEDOV ABDUMALIK SHUXRATOVICH",
+      "similarity": 0.5222,
+      "bbox": [
+        328,
+        358,
+        368,
+        399
+      ],
+      "face_size": "40x41"
+    },
+    {
+      "frame": 360,
+      "video_ts": 12.14,
+      "status": "review_recorded",
+      "pinfl": "52001096600032",
+      "full_name": "MIRMAXMUDOV MIRZIYOD ZOHIDJON O‘G‘LI",
+      "similarity": 0.4234,
+      "bbox": [
+        211,
+        440,
+        259,
+        482
+      ],
+      "face_size": "48x42"
+    },
+    {
+      "frame": 450,
+      "video_ts": 15.17,
+      "status": "review_recorded",
+      "pinfl": "61112086600016",
+      "full_name": "AFANASEVA MARIYA DMITRIYEVNA",
+      "similarity": 0.5179,
+      "bbox": [
+        865,
+        503,
+        925,
+        568
+      ],
+      "face_size": "60x65"
+    },
+    {
+      "frame": 630,
+      "video_ts": 21.24,
+      "status": "review_recorded",
+      "pinfl": "61108086600031",
+      "full_name": "MAMUROVA E’ZOZAXON SARVARBEKOVNA",
+      "similarity": 0.5055,
+      "bbox": [
+        892,
+        326,
+        922,
+        364
+      ],
+      "face_size": "30x38"
+    },
+    {
+      "frame": 630,
+      "video_ts": 21.24,
+      "status": "review_updated",
+      "pinfl": "60905096600027",
+      "full_name": "INAGAMOVA ZULFIYA SHARAFIDDIN QIZI",
+      "similarity": 0.5305,
+      "bbox": [
+        1469,
+        310,
+        1502,
+        351
+      ],
+      "face_size": "33x41"
+    },
+    {
+      "frame": 720,
+      "video_ts": 24.27,
+      "status": "review_updated",
+      "pinfl": "60801096600017",
+      "full_name": "SALIXOVA SAFINA NODIROVNA",
+      "similarity": 0.4804,
+      "bbox": [
+        1136,
+        278,
+        1167,
+        315
+      ],
+      "face_size": "31x37"
+    },
+    {
+      "frame": 900,
+      "video_ts": 30.34,
+      "status": "review_updated",
+      "pinfl": "60905096600027",
+      "full_name": "INAGAMOVA ZULFIYA SHARAFIDDIN QIZI",
+      "similarity": 0.5356,
+      "bbox": [
+        1475,
+        320,
+        1509,
+        360
+      ],
+      "face_size": "34x40"
+    },
+    {
+      "frame": 1170,
+      "video_ts": 39.44,
+      "status": "review_updated",
+      "pinfl": "60905096600027",
+      "full_name": "INAGAMOVA ZULFIYA SHARAFIDDIN QIZI",
+      "similarity": 0.5465,
+      "bbox": [
+        1479,
+        333,
+        1512,
+        367
+      ],
+      "face_size": "33x34"
+    },
+    {
+      "frame": 1530,
+      "video_ts": 51.58,
+      "status": "review_recorded",
+      "pinfl": "52001096600032",
+      "full_name": "MIRMAXMUDOV MIRZIYOD ZOHIDJON O‘G‘LI",
+      "similarity": 0.4803,
+      "bbox": [
+        226,
+        409,
+        275,
+        459
+      ],
+      "face_size": "49x50"
+    },
+    {
+      "frame": 1530,
+      "video_ts": 51.58,
+      "status": "review_updated",
+      "pinfl": "62512086600013",
+      "full_name": "AVAKOVA AREVIK EDUARDOVNA",
+      "similarity": 0.5393,
+      "bbox": [
+        29,
+        524,
+        85,
+        582
+      ],
+      "face_size": "56x58"
+    },
+    {
+      "frame": 1530,
+      "video_ts": 51.58,
+      "status": "review_recorded",
+      "pinfl": "52608080005002",
+      "full_name": "YULDASHEV MEHRIDDIN OYBEK O‘G‘LI",
+      "similarity": 0.4787,
+      "bbox": [
+        1123,
+        430,
+        1170,
+        472
+      ],
+      "face_size": "47x42"
+    },
+    {
+      "frame": 1890,
+      "video_ts": 63.71,
+      "status": "review_recorded",
+      "pinfl": "60108096600105",
+      "full_name": "YUSUFJONOVA MAHFUZA ODILBEKOVNA",
+      "similarity": 0.4743,
+      "bbox": [
+        1554,
+        331,
+        1592,
+        378
+      ],
+      "face_size": "38x47"
+    },
+    {
+      "frame": 1980,
+      "video_ts": 66.75,
+      "status": "review_updated",
+      "pinfl": "60905096600027",
+      "full_name": "INAGAMOVA ZULFIYA SHARAFIDDIN QIZI",
+      "similarity": 0.5498,
+      "bbox": [
+        1472,
+        318,
+        1505,
+        359
+      ],
+      "face_size": "33x41"
+    },
+    {
+      "frame": 2160,
+      "video_ts": 72.82,
+      "status": "review_recorded",
+      "pinfl": "62910086570057",
+      "full_name": "KIRAKOSYAN LILIT SAMVELOVNA",
+      "similarity": 0.5068,
+      "bbox": [
+        511,
+        387,
+        552,
+        431
+      ],
+      "face_size": "41x44"
+    },
+    {
+      "frame": 2700,
+      "video_ts": 91.02,
+      "status": "review_updated",
+      "pinfl": "61108086600031",
+      "full_name": "MAMUROVA E’ZOZAXON SARVARBEKOVNA",
+      "similarity": 0.5477,
+      "bbox": [
+        880,
+        314,
+        912,
+        354
+      ],
+      "face_size": "32x40"
+    }
+  ],
+  "all_events": [
+    {
+      "frame": 90,
+      "video_ts": 3.03,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        903,
+        525,
+        958,
+        582
+      ],
+      "face_size": "55x57"
+    },
+    {
+      "frame": 90,
+      "video_ts": 3.03,
+      "status": "review_recorded",
+      "pinfl": "62810086580015",
+      "full_name": "MORDOVINA POLINA LEONIDOVNA",
+      "similarity": 0.5218,
+      "bbox": [
+        204,
+        506,
+        266,
+        573
+      ],
+      "face_size": "62x67"
+    },
+    {
+      "frame": 90,
+      "video_ts": 3.03,
+      "status": "recorded_and_locked",
+      "pinfl": "52608080005002",
+      "full_name": "YULDASHEV MEHRIDDIN OYBEK O‘G‘LI",
+      "similarity": 0.5523,
+      "bbox": [
+        1045,
+        405,
+        1094,
+        456
+      ],
+      "face_size": "49x51"
+    },
+    {
+      "frame": 90,
+      "video_ts": 3.03,
+      "status": "recorded_and_locked",
+      "pinfl": "50103096600019",
+      "full_name": "ZULUNOV DIYOR DILSHODOVICH",
+      "similarity": 0.5918,
+      "bbox": [
+        908,
+        404,
+        959,
+        459
+      ],
+      "face_size": "51x55"
+    },
+    {
+      "frame": 90,
+      "video_ts": 3.03,
+      "status": "rejected",
+      "pinfl": "60710086600138",
+      "full_name": "FADEYEVA LEYA ALEKSANDROVNA",
+      "similarity": 0.4129,
+      "bbox": [
+        1042,
+        278,
+        1073,
+        316
+      ],
+      "face_size": "31x38"
+    },
+    {
+      "frame": 90,
+      "video_ts": 3.03,
+      "status": "rejected",
+      "pinfl": "62709086600019",
+      "full_name": "PAVLENKO KAROLINA NIKOLAYEVNA",
+      "similarity": 0.3738,
+      "bbox": [
+        1043,
+        511,
+        1101,
+        563
+      ],
+      "face_size": "58x52"
+    },
+    {
+      "frame": 90,
+      "video_ts": 3.03,
+      "status": "recorded_and_locked",
+      "pinfl": "62910086570057",
+      "full_name": "KIRAKOSYAN LILIT SAMVELOVNA",
+      "similarity": 0.5958,
+      "bbox": [
+        494,
+        359,
+        530,
+        401
+      ],
+      "face_size": "36x42"
+    },
+    {
+      "frame": 90,
+      "video_ts": 3.03,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        521,
+        313,
+        558,
+        356
+      ],
+      "face_size": "37x43"
+    },
+    {
+      "frame": 90,
+      "video_ts": 3.03,
+      "status": "rejected",
+      "pinfl": "60801096600017",
+      "full_name": "SALIXOVA SAFINA NODIROVNA",
+      "similarity": 0.4002,
+      "bbox": [
+        1126,
+        258,
+        1157,
+        296
+      ],
+      "face_size": "31x38"
+    },
+    {
+      "frame": 90,
+      "video_ts": 3.03,
+      "status": "rejected",
+      "pinfl": "62512086600013",
+      "full_name": "AVAKOVA AREVIK EDUARDOVNA",
+      "similarity": 0.2544,
+      "bbox": [
+        25,
+        553,
+        83,
+        614
+      ],
+      "face_size": "58x61"
+    },
+    {
+      "frame": 90,
+      "video_ts": 3.03,
+      "status": "skipped_too_small",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        362,
+        346,
+        390,
+        389
+      ],
+      "face_size": "28x43"
+    },
+    {
+      "frame": 90,
+      "video_ts": 3.03,
+      "status": "review_recorded",
+      "pinfl": "60105086600022",
+      "full_name": "GAZIYEVA YASMINA DILSHODOVNA",
+      "similarity": 0.4928,
+      "bbox": [
+        1004,
+        365,
+        1042,
+        416
+      ],
+      "face_size": "38x51"
+    },
+    {
+      "frame": 90,
+      "video_ts": 3.03,
+      "status": "review_recorded",
+      "pinfl": "60905096600027",
+      "full_name": "INAGAMOVA ZULFIYA SHARAFIDDIN QIZI",
+      "similarity": 0.5254,
+      "bbox": [
+        1484,
+        312,
+        1516,
+        351
+      ],
+      "face_size": "32x39"
+    },
+    {
+      "frame": 90,
+      "video_ts": 3.03,
+      "status": "skipped_too_small",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        978,
+        334,
+        1005,
+        373
+      ],
+      "face_size": "27x39"
+    },
+    {
+      "frame": 180,
+      "video_ts": 6.07,
+      "status": "review_recorded",
+      "pinfl": "62709086600019",
+      "full_name": "PAVLENKO KAROLINA NIKOLAYEVNA",
+      "similarity": 0.4526,
+      "bbox": [
+        1038,
+        501,
+        1099,
+        559
+      ],
+      "face_size": "61x58"
+    },
+    {
+      "frame": 180,
+      "video_ts": 6.07,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1079,
+        397,
+        1133,
+        455
+      ],
+      "face_size": "54x58"
+    },
+    {
+      "frame": 180,
+      "video_ts": 6.07,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        924,
+        406,
+        974,
+        462
+      ],
+      "face_size": "50x56"
+    },
+    {
+      "frame": 180,
+      "video_ts": 6.07,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        533,
+        302,
+        569,
+        345
+      ],
+      "face_size": "36x43"
+    },
+    {
+      "frame": 180,
+      "video_ts": 6.07,
+      "status": "review_updated",
+      "pinfl": "60105086600022",
+      "full_name": "GAZIYEVA YASMINA DILSHODOVNA",
+      "similarity": 0.5496,
+      "bbox": [
+        1014,
+        376,
+        1054,
+        420
+      ],
+      "face_size": "40x44"
+    },
+    {
+      "frame": 180,
+      "video_ts": 6.07,
+      "status": "recorded_and_locked",
+      "pinfl": "62810086580015",
+      "full_name": "MORDOVINA POLINA LEONIDOVNA",
+      "similarity": 0.5647,
+      "bbox": [
+        251,
+        489,
+        305,
+        551
+      ],
+      "face_size": "54x62"
+    },
+    {
+      "frame": 180,
+      "video_ts": 6.07,
+      "status": "rejected",
+      "pinfl": "62512086600013",
+      "full_name": "AVAKOVA AREVIK EDUARDOVNA",
+      "similarity": 0.3322,
+      "bbox": [
+        21,
+        535,
+        79,
+        595
+      ],
+      "face_size": "58x60"
+    },
+    {
+      "frame": 180,
+      "video_ts": 6.07,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        471,
+        370,
+        510,
+        411
+      ],
+      "face_size": "39x41"
+    },
+    {
+      "frame": 180,
+      "video_ts": 6.07,
+      "status": "rejected",
+      "pinfl": "61112086600016",
+      "full_name": "AFANASEVA MARIYA DMITRIYEVNA",
+      "similarity": 0.2964,
+      "bbox": [
+        879,
+        526,
+        934,
+        584
+      ],
+      "face_size": "55x58"
+    },
+    {
+      "frame": 180,
+      "video_ts": 6.07,
+      "status": "rejected",
+      "pinfl": "51408096600041",
+      "full_name": "NURMUXAMEDOV ABDUMALIK SHUXRATOVICH",
+      "similarity": 0.2381,
+      "bbox": [
+        366,
+        340,
+        396,
+        382
+      ],
+      "face_size": "30x42"
+    },
+    {
+      "frame": 180,
+      "video_ts": 6.07,
+      "status": "skipped_too_small",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1044,
+        294,
+        1073,
+        328
+      ],
+      "face_size": "29x34"
+    },
+    {
+      "frame": 180,
+      "video_ts": 6.07,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1483,
+        339,
+        1516,
+        374
+      ],
+      "face_size": "33x35"
+    },
+    {
+      "frame": 180,
+      "video_ts": 6.07,
+      "status": "skipped_too_small",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        979,
+        335,
+        1007,
+        373
+      ],
+      "face_size": "28x38"
+    },
+    {
+      "frame": 270,
+      "video_ts": 9.1,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        244,
+        507,
+        303,
+        571
+      ],
+      "face_size": "59x64"
+    },
+    {
+      "frame": 270,
+      "video_ts": 9.1,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        321,
+        359,
+        363,
+        401
+      ],
+      "face_size": "42x42"
+    },
+    {
+      "frame": 270,
+      "video_ts": 9.1,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        533,
+        302,
+        569,
+        345
+      ],
+      "face_size": "36x43"
+    },
+    {
+      "frame": 270,
+      "video_ts": 9.1,
+      "status": "review_updated",
+      "pinfl": "62709086600019",
+      "full_name": "PAVLENKO KAROLINA NIKOLAYEVNA",
+      "similarity": 0.458,
+      "bbox": [
+        1033,
+        503,
+        1094,
+        560
+      ],
+      "face_size": "61x57"
+    },
+    {
+      "frame": 270,
+      "video_ts": 9.1,
+      "status": "review_exists",
+      "pinfl": "60105086600022",
+      "full_name": "GAZIYEVA YASMINA DILSHODOVNA",
+      "similarity": 0.5448,
+      "bbox": [
+        1018,
+        360,
+        1054,
+        406
+      ],
+      "face_size": "36x46"
+    },
+    {
+      "frame": 270,
+      "video_ts": 9.1,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        478,
+        370,
+        517,
+        413
+      ],
+      "face_size": "39x43"
+    },
+    {
+      "frame": 270,
+      "video_ts": 9.1,
+      "status": "rejected",
+      "pinfl": "62512086600013",
+      "full_name": "AVAKOVA AREVIK EDUARDOVNA",
+      "similarity": 0.356,
+      "bbox": [
+        22,
+        538,
+        79,
+        599
+      ],
+      "face_size": "57x61"
+    },
+    {
+      "frame": 270,
+      "video_ts": 9.1,
+      "status": "rejected",
+      "pinfl": "62005096600017",
+      "full_name": "ALIMDJANOVA PARVINA KAMOLOVNA",
+      "similarity": 0.3597,
+      "bbox": [
+        885,
+        537,
+        941,
+        596
+      ],
+      "face_size": "56x59"
+    },
+    {
+      "frame": 270,
+      "video_ts": 9.1,
+      "status": "review_recorded",
+      "pinfl": "60801096600017",
+      "full_name": "SALIXOVA SAFINA NODIROVNA",
+      "similarity": 0.4268,
+      "bbox": [
+        1125,
+        292,
+        1157,
+        327
+      ],
+      "face_size": "32x35"
+    },
+    {
+      "frame": 270,
+      "video_ts": 9.1,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1481,
+        342,
+        1515,
+        377
+      ],
+      "face_size": "34x35"
+    },
+    {
+      "frame": 270,
+      "video_ts": 9.1,
+      "status": "skipped_too_small",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1060,
+        293,
+        1088,
+        329
+      ],
+      "face_size": "28x36"
+    },
+    {
+      "frame": 270,
+      "video_ts": 9.1,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        879,
+        456,
+        931,
+        500
+      ],
+      "face_size": "52x44"
+    },
+    {
+      "frame": 360,
+      "video_ts": 12.14,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        252,
+        504,
+        310,
+        570
+      ],
+      "face_size": "58x66"
+    },
+    {
+      "frame": 360,
+      "video_ts": 12.14,
+      "status": "recorded_and_locked",
+      "pinfl": "62709086600019",
+      "full_name": "PAVLENKO KAROLINA NIKOLAYEVNA",
+      "similarity": 0.5934,
+      "bbox": [
+        1046,
+        465,
+        1106,
+        529
+      ],
+      "face_size": "60x64"
+    },
+    {
+      "frame": 360,
+      "video_ts": 12.14,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        882,
+        429,
+        933,
+        485
+      ],
+      "face_size": "51x56"
+    },
+    {
+      "frame": 360,
+      "video_ts": 12.14,
+      "status": "review_recorded",
+      "pinfl": "62512086600013",
+      "full_name": "AVAKOVA AREVIK EDUARDOVNA",
+      "similarity": 0.4498,
+      "bbox": [
+        35,
+        509,
+        90,
+        568
+      ],
+      "face_size": "55x59"
+    },
+    {
+      "frame": 360,
+      "video_ts": 12.14,
+      "status": "review_recorded",
+      "pinfl": "62105086490012",
+      "full_name": "TURSUNYULDASHEVA LAZIZAXON TURSUNPULAT QIZI",
+      "similarity": 0.5306,
+      "bbox": [
+        1,
+        663,
+        85,
+        751
+      ],
+      "face_size": "84x88"
+    },
+    {
+      "frame": 360,
+      "video_ts": 12.14,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        533,
+        300,
+        570,
+        345
+      ],
+      "face_size": "37x45"
+    },
+    {
+      "frame": 360,
+      "video_ts": 12.14,
+      "status": "review_recorded",
+      "pinfl": "51408096600041",
+      "full_name": "NURMUXAMEDOV ABDUMALIK SHUXRATOVICH",
+      "similarity": 0.5222,
+      "bbox": [
+        328,
+        358,
+        368,
+        399
+      ],
+      "face_size": "40x41"
+    },
+    {
+      "frame": 360,
+      "video_ts": 12.14,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1024,
+        399,
+        1065,
+        445
+      ],
+      "face_size": "41x46"
+    },
+    {
+      "frame": 360,
+      "video_ts": 12.14,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1138,
+        267,
+        1169,
+        305
+      ],
+      "face_size": "31x38"
+    },
+    {
+      "frame": 360,
+      "video_ts": 12.14,
+      "status": "skipped_too_small",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1038,
+        289,
+        1067,
+        323
+      ],
+      "face_size": "29x34"
+    },
+    {
+      "frame": 360,
+      "video_ts": 12.14,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        878,
+        527,
+        936,
+        587
+      ],
+      "face_size": "58x60"
+    },
+    {
+      "frame": 360,
+      "video_ts": 12.14,
+      "status": "review_recorded",
+      "pinfl": "52001096600032",
+      "full_name": "MIRMAXMUDOV MIRZIYOD ZOHIDJON O‘G‘LI",
+      "similarity": 0.4234,
+      "bbox": [
+        211,
+        440,
+        259,
+        482
+      ],
+      "face_size": "48x42"
+    },
+    {
+      "frame": 360,
+      "video_ts": 12.14,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1481,
+        346,
+        1518,
+        383
+      ],
+      "face_size": "37x37"
+    },
+    {
+      "frame": 360,
+      "video_ts": 12.14,
+      "status": "rejected",
+      "pinfl": "62511086580015",
+      "full_name": "BAHTIYOROVA DILNURA MIRODIL QIZI",
+      "similarity": 0.3057,
+      "bbox": [
+        987,
+        322,
+        1017,
+        364
+      ],
+      "face_size": "30x42"
+    },
+    {
+      "frame": 450,
+      "video_ts": 15.17,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1049,
+        469,
+        1106,
+        534
+      ],
+      "face_size": "57x65"
+    },
+    {
+      "frame": 450,
+      "video_ts": 15.17,
+      "status": "recorded_and_locked",
+      "pinfl": "62105086490012",
+      "full_name": "TURSUNYULDASHEVA LAZIZAXON TURSUNPULAT QIZI",
+      "similarity": 0.584,
+      "bbox": [
+        -9,
+        673,
+        78,
+        771
+      ],
+      "face_size": "87x98"
+    },
+    {
+      "frame": 450,
+      "video_ts": 15.17,
+      "status": "review_recorded",
+      "pinfl": "61112086600016",
+      "full_name": "AFANASEVA MARIYA DMITRIYEVNA",
+      "similarity": 0.5179,
+      "bbox": [
+        865,
+        503,
+        925,
+        568
+      ],
+      "face_size": "60x65"
+    },
+    {
+      "frame": 450,
+      "video_ts": 15.17,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        251,
+        511,
+        309,
+        575
+      ],
+      "face_size": "58x64"
+    },
+    {
+      "frame": 450,
+      "video_ts": 15.17,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        42,
+        521,
+        99,
+        579
+      ],
+      "face_size": "57x58"
+    },
+    {
+      "frame": 450,
+      "video_ts": 15.17,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        879,
+        427,
+        927,
+        473
+      ],
+      "face_size": "48x46"
+    },
+    {
+      "frame": 450,
+      "video_ts": 15.17,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        360,
+        342,
+        398,
+        384
+      ],
+      "face_size": "38x42"
+    },
+    {
+      "frame": 450,
+      "video_ts": 15.17,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        475,
+        356,
+        513,
+        402
+      ],
+      "face_size": "38x46"
+    },
+    {
+      "frame": 450,
+      "video_ts": 15.17,
+      "status": "rejected",
+      "pinfl": "60801096600017",
+      "full_name": "SALIXOVA SAFINA NODIROVNA",
+      "similarity": 0.345,
+      "bbox": [
+        1133,
+        287,
+        1165,
+        323
+      ],
+      "face_size": "32x36"
+    },
+    {
+      "frame": 450,
+      "video_ts": 15.17,
+      "status": "rejected",
+      "pinfl": "61108086600031",
+      "full_name": "MAMUROVA E’ZOZAXON SARVARBEKOVNA",
+      "similarity": 0.403,
+      "bbox": [
+        887,
+        322,
+        920,
+        360
+      ],
+      "face_size": "33x38"
+    },
+    {
+      "frame": 450,
+      "video_ts": 15.17,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1025,
+        396,
+        1065,
+        441
+      ],
+      "face_size": "40x45"
+    },
+    {
+      "frame": 450,
+      "video_ts": 15.17,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        998,
+        324,
+        1029,
+        367
+      ],
+      "face_size": "31x43"
+    },
+    {
+      "frame": 450,
+      "video_ts": 15.17,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        524,
+        296,
+        558,
+        337
+      ],
+      "face_size": "34x41"
+    },
+    {
+      "frame": 450,
+      "video_ts": 15.17,
+      "status": "rejected",
+      "pinfl": "60107086600011",
+      "full_name": "XAKIMOVA INDIRA NODIROVNA",
+      "similarity": 0.2876,
+      "bbox": [
+        1031,
+        281,
+        1061,
+        315
+      ],
+      "face_size": "30x34"
+    },
+    {
+      "frame": 450,
+      "video_ts": 15.17,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1482,
+        347,
+        1516,
+        384
+      ],
+      "face_size": "34x37"
+    },
+    {
+      "frame": 450,
+      "video_ts": 15.17,
+      "status": "rejected",
+      "pinfl": "62005096600017",
+      "full_name": "ALIMDJANOVA PARVINA KAMOLOVNA",
+      "similarity": 0.3943,
+      "bbox": [
+        213,
+        444,
+        262,
+        485
+      ],
+      "face_size": "49x41"
+    },
+    {
+      "frame": 540,
+      "video_ts": 18.2,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        865,
+        504,
+        924,
+        568
+      ],
+      "face_size": "59x64"
+    },
+    {
+      "frame": 540,
+      "video_ts": 18.2,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        253,
+        513,
+        310,
+        576
+      ],
+      "face_size": "57x63"
+    },
+    {
+      "frame": 540,
+      "video_ts": 18.2,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        3,
+        692,
+        89,
+        764
+      ],
+      "face_size": "86x72"
+    },
+    {
+      "frame": 540,
+      "video_ts": 18.2,
+      "status": "rejected",
+      "pinfl": "62512086600013",
+      "full_name": "AVAKOVA AREVIK EDUARDOVNA",
+      "similarity": 0.3908,
+      "bbox": [
+        44,
+        518,
+        99,
+        577
+      ],
+      "face_size": "55x59"
+    },
+    {
+      "frame": 540,
+      "video_ts": 18.2,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1060,
+        479,
+        1119,
+        544
+      ],
+      "face_size": "59x65"
+    },
+    {
+      "frame": 540,
+      "video_ts": 18.2,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        475,
+        359,
+        514,
+        406
+      ],
+      "face_size": "39x47"
+    },
+    {
+      "frame": 540,
+      "video_ts": 18.2,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        888,
+        323,
+        922,
+        362
+      ],
+      "face_size": "34x39"
+    },
+    {
+      "frame": 540,
+      "video_ts": 18.2,
+      "status": "review_exists",
+      "pinfl": "60905096600027",
+      "full_name": "INAGAMOVA ZULFIYA SHARAFIDDIN QIZI",
+      "similarity": 0.4881,
+      "bbox": [
+        1474,
+        309,
+        1507,
+        350
+      ],
+      "face_size": "33x41"
+    },
+    {
+      "frame": 540,
+      "video_ts": 18.2,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1139,
+        273,
+        1170,
+        312
+      ],
+      "face_size": "31x39"
+    },
+    {
+      "frame": 540,
+      "video_ts": 18.2,
+      "status": "recorded_and_locked",
+      "pinfl": "51006085220128",
+      "full_name": "UMIDJONOV NURMUHAMMAD UMIDJONOVICH",
+      "similarity": 0.5563,
+      "bbox": [
+        547,
+        292,
+        584,
+        334
+      ],
+      "face_size": "37x42"
+    },
+    {
+      "frame": 540,
+      "video_ts": 18.2,
+      "status": "review_exists",
+      "pinfl": "60105086600022",
+      "full_name": "GAZIYEVA YASMINA DILSHODOVNA",
+      "similarity": 0.5167,
+      "bbox": [
+        1026,
+        358,
+        1061,
+        405
+      ],
+      "face_size": "35x47"
+    },
+    {
+      "frame": 540,
+      "video_ts": 18.2,
+      "status": "rejected",
+      "pinfl": "62401086610019",
+      "full_name": "ATNAGULOVA SOFIYA ERIKOVNA",
+      "similarity": 0.3407,
+      "bbox": [
+        999,
+        331,
+        1031,
+        378
+      ],
+      "face_size": "32x47"
+    },
+    {
+      "frame": 540,
+      "video_ts": 18.2,
+      "status": "review_exists",
+      "pinfl": "51408096600041",
+      "full_name": "NURMUXAMEDOV ABDUMALIK SHUXRATOVICH",
+      "similarity": 0.4436,
+      "bbox": [
+        332,
+        366,
+        374,
+        407
+      ],
+      "face_size": "42x41"
+    },
+    {
+      "frame": 540,
+      "video_ts": 18.2,
+      "status": "rejected",
+      "pinfl": "60710086600138",
+      "full_name": "FADEYEVA LEYA ALEKSANDROVNA",
+      "similarity": 0.3433,
+      "bbox": [
+        1042,
+        300,
+        1075,
+        334
+      ],
+      "face_size": "33x34"
+    },
+    {
+      "frame": 540,
+      "video_ts": 18.2,
+      "status": "rejected",
+      "pinfl": "51904096600013",
+      "full_name": "МАЖЛИМОВ ТИМУР ХУСАНОВИЧ",
+      "similarity": 0.2234,
+      "bbox": [
+        218,
+        437,
+        262,
+        481
+      ],
+      "face_size": "44x44"
+    },
+    {
+      "frame": 540,
+      "video_ts": 18.2,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        890,
+        441,
+        936,
+        485
+      ],
+      "face_size": "46x44"
+    },
+    {
+      "frame": 630,
+      "video_ts": 21.24,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        255,
+        524,
+        311,
+        581
+      ],
+      "face_size": "56x57"
+    },
+    {
+      "frame": 630,
+      "video_ts": 21.24,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1030,
+        376,
+        1081,
+        433
+      ],
+      "face_size": "51x57"
+    },
+    {
+      "frame": 630,
+      "video_ts": 21.24,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        891,
+        510,
+        948,
+        574
+      ],
+      "face_size": "57x64"
+    },
+    {
+      "frame": 630,
+      "video_ts": 21.24,
+      "status": "skipped_locked_after_search",
+      "pinfl": "51006085220128",
+      "full_name": "UMIDJONOV NURMUHAMMAD UMIDJONOVICH",
+      "similarity": 0.5994,
+      "bbox": [
+        519,
+        296,
+        554,
+        337
+      ],
+      "face_size": "35x41"
+    },
+    {
+      "frame": 630,
+      "video_ts": 21.24,
+      "status": "review_recorded",
+      "pinfl": "61108086600031",
+      "full_name": "MAMUROVA E’ZOZAXON SARVARBEKOVNA",
+      "similarity": 0.5055,
+      "bbox": [
+        892,
+        326,
+        922,
+        364
+      ],
+      "face_size": "30x38"
+    },
+    {
+      "frame": 630,
+      "video_ts": 21.24,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1064,
+        491,
+        1120,
+        551
+      ],
+      "face_size": "56x60"
+    },
+    {
+      "frame": 630,
+      "video_ts": 21.24,
+      "status": "rejected",
+      "pinfl": "52001096600032",
+      "full_name": "MIRMAXMUDOV MIRZIYOD ZOHIDJON O‘G‘LI",
+      "similarity": 0.4194,
+      "bbox": [
+        206,
+        415,
+        260,
+        470
+      ],
+      "face_size": "54x55"
+    },
+    {
+      "frame": 630,
+      "video_ts": 21.24,
+      "status": "review_updated",
+      "pinfl": "60905096600027",
+      "full_name": "INAGAMOVA ZULFIYA SHARAFIDDIN QIZI",
+      "similarity": 0.5305,
+      "bbox": [
+        1469,
+        310,
+        1502,
+        351
+      ],
+      "face_size": "33x41"
+    },
+    {
+      "frame": 630,
+      "video_ts": 21.24,
+      "status": "rejected",
+      "pinfl": "62512086600013",
+      "full_name": "AVAKOVA AREVIK EDUARDOVNA",
+      "similarity": 0.2745,
+      "bbox": [
+        28,
+        555,
+        82,
+        608
+      ],
+      "face_size": "54x53"
+    },
+    {
+      "frame": 630,
+      "video_ts": 21.24,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1042,
+        289,
+        1072,
+        324
+      ],
+      "face_size": "30x35"
+    },
+    {
+      "frame": 630,
+      "video_ts": 21.24,
+      "status": "review_exists",
+      "pinfl": "51408096600041",
+      "full_name": "NURMUXAMEDOV ABDUMALIK SHUXRATOVICH",
+      "similarity": 0.4692,
+      "bbox": [
+        314,
+        362,
+        353,
+        400
+      ],
+      "face_size": "39x38"
+    },
+    {
+      "frame": 630,
+      "video_ts": 21.24,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        474,
+        391,
+        512,
+        427
+      ],
+      "face_size": "38x36"
+    },
+    {
+      "frame": 630,
+      "video_ts": 21.24,
+      "status": "skipped_too_small",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1121,
+        292,
+        1150,
+        328
+      ],
+      "face_size": "29x36"
+    },
+    {
+      "frame": 630,
+      "video_ts": 21.24,
+      "status": "skipped_too_small",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        975,
+        317,
+        1004,
+        358
+      ],
+      "face_size": "29x41"
+    },
+    {
+      "frame": 720,
+      "video_ts": 24.27,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        243,
+        522,
+        303,
+        582
+      ],
+      "face_size": "60x60"
+    },
+    {
+      "frame": 720,
+      "video_ts": 24.27,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1043,
+        405,
+        1091,
+        459
+      ],
+      "face_size": "48x54"
+    },
+    {
+      "frame": 720,
+      "video_ts": 24.27,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1037,
+        282,
+        1070,
+        322
+      ],
+      "face_size": "33x40"
+    },
+    {
+      "frame": 720,
+      "video_ts": 24.27,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        892,
+        510,
+        948,
+        572
+      ],
+      "face_size": "56x62"
+    },
+    {
+      "frame": 720,
+      "video_ts": 24.27,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        874,
+        413,
+        924,
+        465
+      ],
+      "face_size": "50x52"
+    },
+    {
+      "frame": 720,
+      "video_ts": 24.27,
+      "status": "review_updated",
+      "pinfl": "60801096600017",
+      "full_name": "SALIXOVA SAFINA NODIROVNA",
+      "similarity": 0.4804,
+      "bbox": [
+        1136,
+        278,
+        1167,
+        315
+      ],
+      "face_size": "31x37"
+    },
+    {
+      "frame": 720,
+      "video_ts": 24.27,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        530,
+        322,
+        567,
+        365
+      ],
+      "face_size": "37x43"
+    },
+    {
+      "frame": 720,
+      "video_ts": 24.27,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1044,
+        515,
+        1101,
+        567
+      ],
+      "face_size": "57x52"
+    },
+    {
+      "frame": 720,
+      "video_ts": 24.27,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1467,
+        315,
+        1500,
+        354
+      ],
+      "face_size": "33x39"
+    },
+    {
+      "frame": 720,
+      "video_ts": 24.27,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        -7,
+        703,
+        75,
+        781
+      ],
+      "face_size": "82x78"
+    },
+    {
+      "frame": 720,
+      "video_ts": 24.27,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        29,
+        563,
+        84,
+        615
+      ],
+      "face_size": "55x52"
+    },
+    {
+      "frame": 720,
+      "video_ts": 24.27,
+      "status": "review_exists",
+      "pinfl": "51408096600041",
+      "full_name": "NURMUXAMEDOV ABDUMALIK SHUXRATOVICH",
+      "similarity": 0.4756,
+      "bbox": [
+        318,
+        364,
+        356,
+        404
+      ],
+      "face_size": "38x40"
+    },
+    {
+      "frame": 720,
+      "video_ts": 24.27,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        210,
+        424,
+        257,
+        467
+      ],
+      "face_size": "47x43"
+    },
+    {
+      "frame": 720,
+      "video_ts": 24.27,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        882,
+        334,
+        913,
+        367
+      ],
+      "face_size": "31x33"
+    },
+    {
+      "frame": 720,
+      "video_ts": 24.27,
+      "status": "rejected",
+      "pinfl": "60105086600022",
+      "full_name": "GAZIYEVA YASMINA DILSHODOVNA",
+      "similarity": 0.3736,
+      "bbox": [
+        1016,
+        399,
+        1046,
+        440
+      ],
+      "face_size": "30x41"
+    },
+    {
+      "frame": 810,
+      "video_ts": 27.31,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        887,
+        415,
+        938,
+        468
+      ],
+      "face_size": "51x53"
+    },
+    {
+      "frame": 810,
+      "video_ts": 27.31,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        17,
+        648,
+        96,
+        731
+      ],
+      "face_size": "79x83"
+    },
+    {
+      "frame": 810,
+      "video_ts": 27.31,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        472,
+        351,
+        512,
+        399
+      ],
+      "face_size": "40x48"
+    },
+    {
+      "frame": 810,
+      "video_ts": 27.31,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1057,
+        400,
+        1106,
+        455
+      ],
+      "face_size": "49x55"
+    },
+    {
+      "frame": 810,
+      "video_ts": 27.31,
+      "status": "recorded_and_locked",
+      "pinfl": "60710086600138",
+      "full_name": "FADEYEVA LEYA ALEKSANDROVNA",
+      "similarity": 0.579,
+      "bbox": [
+        1037,
+        278,
+        1070,
+        318
+      ],
+      "face_size": "33x40"
+    },
+    {
+      "frame": 810,
+      "video_ts": 27.31,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        918,
+        540,
+        970,
+        593
+      ],
+      "face_size": "52x53"
+    },
+    {
+      "frame": 810,
+      "video_ts": 27.31,
+      "status": "review_exists",
+      "pinfl": "60905096600027",
+      "full_name": "INAGAMOVA ZULFIYA SHARAFIDDIN QIZI",
+      "similarity": 0.5141,
+      "bbox": [
+        1467,
+        313,
+        1500,
+        353
+      ],
+      "face_size": "33x40"
+    },
+    {
+      "frame": 810,
+      "video_ts": 27.31,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1144,
+        278,
+        1176,
+        316
+      ],
+      "face_size": "32x38"
+    },
+    {
+      "frame": 810,
+      "video_ts": 27.31,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        237,
+        561,
+        298,
+        615
+      ],
+      "face_size": "61x54"
+    },
+    {
+      "frame": 810,
+      "video_ts": 27.31,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        547,
+        310,
+        581,
+        353
+      ],
+      "face_size": "34x43"
+    },
+    {
+      "frame": 810,
+      "video_ts": 27.31,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1037,
+        511,
+        1097,
+        567
+      ],
+      "face_size": "60x56"
+    },
+    {
+      "frame": 810,
+      "video_ts": 27.31,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1018,
+        401,
+        1049,
+        440
+      ],
+      "face_size": "31x39"
+    },
+    {
+      "frame": 810,
+      "video_ts": 27.31,
+      "status": "rejected",
+      "pinfl": "51712086600022",
+      "full_name": "OSPANOV BOTIR ROMANOVICH",
+      "similarity": 0.3075,
+      "bbox": [
+        881,
+        337,
+        911,
+        369
+      ],
+      "face_size": "30x32"
+    },
+    {
+      "frame": 810,
+      "video_ts": 27.31,
+      "status": "rejected",
+      "pinfl": "62005096600017",
+      "full_name": "ALIMDJANOVA PARVINA KAMOLOVNA",
+      "similarity": 0.3658,
+      "bbox": [
+        214,
+        408,
+        258,
+        453
+      ],
+      "face_size": "44x45"
+    },
+    {
+      "frame": 900,
+      "video_ts": 30.34,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        17,
+        626,
+        101,
+        718
+      ],
+      "face_size": "84x92"
+    },
+    {
+      "frame": 900,
+      "video_ts": 30.34,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        242,
+        521,
+        303,
+        590
+      ],
+      "face_size": "61x69"
+    },
+    {
+      "frame": 900,
+      "video_ts": 30.34,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1090,
+        409,
+        1144,
+        466
+      ],
+      "face_size": "54x57"
+    },
+    {
+      "frame": 900,
+      "video_ts": 30.34,
+      "status": "skipped_locked_after_search",
+      "pinfl": "50103096600019",
+      "full_name": "ZULUNOV DIYOR DILSHODOVICH",
+      "similarity": 0.5671,
+      "bbox": [
+        846,
+        403,
+        897,
+        461
+      ],
+      "face_size": "51x58"
+    },
+    {
+      "frame": 900,
+      "video_ts": 30.34,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        470,
+        356,
+        510,
+        405
+      ],
+      "face_size": "40x49"
+    },
+    {
+      "frame": 900,
+      "video_ts": 30.34,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1037,
+        279,
+        1070,
+        319
+      ],
+      "face_size": "33x40"
+    },
+    {
+      "frame": 900,
+      "video_ts": 30.34,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        890,
+        318,
+        922,
+        358
+      ],
+      "face_size": "32x40"
+    },
+    {
+      "frame": 900,
+      "video_ts": 30.34,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        528,
+        308,
+        565,
+        352
+      ],
+      "face_size": "37x44"
+    },
+    {
+      "frame": 900,
+      "video_ts": 30.34,
+      "status": "review_updated",
+      "pinfl": "60905096600027",
+      "full_name": "INAGAMOVA ZULFIYA SHARAFIDDIN QIZI",
+      "similarity": 0.5356,
+      "bbox": [
+        1475,
+        320,
+        1509,
+        360
+      ],
+      "face_size": "34x40"
+    },
+    {
+      "frame": 900,
+      "video_ts": 30.34,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        915,
+        539,
+        968,
+        591
+      ],
+      "face_size": "53x52"
+    },
+    {
+      "frame": 900,
+      "video_ts": 30.34,
+      "status": "review_exists",
+      "pinfl": "60105086600022",
+      "full_name": "GAZIYEVA YASMINA DILSHODOVNA",
+      "similarity": 0.4255,
+      "bbox": [
+        1017,
+        397,
+        1056,
+        438
+      ],
+      "face_size": "39x41"
+    },
+    {
+      "frame": 900,
+      "video_ts": 30.34,
+      "status": "rejected",
+      "pinfl": "60801096600017",
+      "full_name": "SALIXOVA SAFINA NODIROVNA",
+      "similarity": 0.3815,
+      "bbox": [
+        1142,
+        290,
+        1173,
+        327
+      ],
+      "face_size": "31x37"
+    },
+    {
+      "frame": 900,
+      "video_ts": 30.34,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        206,
+        408,
+        252,
+        455
+      ],
+      "face_size": "46x47"
+    },
+    {
+      "frame": 900,
+      "video_ts": 30.34,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1040,
+        517,
+        1094,
+        567
+      ],
+      "face_size": "54x50"
+    },
+    {
+      "frame": 990,
+      "video_ts": 33.37,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        9,
+        635,
+        91,
+        726
+      ],
+      "face_size": "82x91"
+    },
+    {
+      "frame": 990,
+      "video_ts": 33.37,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        237,
+        543,
+        299,
+        606
+      ],
+      "face_size": "62x63"
+    },
+    {
+      "frame": 990,
+      "video_ts": 33.37,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        850,
+        409,
+        903,
+        464
+      ],
+      "face_size": "53x55"
+    },
+    {
+      "frame": 990,
+      "video_ts": 33.37,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        214,
+        394,
+        265,
+        451
+      ],
+      "face_size": "51x57"
+    },
+    {
+      "frame": 990,
+      "video_ts": 33.37,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1089,
+        399,
+        1141,
+        452
+      ],
+      "face_size": "52x53"
+    },
+    {
+      "frame": 990,
+      "video_ts": 33.37,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        464,
+        353,
+        502,
+        400
+      ],
+      "face_size": "38x47"
+    },
+    {
+      "frame": 990,
+      "video_ts": 33.37,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1485,
+        305,
+        1517,
+        345
+      ],
+      "face_size": "32x40"
+    },
+    {
+      "frame": 990,
+      "video_ts": 33.37,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1545,
+        333,
+        1581,
+        379
+      ],
+      "face_size": "36x46"
+    },
+    {
+      "frame": 990,
+      "video_ts": 33.37,
+      "status": "review_exists",
+      "pinfl": "60105086600022",
+      "full_name": "GAZIYEVA YASMINA DILSHODOVNA",
+      "similarity": 0.5304,
+      "bbox": [
+        1017,
+        394,
+        1055,
+        437
+      ],
+      "face_size": "38x43"
+    },
+    {
+      "frame": 990,
+      "video_ts": 33.37,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1139,
+        276,
+        1169,
+        314
+      ],
+      "face_size": "30x38"
+    },
+    {
+      "frame": 990,
+      "video_ts": 33.37,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        505,
+        316,
+        547,
+        360
+      ],
+      "face_size": "42x44"
+    },
+    {
+      "frame": 990,
+      "video_ts": 33.37,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        916,
+        538,
+        969,
+        590
+      ],
+      "face_size": "53x52"
+    },
+    {
+      "frame": 990,
+      "video_ts": 33.37,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1038,
+        518,
+        1092,
+        568
+      ],
+      "face_size": "54x50"
+    },
+    {
+      "frame": 1080,
+      "video_ts": 36.41,
+      "status": "recorded_and_locked",
+      "pinfl": "61112086600016",
+      "full_name": "AFANASEVA MARIYA DMITRIYEVNA",
+      "similarity": 0.6157,
+      "bbox": [
+        894,
+        489,
+        954,
+        557
+      ],
+      "face_size": "60x68"
+    },
+    {
+      "frame": 1080,
+      "video_ts": 36.41,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        -1,
+        647,
+        74,
+        729
+      ],
+      "face_size": "75x82"
+    },
+    {
+      "frame": 1080,
+      "video_ts": 36.41,
+      "status": "recorded_and_locked",
+      "pinfl": "52001096600032",
+      "full_name": "MIRMAXMUDOV MIRZIYOD ZOHIDJON O‘G‘LI",
+      "similarity": 0.5778,
+      "bbox": [
+        211,
+        409,
+        262,
+        468
+      ],
+      "face_size": "51x59"
+    },
+    {
+      "frame": 1080,
+      "video_ts": 36.41,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        236,
+        569,
+        297,
+        626
+      ],
+      "face_size": "61x57"
+    },
+    {
+      "frame": 1080,
+      "video_ts": 36.41,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1054,
+        405,
+        1104,
+        462
+      ],
+      "face_size": "50x57"
+    },
+    {
+      "frame": 1080,
+      "video_ts": 36.41,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        537,
+        325,
+        577,
+        368
+      ],
+      "face_size": "40x43"
+    },
+    {
+      "frame": 1080,
+      "video_ts": 36.41,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        461,
+        362,
+        502,
+        410
+      ],
+      "face_size": "41x48"
+    },
+    {
+      "frame": 1080,
+      "video_ts": 36.41,
+      "status": "review_exists",
+      "pinfl": "60905096600027",
+      "full_name": "INAGAMOVA ZULFIYA SHARAFIDDIN QIZI",
+      "similarity": 0.487,
+      "bbox": [
+        1480,
+        313,
+        1514,
+        355
+      ],
+      "face_size": "34x42"
+    },
+    {
+      "frame": 1080,
+      "video_ts": 36.41,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1033,
+        511,
+        1090,
+        566
+      ],
+      "face_size": "57x55"
+    },
+    {
+      "frame": 1080,
+      "video_ts": 36.41,
+      "status": "rejected",
+      "pinfl": "51408096600041",
+      "full_name": "NURMUXAMEDOV ABDUMALIK SHUXRATOVICH",
+      "similarity": 0.3365,
+      "bbox": [
+        317,
+        402,
+        358,
+        440
+      ],
+      "face_size": "41x38"
+    },
+    {
+      "frame": 1080,
+      "video_ts": 36.41,
+      "status": "rejected",
+      "pinfl": "51712086600022",
+      "full_name": "OSPANOV BOTIR ROMANOVICH",
+      "similarity": 0.2287,
+      "bbox": [
+        882,
+        332,
+        914,
+        365
+      ],
+      "face_size": "32x33"
+    },
+    {
+      "frame": 1170,
+      "video_ts": 39.44,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        859,
+        493,
+        920,
+        558
+      ],
+      "face_size": "61x65"
+    },
+    {
+      "frame": 1170,
+      "video_ts": 39.44,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        212,
+        409,
+        262,
+        467
+      ],
+      "face_size": "50x58"
+    },
+    {
+      "frame": 1170,
+      "video_ts": 39.44,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1045,
+        414,
+        1097,
+        467
+      ],
+      "face_size": "52x53"
+    },
+    {
+      "frame": 1170,
+      "video_ts": 39.44,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        -3,
+        645,
+        76,
+        730
+      ],
+      "face_size": "79x85"
+    },
+    {
+      "frame": 1170,
+      "video_ts": 39.44,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        230,
+        573,
+        293,
+        627
+      ],
+      "face_size": "63x54"
+    },
+    {
+      "frame": 1170,
+      "video_ts": 39.44,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        537,
+        317,
+        576,
+        360
+      ],
+      "face_size": "39x43"
+    },
+    {
+      "frame": 1170,
+      "video_ts": 39.44,
+      "status": "rejected",
+      "pinfl": "60801096600017",
+      "full_name": "SALIXOVA SAFINA NODIROVNA",
+      "similarity": 0.4089,
+      "bbox": [
+        1134,
+        280,
+        1166,
+        317
+      ],
+      "face_size": "32x37"
+    },
+    {
+      "frame": 1170,
+      "video_ts": 39.44,
+      "status": "review_updated",
+      "pinfl": "60905096600027",
+      "full_name": "INAGAMOVA ZULFIYA SHARAFIDDIN QIZI",
+      "similarity": 0.5465,
+      "bbox": [
+        1479,
+        333,
+        1512,
+        367
+      ],
+      "face_size": "33x34"
+    },
+    {
+      "frame": 1170,
+      "video_ts": 39.44,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        313,
+        405,
+        357,
+        442
+      ],
+      "face_size": "44x37"
+    },
+    {
+      "frame": 1170,
+      "video_ts": 39.44,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1033,
+        514,
+        1087,
+        567
+      ],
+      "face_size": "54x53"
+    },
+    {
+      "frame": 1170,
+      "video_ts": 39.44,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        454,
+        400,
+        496,
+        438
+      ],
+      "face_size": "42x38"
+    },
+    {
+      "frame": 1170,
+      "video_ts": 39.44,
+      "status": "rejected",
+      "pinfl": "61203106600025",
+      "full_name": "ШОРОХИМОВА МАДИНАБОНУ САРДОР ҚИЗИ",
+      "similarity": 0.3688,
+      "bbox": [
+        1013,
+        392,
+        1043,
+        431
+      ],
+      "face_size": "30x39"
+    },
+    {
+      "frame": 1170,
+      "video_ts": 39.44,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        887,
+        348,
+        917,
+        379
+      ],
+      "face_size": "30x31"
+    },
+    {
+      "frame": 1260,
+      "video_ts": 42.48,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        211,
+        409,
+        262,
+        467
+      ],
+      "face_size": "51x58"
+    },
+    {
+      "frame": 1260,
+      "video_ts": 42.48,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        880,
+        420,
+        929,
+        478
+      ],
+      "face_size": "49x58"
+    },
+    {
+      "frame": 1260,
+      "video_ts": 42.48,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        38,
+        668,
+        118,
+        762
+      ],
+      "face_size": "80x94"
+    },
+    {
+      "frame": 1260,
+      "video_ts": 42.48,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        226,
+        572,
+        289,
+        625
+      ],
+      "face_size": "63x53"
+    },
+    {
+      "frame": 1260,
+      "video_ts": 42.48,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        537,
+        315,
+        575,
+        359
+      ],
+      "face_size": "38x44"
+    },
+    {
+      "frame": 1260,
+      "video_ts": 42.48,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1009,
+        387,
+        1046,
+        429
+      ],
+      "face_size": "37x42"
+    },
+    {
+      "frame": 1260,
+      "video_ts": 42.48,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1136,
+        280,
+        1167,
+        316
+      ],
+      "face_size": "31x36"
+    },
+    {
+      "frame": 1260,
+      "video_ts": 42.48,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1485,
+        311,
+        1518,
+        351
+      ],
+      "face_size": "33x40"
+    },
+    {
+      "frame": 1260,
+      "video_ts": 42.48,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        869,
+        569,
+        930,
+        610
+      ],
+      "face_size": "61x41"
+    },
+    {
+      "frame": 1260,
+      "video_ts": 42.48,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1033,
+        518,
+        1089,
+        568
+      ],
+      "face_size": "56x50"
+    },
+    {
+      "frame": 1260,
+      "video_ts": 42.48,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        19,
+        571,
+        74,
+        622
+      ],
+      "face_size": "55x51"
+    },
+    {
+      "frame": 1350,
+      "video_ts": 45.51,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        -3,
+        684,
+        79,
+        768
+      ],
+      "face_size": "82x84"
+    },
+    {
+      "frame": 1350,
+      "video_ts": 45.51,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        212,
+        409,
+        262,
+        466
+      ],
+      "face_size": "50x57"
+    },
+    {
+      "frame": 1350,
+      "video_ts": 45.51,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        235,
+        567,
+        295,
+        621
+      ],
+      "face_size": "60x54"
+    },
+    {
+      "frame": 1350,
+      "video_ts": 45.51,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1036,
+        487,
+        1092,
+        549
+      ],
+      "face_size": "56x62"
+    },
+    {
+      "frame": 1350,
+      "video_ts": 45.51,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1122,
+        277,
+        1153,
+        314
+      ],
+      "face_size": "31x37"
+    },
+    {
+      "frame": 1350,
+      "video_ts": 45.51,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1486,
+        313,
+        1519,
+        352
+      ],
+      "face_size": "33x39"
+    },
+    {
+      "frame": 1350,
+      "video_ts": 45.51,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1007,
+        389,
+        1045,
+        430
+      ],
+      "face_size": "38x41"
+    },
+    {
+      "frame": 1350,
+      "video_ts": 45.51,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        16,
+        571,
+        74,
+        624
+      ],
+      "face_size": "58x53"
+    },
+    {
+      "frame": 1350,
+      "video_ts": 45.51,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        874,
+        573,
+        930,
+        614
+      ],
+      "face_size": "56x41"
+    },
+    {
+      "frame": 1350,
+      "video_ts": 45.51,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        539,
+        345,
+        577,
+        379
+      ],
+      "face_size": "38x34"
+    },
+    {
+      "frame": 1440,
+      "video_ts": 48.54,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        212,
+        411,
+        263,
+        467
+      ],
+      "face_size": "51x56"
+    },
+    {
+      "frame": 1440,
+      "video_ts": 48.54,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1026,
+        491,
+        1086,
+        551
+      ],
+      "face_size": "60x60"
+    },
+    {
+      "frame": 1440,
+      "video_ts": 48.54,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1035,
+        390,
+        1084,
+        445
+      ],
+      "face_size": "49x55"
+    },
+    {
+      "frame": 1440,
+      "video_ts": 48.54,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        224,
+        563,
+        287,
+        618
+      ],
+      "face_size": "63x55"
+    },
+    {
+      "frame": 1440,
+      "video_ts": 48.54,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        534,
+        323,
+        572,
+        365
+      ],
+      "face_size": "38x42"
+    },
+    {
+      "frame": 1440,
+      "video_ts": 48.54,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1480,
+        329,
+        1514,
+        368
+      ],
+      "face_size": "34x39"
+    },
+    {
+      "frame": 1440,
+      "video_ts": 48.54,
+      "status": "rejected",
+      "pinfl": "50406108660031",
+      "full_name": "XAYDAROV AMIR MAXAMMADALIYEVICH",
+      "similarity": 0.3033,
+      "bbox": [
+        15,
+        570,
+        71,
+        622
+      ],
+      "face_size": "56x52"
+    },
+    {
+      "frame": 1440,
+      "video_ts": 48.54,
+      "status": "skipped_too_small",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1138,
+        309,
+        1166,
+        340
+      ],
+      "face_size": "28x31"
+    },
+    {
+      "frame": 1530,
+      "video_ts": 51.58,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        897,
+        399,
+        946,
+        453
+      ],
+      "face_size": "49x54"
+    },
+    {
+      "frame": 1530,
+      "video_ts": 51.58,
+      "status": "review_recorded",
+      "pinfl": "52001096600032",
+      "full_name": "MIRMAXMUDOV MIRZIYOD ZOHIDJON O‘G‘LI",
+      "similarity": 0.4803,
+      "bbox": [
+        226,
+        409,
+        275,
+        459
+      ],
+      "face_size": "49x50"
+    },
+    {
+      "frame": 1530,
+      "video_ts": 51.58,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        250,
+        502,
+        309,
+        570
+      ],
+      "face_size": "59x68"
+    },
+    {
+      "frame": 1530,
+      "video_ts": 51.58,
+      "status": "review_updated",
+      "pinfl": "62512086600013",
+      "full_name": "AVAKOVA AREVIK EDUARDOVNA",
+      "similarity": 0.5393,
+      "bbox": [
+        29,
+        524,
+        85,
+        582
+      ],
+      "face_size": "56x58"
+    },
+    {
+      "frame": 1530,
+      "video_ts": 51.58,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1080,
+        498,
+        1131,
+        554
+      ],
+      "face_size": "51x56"
+    },
+    {
+      "frame": 1530,
+      "video_ts": 51.58,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        2,
+        662,
+        79,
+        731
+      ],
+      "face_size": "77x69"
+    },
+    {
+      "frame": 1530,
+      "video_ts": 51.58,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        535,
+        334,
+        571,
+        371
+      ],
+      "face_size": "36x37"
+    },
+    {
+      "frame": 1530,
+      "video_ts": 51.58,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1007,
+        389,
+        1047,
+        433
+      ],
+      "face_size": "40x44"
+    },
+    {
+      "frame": 1530,
+      "video_ts": 51.58,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        871,
+        562,
+        930,
+        607
+      ],
+      "face_size": "59x45"
+    },
+    {
+      "frame": 1530,
+      "video_ts": 51.58,
+      "status": "review_exists",
+      "pinfl": "60905096600027",
+      "full_name": "INAGAMOVA ZULFIYA SHARAFIDDIN QIZI",
+      "similarity": 0.4958,
+      "bbox": [
+        1482,
+        314,
+        1515,
+        354
+      ],
+      "face_size": "33x40"
+    },
+    {
+      "frame": 1530,
+      "video_ts": 51.58,
+      "status": "rejected",
+      "pinfl": "62511086580015",
+      "full_name": "BAHTIYOROVA DILNURA MIRODIL QIZI",
+      "similarity": 0.2757,
+      "bbox": [
+        1014,
+        320,
+        1047,
+        364
+      ],
+      "face_size": "33x44"
+    },
+    {
+      "frame": 1530,
+      "video_ts": 51.58,
+      "status": "review_recorded",
+      "pinfl": "52608080005002",
+      "full_name": "YULDASHEV MEHRIDDIN OYBEK O‘G‘LI",
+      "similarity": 0.4787,
+      "bbox": [
+        1123,
+        430,
+        1170,
+        472
+      ],
+      "face_size": "47x42"
+    },
+    {
+      "frame": 1620,
+      "video_ts": 54.61,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        239,
+        380,
+        289,
+        432
+      ],
+      "face_size": "50x52"
+    },
+    {
+      "frame": 1620,
+      "video_ts": 54.61,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        252,
+        505,
+        311,
+        571
+      ],
+      "face_size": "59x66"
+    },
+    {
+      "frame": 1620,
+      "video_ts": 54.61,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        886,
+        418,
+        934,
+        473
+      ],
+      "face_size": "48x55"
+    },
+    {
+      "frame": 1620,
+      "video_ts": 54.61,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1003,
+        384,
+        1043,
+        426
+      ],
+      "face_size": "40x42"
+    },
+    {
+      "frame": 1620,
+      "video_ts": 54.61,
+      "status": "rejected",
+      "pinfl": "60710086600138",
+      "full_name": "FADEYEVA LEYA ALEKSANDROVNA",
+      "similarity": 0.3358,
+      "bbox": [
+        994,
+        263,
+        1025,
+        303
+      ],
+      "face_size": "31x40"
+    },
+    {
+      "frame": 1620,
+      "video_ts": 54.61,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        533,
+        324,
+        570,
+        364
+      ],
+      "face_size": "37x40"
+    },
+    {
+      "frame": 1620,
+      "video_ts": 54.61,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1480,
+        332,
+        1514,
+        368
+      ],
+      "face_size": "34x36"
+    },
+    {
+      "frame": 1620,
+      "video_ts": 54.61,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1042,
+        530,
+        1100,
+        572
+      ],
+      "face_size": "58x42"
+    },
+    {
+      "frame": 1620,
+      "video_ts": 54.61,
+      "status": "rejected",
+      "pinfl": "60303106520019",
+      "full_name": "ТУРЕНКОВА СОФИЯ РАВШАНОВНА",
+      "similarity": 0.3062,
+      "bbox": [
+        1036,
+        341,
+        1066,
+        379
+      ],
+      "face_size": "30x38"
+    },
+    {
+      "frame": 1620,
+      "video_ts": 54.61,
+      "status": "skipped_too_small",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1548,
+        326,
+        1575,
+        365
+      ],
+      "face_size": "27x39"
+    },
+    {
+      "frame": 1620,
+      "video_ts": 54.61,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        53,
+        616,
+        92,
+        677
+      ],
+      "face_size": "39x61"
+    },
+    {
+      "frame": 1710,
+      "video_ts": 57.65,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        0,
+        662,
+        85,
+        751
+      ],
+      "face_size": "85x89"
+    },
+    {
+      "frame": 1710,
+      "video_ts": 57.65,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        243,
+        550,
+        307,
+        608
+      ],
+      "face_size": "64x58"
+    },
+    {
+      "frame": 1710,
+      "video_ts": 57.65,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        231,
+        388,
+        280,
+        445
+      ],
+      "face_size": "49x57"
+    },
+    {
+      "frame": 1710,
+      "video_ts": 57.65,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        889,
+        438,
+        937,
+        487
+      ],
+      "face_size": "48x49"
+    },
+    {
+      "frame": 1710,
+      "video_ts": 57.65,
+      "status": "rejected",
+      "pinfl": "62512086600013",
+      "full_name": "AVAKOVA AREVIK EDUARDOVNA",
+      "similarity": 0.2476,
+      "bbox": [
+        10,
+        564,
+        71,
+        624
+      ],
+      "face_size": "61x60"
+    },
+    {
+      "frame": 1710,
+      "video_ts": 57.65,
+      "status": "review_exists",
+      "pinfl": "60801096600017",
+      "full_name": "SALIXOVA SAFINA NODIROVNA",
+      "similarity": 0.4542,
+      "bbox": [
+        1136,
+        285,
+        1168,
+        322
+      ],
+      "face_size": "32x37"
+    },
+    {
+      "frame": 1710,
+      "video_ts": 57.65,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1015,
+        276,
+        1046,
+        310
+      ],
+      "face_size": "31x34"
+    },
+    {
+      "frame": 1710,
+      "video_ts": 57.65,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1000,
+        385,
+        1039,
+        428
+      ],
+      "face_size": "39x43"
+    },
+    {
+      "frame": 1710,
+      "video_ts": 57.65,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        534,
+        337,
+        573,
+        374
+      ],
+      "face_size": "39x37"
+    },
+    {
+      "frame": 1710,
+      "video_ts": 57.65,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1481,
+        334,
+        1513,
+        368
+      ],
+      "face_size": "32x34"
+    },
+    {
+      "frame": 1710,
+      "video_ts": 57.65,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1046,
+        530,
+        1100,
+        572
+      ],
+      "face_size": "54x42"
+    },
+    {
+      "frame": 1710,
+      "video_ts": 57.65,
+      "status": "skipped_too_small",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1039,
+        343,
+        1068,
+        378
+      ],
+      "face_size": "29x35"
+    },
+    {
+      "frame": 1710,
+      "video_ts": 57.65,
+      "status": "skipped_blurry",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1720,
+        878,
+        1821,
+        1064
+      ],
+      "face_size": "101x186"
+    },
+    {
+      "frame": 1710,
+      "video_ts": 57.65,
+      "status": "skipped_too_small",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1546,
+        324,
+        1573,
+        363
+      ],
+      "face_size": "27x39"
+    },
+    {
+      "frame": 1800,
+      "video_ts": 60.68,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        897,
+        452,
+        950,
+        494
+      ],
+      "face_size": "53x42"
+    },
+    {
+      "frame": 1800,
+      "video_ts": 60.68,
+      "status": "review_exists",
+      "pinfl": "61108086600031",
+      "full_name": "MAMUROVA E’ZOZAXON SARVARBEKOVNA",
+      "similarity": 0.4699,
+      "bbox": [
+        877,
+        321,
+        910,
+        360
+      ],
+      "face_size": "33x39"
+    },
+    {
+      "frame": 1800,
+      "video_ts": 60.68,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        530,
+        339,
+        568,
+        374
+      ],
+      "face_size": "38x35"
+    },
+    {
+      "frame": 1800,
+      "video_ts": 60.68,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1001,
+        382,
+        1039,
+        422
+      ],
+      "face_size": "38x40"
+    },
+    {
+      "frame": 1800,
+      "video_ts": 60.68,
+      "status": "rejected",
+      "pinfl": "51408096600041",
+      "full_name": "NURMUXAMEDOV ABDUMALIK SHUXRATOVICH",
+      "similarity": 0.249,
+      "bbox": [
+        313,
+        404,
+        354,
+        441
+      ],
+      "face_size": "41x37"
+    },
+    {
+      "frame": 1800,
+      "video_ts": 60.68,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        231,
+        580,
+        290,
+        630
+      ],
+      "face_size": "59x50"
+    },
+    {
+      "frame": 1800,
+      "video_ts": 60.68,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1039,
+        527,
+        1094,
+        573
+      ],
+      "face_size": "55x46"
+    },
+    {
+      "frame": 1800,
+      "video_ts": 60.68,
+      "status": "skipped_too_small",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1038,
+        343,
+        1067,
+        381
+      ],
+      "face_size": "29x38"
+    },
+    {
+      "frame": 1800,
+      "video_ts": 60.68,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1481,
+        334,
+        1513,
+        368
+      ],
+      "face_size": "32x34"
+    },
+    {
+      "frame": 1800,
+      "video_ts": 60.68,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        455,
+        399,
+        496,
+        436
+      ],
+      "face_size": "41x37"
+    },
+    {
+      "frame": 1890,
+      "video_ts": 63.71,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        530,
+        316,
+        567,
+        359
+      ],
+      "face_size": "37x43"
+    },
+    {
+      "frame": 1890,
+      "video_ts": 63.71,
+      "status": "review_recorded",
+      "pinfl": "60108096600105",
+      "full_name": "YUSUFJONOVA MAHFUZA ODILBEKOVNA",
+      "similarity": 0.4743,
+      "bbox": [
+        1554,
+        331,
+        1592,
+        378
+      ],
+      "face_size": "38x47"
+    },
+    {
+      "frame": 1890,
+      "video_ts": 63.71,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        223,
+        581,
+        283,
+        635
+      ],
+      "face_size": "60x54"
+    },
+    {
+      "frame": 1890,
+      "video_ts": 63.71,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        -3,
+        648,
+        69,
+        717
+      ],
+      "face_size": "72x69"
+    },
+    {
+      "frame": 1890,
+      "video_ts": 63.71,
+      "status": "review_exists",
+      "pinfl": "60905096600027",
+      "full_name": "INAGAMOVA ZULFIYA SHARAFIDDIN QIZI",
+      "similarity": 0.5359,
+      "bbox": [
+        1478,
+        327,
+        1514,
+        368
+      ],
+      "face_size": "36x41"
+    },
+    {
+      "frame": 1890,
+      "video_ts": 63.71,
+      "status": "review_exists",
+      "pinfl": "61108086600031",
+      "full_name": "MAMUROVA E’ZOZAXON SARVARBEKOVNA",
+      "similarity": 0.4239,
+      "bbox": [
+        927,
+        296,
+        957,
+        332
+      ],
+      "face_size": "30x36"
+    },
+    {
+      "frame": 1890,
+      "video_ts": 63.71,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1002,
+        378,
+        1041,
+        418
+      ],
+      "face_size": "39x40"
+    },
+    {
+      "frame": 1890,
+      "video_ts": 63.71,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        327,
+        382,
+        368,
+        423
+      ],
+      "face_size": "41x41"
+    },
+    {
+      "frame": 1890,
+      "video_ts": 63.71,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        893,
+        465,
+        946,
+        508
+      ],
+      "face_size": "53x43"
+    },
+    {
+      "frame": 1890,
+      "video_ts": 63.71,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1041,
+        521,
+        1094,
+        571
+      ],
+      "face_size": "53x50"
+    },
+    {
+      "frame": 1890,
+      "video_ts": 63.71,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        453,
+        396,
+        494,
+        431
+      ],
+      "face_size": "41x35"
+    },
+    {
+      "frame": 1890,
+      "video_ts": 63.71,
+      "status": "rejected",
+      "pinfl": "62511086580015",
+      "full_name": "BAHTIYOROVA DILNURA MIRODIL QIZI",
+      "similarity": 0.3097,
+      "bbox": [
+        1038,
+        341,
+        1068,
+        381
+      ],
+      "face_size": "30x40"
+    },
+    {
+      "frame": 1980,
+      "video_ts": 66.75,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1063,
+        443,
+        1111,
+        490
+      ],
+      "face_size": "48x47"
+    },
+    {
+      "frame": 1980,
+      "video_ts": 66.75,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        532,
+        336,
+        569,
+        373
+      ],
+      "face_size": "37x37"
+    },
+    {
+      "frame": 1980,
+      "video_ts": 66.75,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1566,
+        330,
+        1598,
+        377
+      ],
+      "face_size": "32x47"
+    },
+    {
+      "frame": 1980,
+      "video_ts": 66.75,
+      "status": "review_updated",
+      "pinfl": "60905096600027",
+      "full_name": "INAGAMOVA ZULFIYA SHARAFIDDIN QIZI",
+      "similarity": 0.5498,
+      "bbox": [
+        1472,
+        318,
+        1505,
+        359
+      ],
+      "face_size": "33x41"
+    },
+    {
+      "frame": 1980,
+      "video_ts": 66.75,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1002,
+        377,
+        1039,
+        418
+      ],
+      "face_size": "37x41"
+    },
+    {
+      "frame": 1980,
+      "video_ts": 66.75,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        240,
+        577,
+        297,
+        628
+      ],
+      "face_size": "57x51"
+    },
+    {
+      "frame": 1980,
+      "video_ts": 66.75,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        894,
+        459,
+        950,
+        502
+      ],
+      "face_size": "56x43"
+    },
+    {
+      "frame": 1980,
+      "video_ts": 66.75,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        316,
+        384,
+        355,
+        427
+      ],
+      "face_size": "39x43"
+    },
+    {
+      "frame": 1980,
+      "video_ts": 66.75,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1036,
+        517,
+        1089,
+        571
+      ],
+      "face_size": "53x54"
+    },
+    {
+      "frame": 1980,
+      "video_ts": 66.75,
+      "status": "rejected",
+      "pinfl": "62005096600017",
+      "full_name": "ALIMDJANOVA PARVINA KAMOLOVNA",
+      "similarity": 0.2592,
+      "bbox": [
+        28,
+        574,
+        70,
+        623
+      ],
+      "face_size": "42x49"
+    },
+    {
+      "frame": 2070,
+      "video_ts": 69.78,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1083,
+        421,
+        1136,
+        476
+      ],
+      "face_size": "53x55"
+    },
+    {
+      "frame": 2070,
+      "video_ts": 69.78,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        237,
+        562,
+        297,
+        619
+      ],
+      "face_size": "60x57"
+    },
+    {
+      "frame": 2070,
+      "video_ts": 69.78,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        330,
+        404,
+        369,
+        449
+      ],
+      "face_size": "39x45"
+    },
+    {
+      "frame": 2070,
+      "video_ts": 69.78,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1006,
+        385,
+        1046,
+        427
+      ],
+      "face_size": "40x42"
+    },
+    {
+      "frame": 2070,
+      "video_ts": 69.78,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        840,
+        556,
+        908,
+        606
+      ],
+      "face_size": "68x50"
+    },
+    {
+      "frame": 2070,
+      "video_ts": 69.78,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        899,
+        441,
+        950,
+        492
+      ],
+      "face_size": "51x51"
+    },
+    {
+      "frame": 2070,
+      "video_ts": 69.78,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        -15,
+        723,
+        58,
+        785
+      ],
+      "face_size": "73x62"
+    },
+    {
+      "frame": 2070,
+      "video_ts": 69.78,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1478,
+        331,
+        1513,
+        368
+      ],
+      "face_size": "35x37"
+    },
+    {
+      "frame": 2070,
+      "video_ts": 69.78,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        531,
+        385,
+        570,
+        424
+      ],
+      "face_size": "39x39"
+    },
+    {
+      "frame": 2070,
+      "video_ts": 69.78,
+      "status": "skipped_too_small",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        888,
+        306,
+        915,
+        343
+      ],
+      "face_size": "27x37"
+    },
+    {
+      "frame": 2070,
+      "video_ts": 69.78,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1037,
+        521,
+        1089,
+        573
+      ],
+      "face_size": "52x52"
+    },
+    {
+      "frame": 2070,
+      "video_ts": 69.78,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        12,
+        568,
+        72,
+        627
+      ],
+      "face_size": "60x59"
+    },
+    {
+      "frame": 2160,
+      "video_ts": 72.82,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        854,
+        539,
+        916,
+        603
+      ],
+      "face_size": "62x64"
+    },
+    {
+      "frame": 2160,
+      "video_ts": 72.82,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1033,
+        415,
+        1086,
+        470
+      ],
+      "face_size": "53x55"
+    },
+    {
+      "frame": 2160,
+      "video_ts": 72.82,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        530,
+        313,
+        567,
+        357
+      ],
+      "face_size": "37x44"
+    },
+    {
+      "frame": 2160,
+      "video_ts": 72.82,
+      "status": "review_recorded",
+      "pinfl": "62910086570057",
+      "full_name": "KIRAKOSYAN LILIT SAMVELOVNA",
+      "similarity": 0.5068,
+      "bbox": [
+        511,
+        387,
+        552,
+        431
+      ],
+      "face_size": "41x44"
+    },
+    {
+      "frame": 2160,
+      "video_ts": 72.82,
+      "status": "rejected",
+      "pinfl": "50406106600071",
+      "full_name": "XAYBATOV ELSHOD DILSHODOVICH",
+      "similarity": 0.315,
+      "bbox": [
+        331,
+        406,
+        369,
+        447
+      ],
+      "face_size": "38x41"
+    },
+    {
+      "frame": 2160,
+      "video_ts": 72.82,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        231,
+        581,
+        289,
+        629
+      ],
+      "face_size": "58x48"
+    },
+    {
+      "frame": 2160,
+      "video_ts": 72.82,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        900,
+        450,
+        949,
+        493
+      ],
+      "face_size": "49x43"
+    },
+    {
+      "frame": 2160,
+      "video_ts": 72.82,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1478,
+        336,
+        1511,
+        370
+      ],
+      "face_size": "33x34"
+    },
+    {
+      "frame": 2250,
+      "video_ts": 75.85,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        899,
+        406,
+        950,
+        461
+      ],
+      "face_size": "51x55"
+    },
+    {
+      "frame": 2250,
+      "video_ts": 75.85,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        868,
+        544,
+        925,
+        597
+      ],
+      "face_size": "57x53"
+    },
+    {
+      "frame": 2250,
+      "video_ts": 75.85,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        333,
+        387,
+        371,
+        432
+      ],
+      "face_size": "38x45"
+    },
+    {
+      "frame": 2250,
+      "video_ts": 75.85,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1004,
+        385,
+        1043,
+        427
+      ],
+      "face_size": "39x42"
+    },
+    {
+      "frame": 2250,
+      "video_ts": 75.85,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1047,
+        438,
+        1098,
+        489
+      ],
+      "face_size": "51x51"
+    },
+    {
+      "frame": 2250,
+      "video_ts": 75.85,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        226,
+        578,
+        287,
+        629
+      ],
+      "face_size": "61x51"
+    },
+    {
+      "frame": 2250,
+      "video_ts": 75.85,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1037,
+        514,
+        1089,
+        572
+      ],
+      "face_size": "52x58"
+    },
+    {
+      "frame": 2250,
+      "video_ts": 75.85,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        535,
+        336,
+        572,
+        371
+      ],
+      "face_size": "37x35"
+    },
+    {
+      "frame": 2250,
+      "video_ts": 75.85,
+      "status": "rejected",
+      "pinfl": "51508106600019",
+      "full_name": "GRIGOREV RUBEN ARMENOVICH",
+      "similarity": 0.3236,
+      "bbox": [
+        454,
+        388,
+        491,
+        426
+      ],
+      "face_size": "37x38"
+    },
+    {
+      "frame": 2250,
+      "video_ts": 75.85,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1479,
+        337,
+        1512,
+        371
+      ],
+      "face_size": "33x34"
+    },
+    {
+      "frame": 2340,
+      "video_ts": 78.88,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        192,
+        554,
+        242,
+        609
+      ],
+      "face_size": "50x55"
+    },
+    {
+      "frame": 2340,
+      "video_ts": 78.88,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        878,
+        540,
+        935,
+        596
+      ],
+      "face_size": "57x56"
+    },
+    {
+      "frame": 2340,
+      "video_ts": 78.88,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1,
+        712,
+        87,
+        774
+      ],
+      "face_size": "86x62"
+    },
+    {
+      "frame": 2340,
+      "video_ts": 78.88,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        28,
+        539,
+        81,
+        598
+      ],
+      "face_size": "53x59"
+    },
+    {
+      "frame": 2340,
+      "video_ts": 78.88,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        533,
+        327,
+        572,
+        368
+      ],
+      "face_size": "39x41"
+    },
+    {
+      "frame": 2340,
+      "video_ts": 78.88,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        891,
+        444,
+        942,
+        490
+      ],
+      "face_size": "51x46"
+    },
+    {
+      "frame": 2340,
+      "video_ts": 78.88,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1037,
+        509,
+        1093,
+        567
+      ],
+      "face_size": "56x58"
+    },
+    {
+      "frame": 2340,
+      "video_ts": 78.88,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1472,
+        320,
+        1506,
+        359
+      ],
+      "face_size": "34x39"
+    },
+    {
+      "frame": 2340,
+      "video_ts": 78.88,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1022,
+        430,
+        1057,
+        472
+      ],
+      "face_size": "35x42"
+    },
+    {
+      "frame": 2430,
+      "video_ts": 81.92,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        882,
+        419,
+        931,
+        473
+      ],
+      "face_size": "49x54"
+    },
+    {
+      "frame": 2430,
+      "video_ts": 81.92,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        539,
+        280,
+        577,
+        324
+      ],
+      "face_size": "38x44"
+    },
+    {
+      "frame": 2430,
+      "video_ts": 81.92,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        24,
+        545,
+        80,
+        610
+      ],
+      "face_size": "56x65"
+    },
+    {
+      "frame": 2430,
+      "video_ts": 81.92,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        199,
+        556,
+        252,
+        610
+      ],
+      "face_size": "53x54"
+    },
+    {
+      "frame": 2430,
+      "video_ts": 81.92,
+      "status": "recorded_and_locked",
+      "pinfl": "60905096600027",
+      "full_name": "INAGAMOVA ZULFIYA SHARAFIDDIN QIZI",
+      "similarity": 0.5558,
+      "bbox": [
+        1472,
+        319,
+        1506,
+        359
+      ],
+      "face_size": "34x40"
+    },
+    {
+      "frame": 2430,
+      "video_ts": 81.92,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1048,
+        519,
+        1105,
+        570
+      ],
+      "face_size": "57x51"
+    },
+    {
+      "frame": 2430,
+      "video_ts": 81.92,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        865,
+        566,
+        924,
+        607
+      ],
+      "face_size": "59x41"
+    },
+    {
+      "frame": 2430,
+      "video_ts": 81.92,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1009,
+        383,
+        1048,
+        423
+      ],
+      "face_size": "39x40"
+    },
+    {
+      "frame": 2430,
+      "video_ts": 81.92,
+      "status": "review_exists",
+      "pinfl": "60801096600017",
+      "full_name": "SALIXOVA SAFINA NODIROVNA",
+      "similarity": 0.4379,
+      "bbox": [
+        1125,
+        274,
+        1155,
+        312
+      ],
+      "face_size": "30x38"
+    },
+    {
+      "frame": 2520,
+      "video_ts": 84.95,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        230,
+        545,
+        290,
+        600
+      ],
+      "face_size": "60x55"
+    },
+    {
+      "frame": 2520,
+      "video_ts": 84.95,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        872,
+        434,
+        923,
+        486
+      ],
+      "face_size": "51x52"
+    },
+    {
+      "frame": 2520,
+      "video_ts": 84.95,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1473,
+        318,
+        1506,
+        359
+      ],
+      "face_size": "33x41"
+    },
+    {
+      "frame": 2520,
+      "video_ts": 84.95,
+      "status": "review_exists",
+      "pinfl": "60801096600017",
+      "full_name": "SALIXOVA SAFINA NODIROVNA",
+      "similarity": 0.4404,
+      "bbox": [
+        1133,
+        271,
+        1163,
+        307
+      ],
+      "face_size": "30x36"
+    },
+    {
+      "frame": 2520,
+      "video_ts": 84.95,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1039,
+        519,
+        1096,
+        568
+      ],
+      "face_size": "57x49"
+    },
+    {
+      "frame": 2520,
+      "video_ts": 84.95,
+      "status": "rejected",
+      "pinfl": "62401086610019",
+      "full_name": "ATNAGULOVA SOFIYA ERIKOVNA",
+      "similarity": 0.2616,
+      "bbox": [
+        1018,
+        311,
+        1048,
+        350
+      ],
+      "face_size": "30x39"
+    },
+    {
+      "frame": 2520,
+      "video_ts": 84.95,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1013,
+        384,
+        1049,
+        424
+      ],
+      "face_size": "36x40"
+    },
+    {
+      "frame": 2520,
+      "video_ts": 84.95,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        873,
+        558,
+        925,
+        605
+      ],
+      "face_size": "52x47"
+    },
+    {
+      "frame": 2520,
+      "video_ts": 84.95,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1577,
+        321,
+        1607,
+        369
+      ],
+      "face_size": "30x48"
+    },
+    {
+      "frame": 2520,
+      "video_ts": 84.95,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        538,
+        337,
+        575,
+        370
+      ],
+      "face_size": "37x33"
+    },
+    {
+      "frame": 2520,
+      "video_ts": 84.95,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        -5,
+        700,
+        74,
+        769
+      ],
+      "face_size": "79x69"
+    },
+    {
+      "frame": 2610,
+      "video_ts": 87.98,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        243,
+        551,
+        304,
+        611
+      ],
+      "face_size": "61x60"
+    },
+    {
+      "frame": 2610,
+      "video_ts": 87.98,
+      "status": "review_exists",
+      "pinfl": "51408096600041",
+      "full_name": "NURMUXAMEDOV ABDUMALIK SHUXRATOVICH",
+      "similarity": 0.4664,
+      "bbox": [
+        322,
+        399,
+        363,
+        442
+      ],
+      "face_size": "41x43"
+    },
+    {
+      "frame": 2610,
+      "video_ts": 87.98,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1473,
+        319,
+        1504,
+        359
+      ],
+      "face_size": "31x40"
+    },
+    {
+      "frame": 2610,
+      "video_ts": 87.98,
+      "status": "review_exists",
+      "pinfl": "60801096600017",
+      "full_name": "SALIXOVA SAFINA NODIROVNA",
+      "similarity": 0.4209,
+      "bbox": [
+        1138,
+        287,
+        1169,
+        322
+      ],
+      "face_size": "31x35"
+    },
+    {
+      "frame": 2610,
+      "video_ts": 87.98,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        -19,
+        690,
+        54,
+        775
+      ],
+      "face_size": "73x85"
+    },
+    {
+      "frame": 2610,
+      "video_ts": 87.98,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        895,
+        451,
+        945,
+        491
+      ],
+      "face_size": "50x40"
+    },
+    {
+      "frame": 2610,
+      "video_ts": 87.98,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        538,
+        337,
+        575,
+        371
+      ],
+      "face_size": "37x34"
+    },
+    {
+      "frame": 2610,
+      "video_ts": 87.98,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1041,
+        525,
+        1096,
+        571
+      ],
+      "face_size": "55x46"
+    },
+    {
+      "frame": 2610,
+      "video_ts": 87.98,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1013,
+        385,
+        1049,
+        425
+      ],
+      "face_size": "36x40"
+    },
+    {
+      "frame": 2610,
+      "video_ts": 87.98,
+      "status": "rejected",
+      "pinfl": "50407086600048",
+      "full_name": "XOLBOYEV FERUZ OLIMJONOVICH",
+      "similarity": 0.225,
+      "bbox": [
+        6,
+        586,
+        66,
+        641
+      ],
+      "face_size": "60x55"
+    },
+    {
+      "frame": 2610,
+      "video_ts": 87.98,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        861,
+        566,
+        914,
+        609
+      ],
+      "face_size": "53x43"
+    },
+    {
+      "frame": 2610,
+      "video_ts": 87.98,
+      "status": "skipped_too_small",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        866,
+        347,
+        895,
+        377
+      ],
+      "face_size": "29x30"
+    },
+    {
+      "frame": 2610,
+      "video_ts": 87.98,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        227,
+        459,
+        278,
+        502
+      ],
+      "face_size": "51x43"
+    },
+    {
+      "frame": 2700,
+      "video_ts": 91.02,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        895,
+        435,
+        943,
+        489
+      ],
+      "face_size": "48x54"
+    },
+    {
+      "frame": 2700,
+      "video_ts": 91.02,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1473,
+        320,
+        1505,
+        358
+      ],
+      "face_size": "32x38"
+    },
+    {
+      "frame": 2700,
+      "video_ts": 91.02,
+      "status": "review_updated",
+      "pinfl": "61108086600031",
+      "full_name": "MAMUROVA E’ZOZAXON SARVARBEKOVNA",
+      "similarity": 0.5477,
+      "bbox": [
+        880,
+        314,
+        912,
+        354
+      ],
+      "face_size": "32x40"
+    },
+    {
+      "frame": 2700,
+      "video_ts": 91.02,
+      "status": "rejected",
+      "pinfl": "60801096600017",
+      "full_name": "SALIXOVA SAFINA NODIROVNA",
+      "similarity": 0.4005,
+      "bbox": [
+        1138,
+        288,
+        1170,
+        324
+      ],
+      "face_size": "32x36"
+    },
+    {
+      "frame": 2700,
+      "video_ts": 91.02,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        243,
+        557,
+        303,
+        612
+      ],
+      "face_size": "60x55"
+    },
+    {
+      "frame": 2700,
+      "video_ts": 91.02,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        849,
+        566,
+        910,
+        610
+      ],
+      "face_size": "61x44"
+    },
+    {
+      "frame": 2700,
+      "video_ts": 91.02,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1008,
+        382,
+        1046,
+        422
+      ],
+      "face_size": "38x40"
+    },
+    {
+      "frame": 2700,
+      "video_ts": 91.02,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        1037,
+        528,
+        1093,
+        572
+      ],
+      "face_size": "56x44"
+    },
+    {
+      "frame": 2700,
+      "video_ts": 91.02,
+      "status": "waiting_frontal",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        537,
+        336,
+        573,
+        370
+      ],
+      "face_size": "36x34"
+    },
+    {
+      "frame": 2700,
+      "video_ts": 91.02,
+      "status": "skipped_before_recognition",
+      "pinfl": "",
+      "full_name": "",
+      "similarity": null,
+      "bbox": [
+        13,
+        583,
+        65,
+        633
+      ],
+      "face_size": "52x50"
+    }
+  ],
+  "students": [
+    {
+      "pinfl": "52608080005002",
+      "full_name": "YULDASHEV MEHRIDDIN OYBEK O‘G‘LI",
+      "accepted_count": 1,
+      "best_similarity": 0.552318,
+      "first_seen_frame": 90,
+      "first_seen_sec": 3.0
+    },
+    {
+      "pinfl": "50103096600019",
+      "full_name": "ZULUNOV DIYOR DILSHODOVICH",
+      "accepted_count": 1,
+      "best_similarity": 0.591793,
+      "first_seen_frame": 90,
+      "first_seen_sec": 3.0
+    },
+    {
+      "pinfl": "62910086570057",
+      "full_name": "KIRAKOSYAN LILIT SAMVELOVNA",
+      "accepted_count": 1,
+      "best_similarity": 0.595826,
+      "first_seen_frame": 90,
+      "first_seen_sec": 3.0
+    },
+    {
+      "pinfl": "62810086580015",
+      "full_name": "MORDOVINA POLINA LEONIDOVNA",
+      "accepted_count": 1,
+      "best_similarity": 0.56475,
+      "first_seen_frame": 180,
+      "first_seen_sec": 6.1
+    },
+    {
+      "pinfl": "62709086600019",
+      "full_name": "PAVLENKO KAROLINA NIKOLAYEVNA",
+      "accepted_count": 1,
+      "best_similarity": 0.593373,
+      "first_seen_frame": 360,
+      "first_seen_sec": 12.1
+    },
+    {
+      "pinfl": "62105086490012",
+      "full_name": "TURSUNYULDASHEVA LAZIZAXON TURSUNPULAT QIZI",
+      "accepted_count": 1,
+      "best_similarity": 0.583976,
+      "first_seen_frame": 450,
+      "first_seen_sec": 15.2
+    },
+    {
+      "pinfl": "51006085220128",
+      "full_name": "UMIDJONOV NURMUHAMMAD UMIDJONOVICH",
+      "accepted_count": 1,
+      "best_similarity": 0.556272,
+      "first_seen_frame": 540,
+      "first_seen_sec": 18.2
+    },
+    {
+      "pinfl": "60710086600138",
+      "full_name": "FADEYEVA LEYA ALEKSANDROVNA",
+      "accepted_count": 1,
+      "best_similarity": 0.578971,
+      "first_seen_frame": 810,
+      "first_seen_sec": 27.3
+    },
+    {
+      "pinfl": "61112086600016",
+      "full_name": "AFANASEVA MARIYA DMITRIYEVNA",
+      "accepted_count": 1,
+      "best_similarity": 0.615689,
+      "first_seen_frame": 1080,
+      "first_seen_sec": 36.4
+    },
+    {
+      "pinfl": "52001096600032",
+      "full_name": "MIRMAXMUDOV MIRZIYOD ZOHIDJON O‘G‘LI",
+      "accepted_count": 1,
+      "best_similarity": 0.577841,
+      "first_seen_frame": 1080,
+      "first_seen_sec": 36.4
+    },
+    {
+      "pinfl": "60905096600027",
+      "full_name": "INAGAMOVA ZULFIYA SHARAFIDDIN QIZI",
+      "accepted_count": 1,
+      "best_similarity": 0.555833,
+      "first_seen_frame": 2430,
+      "first_seen_sec": 81.9
+    }
+  ],
+  "stats": {
+    "total_video_frames": 95400,
+    "frames_processed": 30,
+    "students_recognized": 11,
+    "accepted_events": 11,
+    "review_events": 24,
+    "elapsed_sec": 727.07,
+    "avg_frame_per_sec": 0.04
+  },
+  "finished_at": "2026-05-16T09:47:48.015763+00:00",
+  "elapsed_sec": 727.07
+}

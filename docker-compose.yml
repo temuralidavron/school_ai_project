@@ -1,0 +1,163 @@
+# MinIO + PostgreSQL + Django (web) + kamera stream (cameras).
+# web/cameras GPU dan foydalanadi → hostda nvidia-container-toolkit kerak.
+
+services:
+
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: school_ai_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-school_ai}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-school_ai}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: school_ai_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "127.0.0.1:9000:9000"   # API (Django ishlatadi)
+      - "0.0.0.0:9001:9001"      # Web UI (brauzerdan kirish uchun)
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MinIO bucket-larni avtomatik yaratadi (birinchi ishga tushganda)
+  minio_init:
+    image: minio/mc:latest
+    container_name: school_ai_minio_init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set local http://minio:9000 ${MINIO_ACCESS_KEY:-minioadmin} ${MINIO_SECRET_KEY:-minioadmin};
+        mc mb --ignore-existing local/${MINIO_BUCKET_NAME:-student-photos};
+        mc mb --ignore-existing local/${MINIO_RECOGNITION_BUCKET:-recognition-events};
+        echo 'MinIO bucketlar tayyor';
+      "
+    restart: on-failure
+
+  # ─── Django API / admin ─────────────────────────────────────────────────────
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: school_ai:latest
+    container_name: school_ai_web
+    restart: unless-stopped
+    command: ["./docker/entrypoint-web.sh"]
+    env_file: .env
+    environment:
+      DB_HOST: db
+      MINIO_HOST: minio
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - media_data:/app/media
+      - static_data:/app/staticfiles
+      - insightface_models:/root/.insightface
+      - ./logs:/app/logs
+    ports:
+      - "127.0.0.1:8000:8000"   # nginx shu portga proxy qiladi
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # ─── Kamera stream (yuz tanish + davomat) ───────────────────────────────────
+  cameras:
+    image: school_ai:latest
+    container_name: school_ai_cameras
+    restart: unless-stopped
+    command: ["./docker/entrypoint-cameras.sh"]
+    env_file: .env
+    environment:
+      DB_HOST: db
+      MINIO_HOST: minio
+    depends_on:
+      web:
+        condition: service_started
+      db:
+        condition: service_healthy
+    volumes:
+      - media_data:/app/media
+      - insightface_models:/root/.insightface
+      - ./logs:/app/logs
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # ─── Kamera patrul (aylanish) — UYQUDA, opt-in ──────────────────────────────
+  # Default ishga tushmaydi. Faqat: docker compose --profile patrol up -d patrol
+  # Mavjud stream/davomat oqimiga umuman tegmaydi (alohida modul, default off).
+  patrol:
+    image: school_ai:latest
+    container_name: school_ai_patrol
+    restart: unless-stopped
+    profiles: ["patrol"]
+    command: ["python3.14", "manage.py", "run_camera_patrol", "--all"]
+    env_file: .env
+    environment:
+      DB_HOST: db
+      MINIO_HOST: minio
+    depends_on:
+      web:
+        condition: service_started
+      db:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+
+  # ─── Rejalashtirilgan vazifalar (jadval sync + absent) ──────────────────────
+  cron:
+    image: school_ai:latest
+    container_name: school_ai_cron
+    restart: unless-stopped
+    command: ["./docker/entrypoint-cron.sh"]
+    env_file: .env
+    environment:
+      DB_HOST: db
+      MINIO_HOST: minio
+    depends_on:
+      web:
+        condition: service_started
+      db:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+
+volumes:
+  postgres_data:
+  minio_data:
+  media_data:
+  static_data:
+  insightface_models:
