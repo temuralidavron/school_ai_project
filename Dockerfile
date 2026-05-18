@@ -52,6 +52,11 @@ RUN python3.14 -m pip install --upgrade pip setuptools wheel \
     && python3.14 -m pip uninstall -y onnxruntime \
     && python3.14 -m pip install onnxruntime-gpu==1.25.0
 
+# django-cors-headers — settings.py da kerak, alohida qatorda (yuqoridagi
+# og'ir pip qatlami keshda qolsin, qayta 1 soat yuklab olmasin).
+# TODO: keyinroq requirements.txt ga ko'chirilsin.
+RUN python3.14 -m pip install --ignore-installed django-cors-headers==4.9.0
+
 # ─── Loyiha kodi ──────────────────────────────────────────────────────────────
 COPY . .
 
