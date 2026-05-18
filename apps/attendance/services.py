@@ -31,8 +31,13 @@ _FRONTAL_STORE: dict[str, list] = {}
 _FRONTAL_STORE_LOCK = threading.Lock()
 _FRONTAL_STORE_TIMESTAMPS: dict[str, float] = {}
 _FRONTAL_STORE_TTL = 60.0   # 60s ko'rinmagan track key o'chiriladi
-_MIN_FRONTAL_FRAMES = 1
-_MAX_FRONTAL_STORE = 3
+# .env orqali sozlanadi (default = hozirgi xatti-harakat: 1)
+try:
+    from django.conf import settings as _dj_settings
+    _MIN_FRONTAL_FRAMES = int(getattr(_dj_settings, "AI_MIN_FRONTAL_FRAMES", 1))
+except Exception:
+    _MIN_FRONTAL_FRAMES = 1
+_MAX_FRONTAL_STORE = max(3, _MIN_FRONTAL_FRAMES)
 
 
 def _cleanup_frontal_store():
@@ -386,6 +391,35 @@ class RecognitionEventService:
         self.lock_service = AttendanceLockService(lock_minutes=lock_minutes)
         self.search_service = RecognitionSearchService()
 
+    def _maybe_record_review_attendance(self, best, camera_id, schedule, event, arrived_at):
+        """
+        review natija ham davomatga yozilsinmi — .env AI_REVIEW_RECORDS_ATTENDANCE.
+        Default False → DARROV qaytadi, hech narsa qilmaydi (hozirgi xatti-harakat).
+        Xato bo'lsa ham tanish oqimini buzmaydi (try/except).
+        """
+        from django.conf import settings
+        if not getattr(settings, "AI_REVIEW_RECORDS_ATTENDANCE", False):
+            return
+        if camera_id is None or schedule is None or not best:
+            return
+        try:
+            with transaction.atomic():
+                ActiveScheduleService().record_lesson_attendance(
+                    student_id=best["student_id"],
+                    schedule=schedule,
+                    recognition_event=event,
+                    arrived_at=arrived_at,
+                )
+            logger.info(
+                "REVIEW→DAVOMAT | student=%s sim=%.3f cam=%s",
+                best.get("pinfl", ""), best.get("best_score", 0), camera_id,
+            )
+        except Exception as exc:
+            logger.error(
+                "REVIEW→DAVOMAT xatosi cam=%s student=%s: %s",
+                camera_id, best.get("student_id"), exc,
+            )
+
     def recognize_track_and_record_by_embedding(
             self,
             track_key: str,
@@ -530,6 +564,8 @@ class RecognitionEventService:
                         "REVIEW (existing better) | student=%s new_sim=%.3f existing_sim=%.3f",
                         best["pinfl"], best["best_score"], existing.similarity,
                     )
+                    self._maybe_record_review_attendance(
+                        best, camera_id, _active_schedule, existing, now)
                     return {
                         "status": "review_exists",
                         "event_id": existing.id,
@@ -566,6 +602,8 @@ class RecognitionEventService:
                         "REVIEW (updated) | student=%s sim=%.3f→%.3f event_id=%s",
                         best["pinfl"], existing.similarity, best["best_score"], existing.id,
                     )
+                    self._maybe_record_review_attendance(
+                        best, camera_id, _active_schedule, event, now)
                     return {
                         "status": "review_updated",
                         "event_id": existing.id,
@@ -605,6 +643,8 @@ class RecognitionEventService:
                     "REVIEW (new) | student=%s sim=%.3f event_id=%s track=%s",
                     best["pinfl"], best["best_score"], event.id, track_key,
                 )
+                self._maybe_record_review_attendance(
+                    best, camera_id, _active_schedule, event, now)
                 return {
                     "status": "review_recorded",
                     "event_id": event.id,
@@ -1016,9 +1056,14 @@ class FaceTrackService:
         ).update(is_active=False, status=TrackSession.STATUS_LOST)
 
 
-# Sinf xonasi kamerasi uchun — o'quvchilar pastga (doskaga) qarab o'tiradi
-_MAX_YAW_DEG = 40.0
-_MAX_PITCH_DEG = 40.0
+# Sinf xonasi kamerasi uchun — .env orqali sozlanadi (default = hozirgi: 40°)
+try:
+    from django.conf import settings as _pose_settings
+    _MAX_YAW_DEG = float(getattr(_pose_settings, "AI_MAX_YAW_DEG", 40.0))
+    _MAX_PITCH_DEG = float(getattr(_pose_settings, "AI_MAX_PITCH_DEG", 40.0))
+except Exception:
+    _MAX_YAW_DEG = 40.0
+    _MAX_PITCH_DEG = 40.0
 
 
 class LiveFrameProcessorService:

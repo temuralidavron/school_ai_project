@@ -111,6 +111,17 @@ _cors_origins = config('CORS_ALLOWED_ORIGINS', default='', cast=Csv())
 CORS_ALLOWED_ORIGINS = [o for o in _cors_origins if o]
 CORS_ALLOW_CREDENTIALS = True
 
+# ─── CSRF (admin/IP orqali kirish uchun) ──────────────────────────────────────
+# .env da CSRF_TRUSTED_ORIGINS bo'lsa o'sha; bo'lmasa ALLOWED_HOSTS dan
+# avtomatik http://<host>:8000 hosil qilinadi (admin login ishlashi uchun).
+_csrf_env = config('CSRF_TRUSTED_ORIGINS', default='', cast=Csv())
+CSRF_TRUSTED_ORIGINS = [o for o in _csrf_env if o]
+if not CSRF_TRUSTED_ORIGINS:
+    for _h in ALLOWED_HOSTS:
+        if _h and _h not in ("*",):
+            CSRF_TRUSTED_ORIGINS.append(f"http://{_h}:8000")
+            CSRF_TRUSTED_ORIGINS.append(f"https://{_h}")
+
 # ─── SKUD API ─────────────────────────────────────────────────────────────────
 SKUD_API_BASE_URL   = config('SKUD_API_BASE_URL',   default='https://edu.devel.uz')
 SKUD_CLIENT_ID      = config('SKUD_CLIENT_ID',      default='faceid')
@@ -129,6 +140,19 @@ AI_ACCEPT_THRESHOLD  = config('AI_ACCEPT_THRESHOLD',  default=0.55, cast=float)
 AI_REVIEW_THRESHOLD  = config('AI_REVIEW_THRESHOLD',  default=0.42, cast=float)
 # Kamera stream oralig'i (soniya)
 AI_FRAME_INTERVAL    = config('AI_FRAME_INTERVAL',    default=2.0,  cast=float)
+
+# ─── AI aniqlik sozlash (kalibrlash uchun — .env'dan, kod o'zgarmaydi) ─────────
+# Default'lar = hozirgi xatti-harakat (o'zgartirilmasa hech narsa o'zgarmaydi).
+# Strategiya: 1-kun past threshold + review ham yozsin → ma'lumot yig'iladi →
+#   keyin .env'da threshold oshiriladi, review o'chiriladi (kod tegmaydi).
+# Frontal kadrlar soni: 1=bitta kadr (hozirgi), 3=3 kadr o'rtacha (aniqroq)
+AI_MIN_FRONTAL_FRAMES      = config('AI_MIN_FRONTAL_FRAMES',      default=1,    cast=int)
+# Poza chegaralari (gradus) — kichikroq = qattiqroq filtr (aniqroq embedding)
+AI_MAX_YAW_DEG             = config('AI_MAX_YAW_DEG',             default=40.0, cast=float)
+AI_MAX_PITCH_DEG           = config('AI_MAX_PITCH_DEG',           default=40.0, cast=float)
+# review natija ham davomatga yozilsinmi (1-kun: True = ko'proq ushlaydi;
+#   threshold oshirilgach: False = faqat aniq accepted)
+AI_REVIEW_RECORDS_ATTENDANCE = config('AI_REVIEW_RECORDS_ATTENDANCE', default=False, cast=bool)
 
 # ─── Kamera patrul (aylanish) ─────────────────────────────────────────────────
 # Global rejim: off | preset | sweep | hybrid
