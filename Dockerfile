@@ -8,7 +8,14 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
-    TZ=Asia/Tashkent
+    TZ=Asia/Tashkent \
+    # PyPI CDN (Fastly) O'zbekistondan sekin — Aliyun mirror (Tashkent'dan tez),
+    # pypi.org zaxira sifatida (mirror'da topilmasa)
+    PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/ \
+    PIP_EXTRA_INDEX_URL=https://pypi.org/simple/ \
+    PIP_DEFAULT_TIMEOUT=120 \
+    PIP_RETRIES=10 \
+    PIP_TRUSTED_HOST="mirrors.aliyun.com pypi.org files.pythonhosted.org"
 
 # ─── Tizim paketlari + Python 3.14 (deadsnakes) ───────────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
