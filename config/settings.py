@@ -164,6 +164,15 @@ AI_SKIP_LOCKED_TRACK       = config('AI_SKIP_LOCKED_TRACK',       default=True, 
 # Inference shu ms'dan uzoq cho'zilsa WARNING (jim sekinlashuvni ko'rsatadi)
 AI_INFERENCE_WARN_MS       = config('AI_INFERENCE_WARN_MS',       default=2000, cast=int)
 
+# ─── Kamera stream shabloni (SKUD deviceId=IP dan URL quriladi) ───────────────
+# {ip} = SKUD deviceId, {user}/{password} = kamera login, {org}/{room} = SKUD id
+# Misol (Hikvision): rtsp://{user}:{password}@{ip}:554/Streaming/Channels/101
+# Misol (Dahua):     rtsp://{user}:{password}@{ip}:554/cam/realmonitor?channel=1&subtype=0
+# Misol (edu proxy): https://edu-api.devel.uz/cam{org}_{room}
+CAMERA_STREAM_TEMPLATE = config('CAMERA_STREAM_TEMPLATE', default='')
+CAMERA_USER            = config('CAMERA_USER',            default='')
+CAMERA_PASSWORD        = config('CAMERA_PASSWORD',        default='')
+
 # ─── Kamera patrul (aylanish) ─────────────────────────────────────────────────
 # Global rejim: off | preset | sweep | hybrid
 # Har kamera Camera.patrol_mode bilan bekor qila oladi ("default" = shu global)
