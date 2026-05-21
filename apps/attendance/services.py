@@ -78,10 +78,12 @@ def _cleanup_frontal_store():
 _LESSON_CACHE: dict[int, tuple] = {}
 _LESSON_CACHE_LOCK = threading.Lock()
 
-# Aktiv darsni 30 sekundda bir marta tekshirish uchun kesh
+# Aktiv darsni 5 sekundda bir marta tekshirish uchun kesh.
+# 30s → 5s: tanaffus oxirida yangi dars boshlanishi tezroq aniqlanadi
+# (eski 30s bilan har dars boshida 0-30s davomat yozilmas edi).
 # camera_id → (monotonic_time, schedule | None)
 _SCHEDULE_CACHE: dict[int, tuple] = {}
-_SCHEDULE_CACHE_TTL = 30.0
+_SCHEDULE_CACHE_TTL = 5.0
 _SCHEDULE_CACHE_LOCK = threading.Lock()
 
 
@@ -1025,7 +1027,8 @@ class FaceTrackService:
     def __init__(
         self,
         lock_minutes: int = 45,
-        re_recognize_seconds: int = 30,
+        re_recognize_seconds: int = 5,   # 30→5: REJECTED bo'lgan trackni
+        # tezda qaytadan tekshirish (talaba burchakni o'zgartirsa darrov ushlash)
         track_ttl_seconds: int = 120,
     ):
         self.lock_service = AttendanceLockService(lock_minutes=lock_minutes)
