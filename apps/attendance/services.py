@@ -354,38 +354,87 @@ class ActiveScheduleService:
 
 class AttendanceLockService:
     def __init__(self, lock_minutes: int = 45):
+        # Fallback TTL — faqat schedule berilmagan holatlar uchun (eski xulq).
+        # Schedule berilsa locked_until = schedule.end_at + buffer.
         self.lock_minutes = lock_minutes
 
-    def get_active_lock(self, student_id: int, camera_id: int | None = None):
+    def get_active_lock(
+        self,
+        student_id: int,
+        schedule_id: int | None = None,
+        camera_id: int | None = None,
+    ):
+        """
+        Aktiv lock'ni qaytaradi.
+        - schedule_id berilsa: FAQAT shu dars uchun lock topiladi. Boshqa
+          dars lock'i bor bo'lsa ham — joriy dars uchun bloklamasin
+          (8:00-8:45 lock 9:00-9:45 darsga ta'sir qilmasligi shart).
+        - schedule_id=None: dars aniqlanmagan (tanaffus) — eski uslub
+          bo'yicha eng yangi aktiv lock'ni qaytaradi.
+        """
         now = timezone.now()
         qs = AttendanceLock.objects.filter(
             student_id=student_id,
             is_active=True,
             locked_until__gt=now,
         )
+        if schedule_id is not None:
+            qs = qs.filter(schedule_id=schedule_id)
         if camera_id is not None:
             qs = qs.filter(camera_id=camera_id)
         return qs.order_by("-locked_until").first()
 
-    def is_locked(self, student_id: int, camera_id: int | None = None) -> bool:
-        return self.get_active_lock(student_id=student_id, camera_id=camera_id) is not None
+    def is_locked(
+        self,
+        student_id: int,
+        schedule_id: int | None = None,
+        camera_id: int | None = None,
+    ) -> bool:
+        return self.get_active_lock(
+            student_id=student_id,
+            schedule_id=schedule_id,
+            camera_id=camera_id,
+        ) is not None
 
     def create_lock(
         self,
         student_id: int,
         organization_id: int | None = None,
         camera_id: int | None = None,
+        schedule=None,
         minutes: int | None = None,
         reason: str = "attendance_done",
     ):
+        """
+        Yangi lock yaratadi.
+        - schedule berilsa: locked_until = schedule end_at (real dars oxiri,
+          +2 daq buffer). Bir o'quvchi+bir dars → bitta lock (DB constraint).
+        - schedule=None: fallback TTL (45 daq) — eski xulq.
+        """
         now = timezone.now()
-        duration = minutes if minutes is not None else self.lock_minutes
-        locked_until = now + timedelta(minutes=duration)
+        locked_until = None
+        if schedule is not None:
+            try:
+                end_dt = datetime.combine(schedule.date, schedule.end_at)
+                if timezone.is_naive(end_dt):
+                    end_dt = timezone.make_aware(end_dt, timezone.get_current_timezone())
+                # +2 daq buffer — dars oxirida ham qisqa muddat lock kuchda
+                locked_until = end_dt + timedelta(minutes=2)
+            except Exception as exc:
+                logger.warning(
+                    "AttendanceLock: schedule.end_at parsing xatosi sid=%s: %s",
+                    getattr(schedule, "id", None), exc,
+                )
+                locked_until = None
+        if locked_until is None:
+            duration = minutes if minutes is not None else self.lock_minutes
+            locked_until = now + timedelta(minutes=duration)
         try:
             with transaction.atomic():
                 return AttendanceLock.objects.create(
                     student_id=student_id,
                     camera_id=camera_id,
+                    schedule_id=getattr(schedule, "id", None),
                     organization_id=organization_id,
                     locked_from=now,
                     locked_until=locked_until,
@@ -395,10 +444,14 @@ class AttendanceLockService:
         except IntegrityError:
             # Ikki thread bir vaqtda lock yaratmoqchi bo'ldi — mavjudini qaytaramiz
             logger.debug(
-                "AttendanceLock race: student_id=%s cam=%s — mavjud lock ishlatiladi",
-                student_id, camera_id,
+                "AttendanceLock race: student_id=%s sched=%s cam=%s — mavjud lock ishlatiladi",
+                student_id, getattr(schedule, "id", None), camera_id,
             )
-            return self.get_active_lock(student_id=student_id, camera_id=camera_id)
+            return self.get_active_lock(
+                student_id=student_id,
+                schedule_id=getattr(schedule, "id", None),
+                camera_id=camera_id,
+            )
 
     @transaction.atomic
     def deactivate_expired_locks(self):
@@ -678,8 +731,13 @@ class RecognitionEventService:
                 }
 
         # ── 4. Accepted ──────────────────────────────────────────────────────────
-        # Global lock tekshiruvi — birorta kamerada yozilgan bo'lsa o'tkazib yuboramiz
-        if self.lock_service.is_locked(student_id=best["student_id"], camera_id=None):
+        # Joriy dars uchun lock tekshiruvi — agar shu darsda allaqachon yozilgan
+        # bo'lsa o'tkazib yuboramiz. Boshqa dars lock'i bu tekshiruvga ta'sir
+        # qilmaydi (har dars mustaqil).
+        _active_schedule_id = getattr(_active_schedule, "id", None) if _active_schedule else None
+        if _active_schedule_id is not None and self.lock_service.is_locked(
+            student_id=best["student_id"], schedule_id=_active_schedule_id,
+        ):
             with transaction.atomic():
                 track_service.mark_track_recognized(
                     track=track,
@@ -749,6 +807,7 @@ class RecognitionEventService:
                 student_id=best["student_id"],
                 organization_id=organization_id,
                 camera_id=camera_id,
+                schedule=_active_schedule,  # ← per-lesson scope
                 reason="attendance_done",
             )
 
@@ -837,8 +896,20 @@ class RecognitionEventService:
         best = result["best_match"]
         decision = result["decision"]
 
+        # Legacy path — track yo'q. Joriy darsni aniqlaymiz (bo'lsa) → lock uni
+        # nazarda tutadi (har dars uchun alohida lock).
+        _legacy_schedule = None
+        if camera_id is not None:
+            try:
+                _legacy_schedule, _ = _get_lesson_embedding_cache(camera_id)
+            except Exception:
+                _legacy_schedule = None
+        _legacy_sid = getattr(_legacy_schedule, "id", None) if _legacy_schedule else None
+
         if best and decision == "accepted":
-            if self.lock_service.is_locked(student_id=best["student_id"], camera_id=None):
+            if _legacy_sid is not None and self.lock_service.is_locked(
+                student_id=best["student_id"], schedule_id=_legacy_sid,
+            ):
                 return {"status": "skipped_locked", "decision": decision, "best_match": best}
 
         image_base64 = self._to_base64(image_path) if save_base64 else None
@@ -869,6 +940,7 @@ class RecognitionEventService:
                     student_id=best["student_id"],
                     organization_id=organization_id,
                     camera_id=camera_id,
+                    schedule=_legacy_schedule,  # ← per-lesson scope (None bo'lsa fallback 45 daq)
                     reason="attendance_done",
                 )
 
@@ -1016,10 +1088,25 @@ class FaceTrackService:
             return True, "inactive_track"
 
         if track.student_id:
-            lock = self.lock_service.get_active_lock(
-                student_id=track.student_id,
-                camera_id=track.camera_id,
-            )
+            # Joriy dars uchun lock'ni qidiramiz. Boshqa dars lock'i bu yerda
+            # bloklamasin (har dars mustaqil: 8:00-8:45 lock 9:00-9:45 da
+            # tanishni to'xtatmaydi).
+            _cur_schedule_id = None
+            if track.camera_id is not None:
+                try:
+                    _cur_sched, _ = _get_lesson_embedding_cache(track.camera_id)
+                    _cur_schedule_id = getattr(_cur_sched, "id", None) if _cur_sched else None
+                except Exception:
+                    _cur_schedule_id = None
+            # Agar joriy dars aniqlanmagan bo'lsa (tanaffus) — lock tekshiruvi
+            # o'tkazib yuboriladi. Aks holda eski lock yangi darsni bloklardi.
+            if _cur_schedule_id is None:
+                lock = None
+            else:
+                lock = self.lock_service.get_active_lock(
+                    student_id=track.student_id,
+                    schedule_id=_cur_schedule_id,
+                )
             if lock:
                 from django.conf import settings as _lk_s
                 _skip_locked = getattr(_lk_s, "AI_SKIP_LOCKED_TRACK", True)

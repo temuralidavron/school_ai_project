@@ -69,6 +69,15 @@ class AttendanceLock(BaseModel):
         blank=True,
         related_name="attendance_locks",
     )
+    # Lock dars'ga bog'lanadi — har dars uchun alohida lock (8:00-8:45,
+    # 9:00-9:45 — ikkita mustaqil lock, ikkita mustaqil davomat).
+    schedule = models.ForeignKey(
+        "integrations.ExternalSchedule",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="attendance_locks",
+    )
     organization_id = models.BigIntegerField(null=True, blank=True)
     locked_from = models.DateTimeField()
     locked_until = models.DateTimeField()
@@ -79,12 +88,15 @@ class AttendanceLock(BaseModel):
         db_table = "attendance_locks"
         indexes = [
             models.Index(fields=["student_id", "is_active", "locked_until"], name="al_student_lock_idx"),
+            models.Index(fields=["student_id", "schedule_id", "is_active"], name="al_student_sched_idx"),
         ]
         constraints = [
+            # Bir o'quvchi + bir dars uchun faqat bitta aktiv lock.
+            # Boshqa dars (boshqa schedule_id) bo'lsa — yangi lock ruxsat etiladi.
             models.UniqueConstraint(
-                fields=["student_id", "camera_id"],
-                condition=models.Q(is_active=True),
-                name="al_unique_active_lock",
+                fields=["student_id", "schedule_id"],
+                condition=models.Q(is_active=True, schedule_id__isnull=False),
+                name="al_unique_active_schedule_lock",
             ),
         ]
 
