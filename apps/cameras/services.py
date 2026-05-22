@@ -145,7 +145,11 @@ class CameraStreamService:
         if not stream_url:
             logger.error("Camera id=%s uchun stream_url yo'q", self.camera.id)
             return
-        if not stream_url.endswith(".m3u8"):
+        # RTSP (to'g'ridan kamera) — o'zgartirilmaydi.
+        # HLS (proxy) — /index.m3u8 qo'shiladi (eski xulq).
+        if stream_url.startswith(("rtsp://", "rtsps://")):
+            pass
+        elif not stream_url.endswith(".m3u8"):
             stream_url = stream_url.rstrip("/") + "/index.m3u8"
 
         # FFMPEG global timeout — CAP_PROP timeout backend'da ishlamasa, zaxira.
