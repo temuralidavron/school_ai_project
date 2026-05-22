@@ -163,6 +163,10 @@ AI_SKUD_PUSH_WORKERS       = config('AI_SKUD_PUSH_WORKERS',       default=8,    
 AI_SKIP_LOCKED_TRACK       = config('AI_SKIP_LOCKED_TRACK',       default=True, cast=bool)
 # Inference shu ms'dan uzoq cho'zilsa WARNING (jim sekinlashuvni ko'rsatadi)
 AI_INFERENCE_WARN_MS       = config('AI_INFERENCE_WARN_MS',       default=2000, cast=int)
+# Kichik yuzlarni upscale qilib qayta detect qilish. det_size>=1280 da KERAK EMAS
+# (asosiy detektsiya allaqachon sifatli) — har yuz uchun qo'shimcha GPU inference
+# (global lock) → sinf to'lganda 10-20x sekinlashtiradi. det=1920 da False tavsiya.
+AI_UPSCALE_SMALL_FACES     = config('AI_UPSCALE_SMALL_FACES',     default=True, cast=bool)
 
 # ─── Kamera stream shabloni (SKUD deviceId=IP dan URL quriladi) ───────────────
 # {ip} = SKUD deviceId, {user}/{password} = kamera login, {org}/{room} = SKUD id
