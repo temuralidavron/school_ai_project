@@ -1374,9 +1374,15 @@ class LiveFrameProcessorService:
                 })
                 continue
 
-            # 4. Embedding olish — 160px dan kichik barcha yuzlar upscale qilinadi
+            # 4. Embedding olish.
+            # Upscale (crop→resize→qayta detect_faces) faqat KICHIK det_size uchun
+            # foydali edi (det=640). det_size=1920 da asosiy detektsiya allaqachon
+            # sifatli embedding beradi — upscale ortiqcha + har yuz uchun yana bir
+            # GPU inference (global lock) → sinf to'lganda 10-20x sekinlashtiradi.
+            # AI_UPSCALE_SMALL_FACES=False (det>=1280 da tavsiya) → tezlik 10x oshadi.
             upscaled_emb = None
-            if face_w < 160 or face_h < 160:
+            _do_upscale = getattr(settings, "AI_UPSCALE_SMALL_FACES", True)
+            if _do_upscale and (face_w < 160 or face_h < 160):
                 upscaled_emb = self._get_upscaled_embedding(frame, (x1, y1, x2, y2))
 
             query_embedding = upscaled_emb if upscaled_emb is not None else face.embedding
