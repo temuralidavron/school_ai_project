@@ -24,6 +24,12 @@ print("[cameras] DB ga ulanib bo'lmadi — 120s timeout")
 sys.exit(1)
 PY
 
+# RTSP TCP transport — Python/cv2 ishga tushishidan OLDIN (shell darajasi).
+# UDP paket yo'qolishi h264 "decoding MB" artefaktlariga sabab → TCP yo'qotadi.
+# Yagona ishonchli usul: modul-level setdefault cv2 boshqa moduldan oldin
+# yuklansa kech qoladi, shell export esa kafolatli.
+export OPENCV_FFMPEG_CAPTURE_OPTIONS="rtsp_transport;tcp|timeout;8000000"
+
 ACCEPT="${AI_ACCEPT_THRESHOLD:-0.55}"
 REVIEW="${AI_REVIEW_THRESHOLD:-0.42}"
 INTERVAL="${AI_FRAME_INTERVAL:-1.0}"
