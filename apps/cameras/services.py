@@ -152,11 +152,12 @@ class CameraStreamService:
         elif not stream_url.endswith(".m3u8"):
             stream_url = stream_url.rstrip("/") + "/index.m3u8"
 
-        # FFMPEG global timeout — CAP_PROP timeout backend'da ishlamasa, zaxira.
-        # Faqat o'rnatilmagan bo'lsa qo'yamiz (boshqa kamera thread'ini buzmaslik).
-        os.environ.setdefault(
-            "OPENCV_FFMPEG_CAPTURE_OPTIONS",
-            f"timeout;{self._FFMPEG_TIMEOUT_US}",
+        # FFMPEG opsiyalari:
+        # - rtsp_transport;tcp → RTSP TCP orqali (UDP paket yo'qolishi → h264
+        #   "error while decoding MB" artefaktlarini yo'qotadi, kadr buzilmaydi)
+        # - timeout → o'lik stream'da abadiy osilib qolmaydi
+        os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = (
+            f"rtsp_transport;tcp|timeout;{self._FFMPEG_TIMEOUT_US}"
         )
 
         try:
