@@ -117,6 +117,26 @@ class CameraStreamService:
         delay = self.reconnect_delay * (2 ** min(error_count - 1, 6))
         return min(delay, self._RECONNECT_MAX_DELAY)
 
+    # FFMPEG ochish/o'qish timeout (mikrosekund). HLS stream o'lsa cv2.read()
+    # abadiy osilib qolmaydi — shu vaqtdan keyin xato qaytaradi → qayta ulanish.
+    _FFMPEG_TIMEOUT_US = 8_000_000  # 8 sekund
+
+    def _open_capture(self, stream_url: str):
+        """Persistent HLS capture — timeout bilan (qotib qolishni oldini oladi)."""
+        cap = cv2.VideoCapture(stream_url, cv2.CAP_FFMPEG)
+        # Bufer 1 kadr — har read() eng yangi kadrni beradi (real-time, lag yo'q)
+        for prop, val in (
+            (getattr(cv2, "CAP_PROP_BUFFERSIZE", None), 1),
+            (getattr(cv2, "CAP_PROP_OPEN_TIMEOUT_MSEC", None), 8000),
+            (getattr(cv2, "CAP_PROP_READ_TIMEOUT_MSEC", None), 8000),
+        ):
+            if prop is not None:
+                try:
+                    cap.set(prop, val)
+                except Exception:
+                    pass
+        return cap
+
     def run(self, stop_event: threading.Event | None = None):
         from apps.attendance.services import LiveFrameProcessorService
         processor = LiveFrameProcessorService()
@@ -128,6 +148,13 @@ class CameraStreamService:
         if not stream_url.endswith(".m3u8"):
             stream_url = stream_url.rstrip("/") + "/index.m3u8"
 
+        # FFMPEG global timeout — CAP_PROP timeout backend'da ishlamasa, zaxira.
+        # Faqat o'rnatilmagan bo'lsa qo'yamiz (boshqa kamera thread'ini buzmaslik).
+        os.environ.setdefault(
+            "OPENCV_FFMPEG_CAPTURE_OPTIONS",
+            f"timeout;{self._FFMPEG_TIMEOUT_US}",
+        )
+
         try:
             org_id = self._get_organization_id()
         except ValueError as e:
@@ -136,62 +163,77 @@ class CameraStreamService:
 
         cam_id = self.camera.id
         logger.info(
-            "Stream boshlandi: cam=%s  url=%s  org=%s  interval=%.1fs  threshold=%.2f/%.2f",
+            "Stream boshlandi (persistent): cam=%s  url=%s  org=%s  interval=%.1fs  threshold=%.2f/%.2f",
             cam_id, stream_url, org_id,
             self.frame_interval, self.accept_threshold, self.review_threshold,
         )
 
         frame_count = 0
         error_count = 0
+        cap = None
 
-        while True:
-            if stop_event and stop_event.is_set():
-                break
+        try:
+            while True:
+                if stop_event and stop_event.is_set():
+                    break
 
-            t_loop = time.monotonic()
-            cap = cv2.VideoCapture(stream_url)
-            try:
-                if not cap.isOpened():
-                    cap.release()
-                    error_count += 1
-                    backoff = self._calc_backoff(error_count)
+                # ── 1. Ulanish yo'q/uzilgan bo'lsa — ochamiz (timeout bilan) ──────
+                if cap is None or not cap.isOpened():
+                    if cap is not None:
+                        try:
+                            cap.release()
+                        except Exception:
+                            pass
+                    cap = self._open_capture(stream_url)
+                    if not cap.isOpened():
+                        error_count += 1
+                        backoff = self._calc_backoff(error_count)
+                        if error_count >= self._MAX_CONSECUTIVE_ERRORS:
+                            logger.critical(
+                                "cam=%s ULANMADI %d marta ketma-ket! "
+                                "Kamera o'chiq yoki tarmoq muammosi. %.0fs kutiladi.",
+                                cam_id, error_count, backoff,
+                            )
+                        else:
+                            logger.warning(
+                                "cam=%s ulanmadi (#%d), %.0fs kutiladi",
+                                cam_id, error_count, backoff,
+                            )
+                        if stop_event:
+                            stop_event.wait(timeout=backoff)
+                        else:
+                            time.sleep(backoff)
+                        continue
+                    if error_count > 0:
+                        logger.info("cam=%s qayta ulandi (avval %d xato bor edi)", cam_id, error_count)
+                    error_count = 0
 
-                    if error_count >= self._MAX_CONSECUTIVE_ERRORS:
-                        logger.critical(
-                            "cam=%s ULANMADI %d marta ketma-ket! "
-                            "Kamera o'chiq yoki tarmoq muammosi. %.0fs kutiladi.",
-                            cam_id, error_count, backoff,
-                        )
-                    else:
-                        logger.warning(
-                            "cam=%s ulanmadi (#%d), %.0fs kutiladi",
-                            cam_id, error_count, backoff,
-                        )
+                t_loop = time.monotonic()
 
-                    if stop_event:
-                        stop_event.wait(timeout=backoff)
-                    else:
-                        time.sleep(backoff)
-                    continue
-
+                # ── 2. Eng yangi kadrni olish (uzluksiz ulanishdan) ──────────────
                 ret, frame = cap.read()
                 if not ret or frame is None:
-                    cap.release()
+                    # HLS uzilgan/o'lgan — ulanishni yopib qayta ochamiz
                     error_count += 1
+                    try:
+                        cap.release()
+                    except Exception:
+                        pass
+                    cap = None
                     backoff = self._calc_backoff(error_count)
-                    logger.warning("cam=%s frame o'qilmadi (#%d), %.0fs kutiladi", cam_id, error_count, backoff)
+                    logger.warning(
+                        "cam=%s frame o'qilmadi (#%d) — qayta ulanish, %.0fs kutiladi",
+                        cam_id, error_count, backoff,
+                    )
                     if stop_event:
                         stop_event.wait(timeout=backoff)
                     else:
                         time.sleep(backoff)
                     continue
 
-                cap.release()
                 frame_count += 1
-                if error_count > 0:
-                    logger.info("cam=%s qayta ulandi (avval %d xato bor edi)", cam_id, error_count)
-                error_count = 0
 
+                # ── 3. Kadrni qayta ishlash ───────────────────────────────────────
                 tmp_path = self._save_frame(frame)
                 t_ai = time.monotonic()
                 try:
@@ -214,31 +256,33 @@ class CameraStreamService:
                         cleaned = _cleanup_frontal_store()
                         if cleaned:
                             logger.debug("cam=%s frontal_store cleanup: %d stale entry", cam_id, cleaned)
+                except Exception as e:
+                    error_count += 1
+                    logger.error("cam=%s ishlov xatosi (#%d): %s", cam_id, error_count, str(e), exc_info=True)
                 finally:
                     if os.path.exists(tmp_path):
                         os.remove(tmp_path)
 
-            except Exception as e:
-                error_count += 1
-                logger.error("cam=%s xato (#%d): %s", cam_id, error_count, str(e), exc_info=True)
+                # ── 4. Interval — kutish vaqtida buferni bo'shatib turamiz ────────
+                # (uzluksiz ulanishda eski kadrlar to'planmasligi uchun grab() bilan
+                #  drenaj — keyingi read() eng yangi kadrni beradi)
+                elapsed = time.monotonic() - t_loop
+                remaining = self.frame_interval - elapsed
+                while remaining > 0:
+                    if stop_event and stop_event.is_set():
+                        break
+                    # Bufer drenaji — eski kadrlarni tashlab yubor (lag oldini oladi)
+                    try:
+                        cap.grab()
+                    except Exception:
+                        pass
+                    time.sleep(min(0.2, remaining))
+                    remaining = self.frame_interval - (time.monotonic() - t_loop)
+        finally:
+            if cap is not None:
                 try:
                     cap.release()
                 except Exception:
                     pass
-                backoff = self._calc_backoff(error_count)
-                if stop_event:
-                    stop_event.wait(timeout=backoff)
-                else:
-                    time.sleep(backoff)
-                continue
-
-            # Frame interval — AI vaqtini hisobga olgan holda kutish
-            elapsed = time.monotonic() - t_loop
-            remaining = max(0.0, self.frame_interval - elapsed)
-            if remaining > 0:
-                if stop_event:
-                    stop_event.wait(timeout=remaining)
-                else:
-                    time.sleep(remaining)
 
         logger.info("Stream to'xtatildi: cam=%s  jami_kadr=%d", cam_id, frame_count)
