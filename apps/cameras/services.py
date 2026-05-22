@@ -4,6 +4,15 @@ import tempfile
 import threading
 import time
 
+# MUHIM: cv2 import qilinishidan OLDIN o'rnatiladi — OpenCV bu env'ni
+# FFMPEG backend ishga tushganda bir marta o'qiydi. Kech o'rnatilsa ta'sir qilmaydi.
+# rtsp_transport;tcp → UDP paket yo'qolishi (h264 "decoding MB" artefakt) yo'qoladi.
+# timeout (mikrosekund) → o'lik stream'da abadiy osilib qolmaydi.
+os.environ.setdefault(
+    "OPENCV_FFMPEG_CAPTURE_OPTIONS",
+    "rtsp_transport;tcp|timeout;8000000",
+)
+
 import cv2
 from django.utils import timezone
 
@@ -152,13 +161,8 @@ class CameraStreamService:
         elif not stream_url.endswith(".m3u8"):
             stream_url = stream_url.rstrip("/") + "/index.m3u8"
 
-        # FFMPEG opsiyalari:
-        # - rtsp_transport;tcp → RTSP TCP orqali (UDP paket yo'qolishi → h264
-        #   "error while decoding MB" artefaktlarini yo'qotadi, kadr buzilmaydi)
-        # - timeout → o'lik stream'da abadiy osilib qolmaydi
-        os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = (
-            f"rtsp_transport;tcp|timeout;{self._FFMPEG_TIMEOUT_US}"
-        )
+        # FFMPEG opsiyalari (rtsp_transport;tcp + timeout) modul boshida —
+        # cv2 import'idan oldin — o'rnatilgan (OpenCV faqat bir marta o'qiydi).
 
         try:
             org_id = self._get_organization_id()
