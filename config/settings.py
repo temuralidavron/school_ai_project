@@ -167,6 +167,11 @@ AI_INFERENCE_WARN_MS       = config('AI_INFERENCE_WARN_MS',       default=2000, 
 # (asosiy detektsiya allaqachon sifatli) — har yuz uchun qo'shimcha GPU inference
 # (global lock) → sinf to'lganda 10-20x sekinlashtiradi. det=1920 da False tavsiya.
 AI_UPSCALE_SMALL_FACES     = config('AI_UPSCALE_SMALL_FACES',     default=True, cast=bool)
+# Inference parallellik — bir vaqtда necha thread GPU inference qila oladi.
+#   1 = serial (eski xulq, eng xavfsiz). 10 kamera serial → throughput past.
+#   3-4 = GPU parallel (RTX 5080) → 10 kamera tezroq ishlanadi → ko'proq kadr.
+# Crash/CUDA xato bo'lsa → 1 ga qaytaring. CPU (AI_GPU_ID=-1) da 1 qoldiring.
+AI_INFERENCE_CONCURRENCY   = config('AI_INFERENCE_CONCURRENCY',   default=1,    cast=int)
 
 # ─── Kamera stream shabloni (SKUD deviceId=IP dan URL quriladi) ───────────────
 # {ip} = SKUD deviceId, {user}/{password} = kamera login, {org}/{room} = SKUD id

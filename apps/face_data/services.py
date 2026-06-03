@@ -19,10 +19,30 @@ from apps.integrations.models import ExternalStudent, ExternalStudentPhoto
 # buffalo_l bir marta yuklanadi — har yangi service obyektida qayta disk o'qilmaydi
 _face_app: FaceAnalysis | None = None
 _face_app_init_lock = threading.Lock()
-# InsightFace FaceAnalysis.get() ichki buferlar ishlatadi — thread-safe emas.
-# CPU da parallel inference ham foyda bermaydi (bottleneck CPU o'zi).
-# Shuning uchun barcha threadlar bir navbat orqali o'tadi.
-_face_app_inference_lock = threading.Lock()
+# Inference parallellik nazorati — Semaphore(N):
+#   N=1 → serial (eski xulq, eng xavfsiz, CPU yoki ehtiyot uchun)
+#   N>1 → N ta thread bir vaqtда inference (GPU parallel → throughput oshadi).
+# GPU'da CUDA o'zi navbatlaydi, lekin xotira to'lmasligi uchun N cheklangan.
+# .env AI_INFERENCE_CONCURRENCY orqali sozlanadi (default 1 = eski xulq).
+# 10 kamera + RTX 5080 (16GB) uchun 3-4 tavsiya (sinab moslang).
+_face_app_inference_sem: threading.Semaphore | None = None
+_face_app_sem_lock = threading.Lock()
+
+
+def _get_inference_sem() -> threading.Semaphore:
+    global _face_app_inference_sem
+    if _face_app_inference_sem is None:
+        with _face_app_sem_lock:
+            if _face_app_inference_sem is None:
+                try:
+                    from django.conf import settings
+                    n = int(getattr(settings, "AI_INFERENCE_CONCURRENCY", 1))
+                except Exception:
+                    n = 1
+                n = max(1, n)
+                _face_app_inference_sem = threading.Semaphore(n)
+                logger.info("Inference concurrency: %d (1=serial, >1=GPU parallel)", n)
+    return _face_app_inference_sem
 
 _PGVECTOR_FETCH_LIMIT = 1000
 _QUALITY_FACE_AREA_NORM = 40_000.0  # 200x200 piksel yuz "ideal" deb hisoblangan
@@ -48,10 +68,12 @@ def get_face_app() -> FaceAnalysis:
 
 
 def detect_faces(img: np.ndarray) -> list:
-    """Thread-safe InsightFace yuz aniqlash — barcha threadlar shu orqali o'tadi."""
+    """InsightFace yuz aniqlash — Semaphore bilan parallellik nazorati.
+    AI_INFERENCE_CONCURRENCY=1 → serial; >1 → GPU parallel (throughput)."""
     app = get_face_app()
+    sem = _get_inference_sem()
     _wait0 = time.monotonic()
-    with _face_app_inference_lock:
+    with sem:
         _t0 = time.monotonic()
         faces = app.get(img)
         _dur_ms = int((time.monotonic() - _t0) * 1000)
