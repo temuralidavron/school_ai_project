@@ -1,17 +1,21 @@
 """
-Telegram davomat bot — ALOHIDA konteyner, davomat pipeline'ga TEGMAYDI.
+Telegram davomat bot — TUGMALI (inline keyboard), IZOLYATSIYALANGAN.
 
-Izolyatsiya:
-  - GPU ishlatmaydi (faqat DB read + Telegram API)
-  - DB faqat O'QIYDI (report_service), BotSentReport'gagina yozadi
-  - python-telegram-bot kutubxonasi kerak emas (requests yetadi)
+Davomat pipeline'ga TEGMAYDI:
+  - GPU yo'q (faqat DB read + Telegram API)
+  - DB read-only (report_service) + faqat BotSentReport'ga write
+  - requests yetadi (python-telegram-bot kerak emas)
 
-2 parallel vazifa:
-  - polling: admin buyruqlari (/bugun, /sinf, /kamera, /start)
-  - scheduler: tugagan dars → avtomatik hisobot (har 5 daqiqa)
+UX — tugmalar (buyruq yozish shart emas):
+  Asosiy menyu: [📅 Bugun] [🏫 Sinflar] [📷 Kameralar]
+  Sinflar → har sinf tugma → bosса o'sha sinf hisoboti
+  ⬅️ Orqaga — navigatsiya
 
-Ishlatish:
-    python manage.py run_bot
+2 parallel:
+  - polling: message + callback_query (tugma bosish)
+  - scheduler: dars tugaganда → avtomatik hisobot (har 5 daqiqa)
+
+Ishlatish: python manage.py run_bot
 """
 import logging
 import threading
@@ -27,7 +31,7 @@ _API = "https://api.telegram.org/bot{token}/{method}"
 
 
 class Command(BaseCommand):
-    help = "Telegram davomat botini ishga tushiradi (alohida, read-only)"
+    help = "Telegram davomat botini ishga tushiradi (tugmali, read-only)"
 
     def handle(self, *args, **options):
         token = getattr(settings, "TELEGRAM_BOT_TOKEN", "")
@@ -41,13 +45,10 @@ class Command(BaseCommand):
         self.org_id = getattr(settings, "BOT_ORG_ID", None)
         self.session = requests.Session()
 
-        logger.info("Bot ishga tushdi (admin=%s group=%s org=%s)",
-                    self.admin_chat, self.group_chat or "—", self.org_id)
+        logger.info("Bot ishga tushdi (tugmali, admin=%s org=%s)", self.admin_chat, self.org_id)
 
         stop = threading.Event()
-        t_sched = threading.Thread(target=self._scheduler_loop, args=(stop,), daemon=True, name="bot-scheduler")
-        t_sched.start()
-
+        threading.Thread(target=self._scheduler_loop, args=(stop,), daemon=True, name="bot-scheduler").start()
         try:
             self._polling_loop(stop)
         except KeyboardInterrupt:
@@ -55,19 +56,33 @@ class Command(BaseCommand):
         logger.info("Bot to'xtatildi")
 
     # ─── Telegram API ──────────────────────────────────────────────────────
-    def _send(self, chat_id, text):
-        """HTML xabar yuboradi (4096 belgi cheklovi — bo'lib yuboradi)."""
+    def _post(self, method, payload):
+        try:
+            return self.session.post(
+                _API.format(token=self.token, method=method), json=payload, timeout=20,
+            ).json()
+        except Exception as e:
+            logger.error("%s xato: %s", method, e)
+            return {}
+
+    def _send(self, chat_id, text, keyboard=None):
         if not chat_id:
             return
-        for chunk in self._split(text, 4000):
-            try:
-                self.session.post(
-                    _API.format(token=self.token, method="sendMessage"),
-                    json={"chat_id": chat_id, "text": chunk, "parse_mode": "HTML"},
-                    timeout=20,
-                )
-            except Exception as e:
-                logger.error("sendMessage xato: %s", e)
+        for chunk in self._split(text, 3800):
+            payload = {"chat_id": chat_id, "text": chunk, "parse_mode": "HTML"}
+            if keyboard:
+                payload["reply_markup"] = {"inline_keyboard": keyboard}
+            self._post("sendMessage", payload)
+
+    def _edit(self, chat_id, message_id, text, keyboard=None):
+        """Tugma bosилganда xabarni O'ZGARTIRADI (yangi xabar emas — toza UX)."""
+        payload = {"chat_id": chat_id, "message_id": message_id, "text": text[:3800], "parse_mode": "HTML"}
+        if keyboard:
+            payload["reply_markup"] = {"inline_keyboard": keyboard}
+        self._post("editMessageText", payload)
+
+    def _answer_cb(self, cb_id):
+        self._post("answerCallbackQuery", {"callback_query_id": cb_id})
 
     @staticmethod
     def _split(text, limit):
@@ -76,8 +91,7 @@ class Command(BaseCommand):
         parts, cur = [], ""
         for line in text.split("\n"):
             if len(cur) + len(line) + 1 > limit:
-                parts.append(cur)
-                cur = line
+                parts.append(cur); cur = line
             else:
                 cur = f"{cur}\n{line}" if cur else line
         if cur:
@@ -85,7 +99,6 @@ class Command(BaseCommand):
         return parts
 
     def _recipients(self):
-        """Hisobot kimga: admin + (bo'lsa) guruh."""
         out = []
         if self.admin_chat:
             out.append(self.admin_chat)
@@ -93,93 +106,105 @@ class Command(BaseCommand):
             out.append(self.group_chat)
         return out
 
-    # ─── Polling (buyruqlar) ───────────────────────────────────────────────
+    # ─── Tugmalar (inline keyboard) ────────────────────────────────────────
+    def _main_menu_kb(self):
+        return [
+            [{"text": "📅 Bugungi hisobot", "callback_data": "today"}],
+            [{"text": "🏫 Sinflar", "callback_data": "classes"},
+             {"text": "📷 Kameralar", "callback_data": "cameras"}],
+        ]
+
+    def _classes_kb(self):
+        from apps.monitoring.services.report_service import get_today_classes
+        classes = get_today_classes(self.org_id)
+        rows, row = [], []
+        for c in classes:
+            row.append({"text": c["label"], "callback_data": f"cls:{c['degree']}:{c['name']}"})
+            if len(row) == 3:           # 3 ustun
+                rows.append(row); row = []
+        if row:
+            rows.append(row)
+        rows.append([{"text": "⬅️ Orqaga", "callback_data": "menu"}])
+        return rows
+
+    def _back_kb(self):
+        return [[{"text": "⬅️ Asosiy menyu", "callback_data": "menu"}]]
+
+    # ─── Polling ───────────────────────────────────────────────────────────
     def _polling_loop(self, stop):
         offset = 0
         while not stop.is_set():
             try:
                 r = self.session.get(
                     _API.format(token=self.token, method="getUpdates"),
-                    params={"offset": offset, "timeout": 25},
-                    timeout=30,
+                    params={"offset": offset, "timeout": 25}, timeout=30,
                 )
-                data = r.json()
-                for upd in data.get("result", []):
+                for upd in r.json().get("result", []):
                     offset = upd["update_id"] + 1
-                    self._handle_update(upd)
+                    if "callback_query" in upd:
+                        self._handle_callback(upd["callback_query"])
+                    elif "message" in upd:
+                        self._handle_message(upd["message"])
             except Exception as e:
                 logger.error("polling xato: %s", e)
                 time.sleep(5)
 
-    def _handle_update(self, upd):
-        msg = upd.get("message") or {}
-        text = (msg.get("text") or "").strip()
+    def _handle_message(self, msg):
+        text = (msg.get("text") or "").strip().lower()
         chat_id = str(msg.get("chat", {}).get("id", ""))
-        if not text:
-            return
-
-        cmd = text.split()[0].lower().lstrip("/").split("@")[0]
-        arg = text[len(text.split()[0]):].strip()
-
-        if cmd == "start":
+        if text.startswith("/start") or text.startswith("/menu"):
             self._send(chat_id,
-                       f"🤖 Davomat bot.\nSizning chat_id: <code>{chat_id}</code>\n\n"
-                       "Buyruqlar:\n/bugun — kunlik hisobot\n/sinf 9A — sinf holati\n/kamera — kamera holati")
-        elif cmd == "bugun":
-            self._cmd_today(chat_id)
-        elif cmd == "sinf":
-            self._cmd_class(chat_id, arg)
-        elif cmd == "kamera":
-            self._cmd_cameras(chat_id)
+                       "🤖 <b>225 Maktab — Davomat</b>\n\nKerakli bo'limni tanlang:",
+                       keyboard=self._main_menu_kb())
+        else:
+            self._send(chat_id, "Menyu uchun /start bosing.", keyboard=self._main_menu_kb())
 
-    def _cmd_today(self, chat_id):
-        from apps.monitoring.services.report_service import generate_daily_report
-        self._send(chat_id, generate_daily_report(organization_id=self.org_id))
+    def _handle_callback(self, cb):
+        from apps.monitoring.services.report_service import (
+            generate_daily_report, generate_class_today,
+        )
+        cb_id = cb["id"]
+        data = cb.get("data", "")
+        msg = cb.get("message", {})
+        chat_id = str(msg.get("chat", {}).get("id", ""))
+        msg_id = msg.get("message_id")
+        self._answer_cb(cb_id)          # tugma "loading" ni to'xtatadi
 
-    def _cmd_class(self, chat_id, arg):
-        from apps.monitoring.services.report_service import generate_lesson_report
-        from apps.integrations.models import ExternalSchedule
-        from django.utils import timezone
-        from zoneinfo import ZoneInfo
-        if not arg:
-            self._send(chat_id, "Sinf nomini yozing: /sinf 9A")
-            return
-        today = timezone.now().astimezone(ZoneInfo("Asia/Tashkent")).date()
-        # arg "9A" → degree=9, name=A (oddiy parse)
-        deg = "".join(c for c in arg if c.isdigit())
-        name = "".join(c for c in arg if c.isalpha()).upper()
-        scheds = ExternalSchedule.objects.filter(
-            date=today,
-            class_obj__class_degree=deg or None,
-            class_obj__class_name__iexact=name,
-        ).select_related("class_obj").order_by("start_at")
-        if self.org_id:
-            scheds = scheds.filter(organization__organization_id=self.org_id)
-        scheds = list(scheds)
-        if not scheds:
-            self._send(chat_id, f"{arg} uchun bugun dars topilmadi.")
-            return
-        for s in scheds:
-            self._send(chat_id, generate_lesson_report(s))
+        if data == "menu":
+            self._edit(chat_id, msg_id,
+                       "🤖 <b>225 Maktab — Davomat</b>\n\nKerakli bo'limni tanlang:",
+                       keyboard=self._main_menu_kb())
+        elif data == "today":
+            self._edit(chat_id, msg_id, generate_daily_report(organization_id=self.org_id),
+                       keyboard=self._back_kb())
+        elif data == "classes":
+            self._edit(chat_id, msg_id, "🏫 <b>Sinfni tanlang:</b>", keyboard=self._classes_kb())
+        elif data.startswith("cls:"):
+            _, deg, name = data.split(":", 2)
+            self._edit(chat_id, msg_id,
+                       generate_class_today(deg, name, organization_id=self.org_id),
+                       keyboard=[[{"text": "⬅️ Sinflar", "callback_data": "classes"}],
+                                 [{"text": "🏠 Asosiy menyu", "callback_data": "menu"}]])
+        elif data == "cameras":
+            self._edit(chat_id, msg_id, self._cameras_text(), keyboard=self._back_kb())
 
-    def _cmd_cameras(self, chat_id):
+    def _cameras_text(self):
         from apps.cameras.models import Camera
         cams = Camera.objects.filter(is_active_stream=True).order_by("id")
-        lines = [f"📷 <b>Kameralar ({cams.count()} aktiv):</b>"]
+        lines = [f"📷 <b>Aktiv kameralar ({cams.count()}):</b>", ""]
         for c in cams:
-            lines.append(f"  • cam={c.id} {c.name}")
-        self._send(chat_id, "\n".join(lines))
+            lines.append(f"  • cam={c.id} — {c.name}")
+        return "\n".join(lines)
 
     # ─── Scheduler (avtomatik push) ────────────────────────────────────────
     def _scheduler_loop(self, stop):
-        # Ishga tushganда darrov emas, 30s keyin (warmup)
         stop.wait(30)
         while not stop.is_set():
             try:
                 self._push_finished_lessons()
             except Exception as e:
                 logger.error("scheduler xato: %s", e)
-            stop.wait(300)  # har 5 daqiqa
+            stop.wait(300)
 
     def _push_finished_lessons(self):
         from apps.monitoring.services.report_service import (
@@ -187,14 +212,9 @@ class Command(BaseCommand):
         )
         from apps.monitoring.models import BotSentReport
 
-        lessons = find_unsent_finished_lessons(organization_id=self.org_id)
-        for sch in lessons:
-            text = generate_lesson_report(sch)
+        for sch in find_unsent_finished_lessons(organization_id=self.org_id):
+            text = "🔔 <b>Dars tugadi</b>\n\n" + generate_lesson_report(sch)
             for chat in self._recipients():
-                self._send(chat, text)
-            # Yuborildi deb belgilash (takror yo'q) — bot FAQAT shu jadvalga yozadi
-            BotSentReport.objects.get_or_create(
-                report_type=BotSentReport.TYPE_LESSON,
-                schedule=sch,
-            )
+                self._send(chat, text, keyboard=[[{"text": "📅 Bugungi hisobot", "callback_data": "today"}]])
+            BotSentReport.objects.get_or_create(report_type=BotSentReport.TYPE_LESSON, schedule=sch)
             logger.info("Dars hisoboti yuborildi: schedule_id=%s", sch.id)

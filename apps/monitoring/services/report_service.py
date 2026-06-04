@@ -144,6 +144,49 @@ def generate_daily_report(report_date=None, organization_id: int = None) -> str:
     return "\n".join(lines)
 
 
+def get_today_classes(organization_id: int = None) -> list:
+    """
+    Bugun darsi bor unique sinflar ro'yxati (tugmalar uchun).
+    Qaytaradi: [{"degree": 9, "name": "A", "label": "9-A"}, ...]
+    """
+    from apps.integrations.models import ExternalSchedule
+
+    today = timezone.now().astimezone(_TZ).date()
+    qs = ExternalSchedule.objects.filter(date=today).select_related("class_obj")
+    if organization_id is not None:
+        qs = qs.filter(organization__organization_id=organization_id)
+
+    seen = {}
+    for s in qs:
+        c = s.class_obj
+        if not c:
+            continue
+        key = (c.class_degree, c.class_name)
+        if key not in seen:
+            seen[key] = {"degree": c.class_degree, "name": c.class_name, "label": _class_label(c)}
+    # tartib: daraja, nom
+    return sorted(seen.values(), key=lambda x: (x["degree"] or 0, x["name"] or ""))
+
+
+def generate_class_today(degree, name, organization_id: int = None) -> str:
+    """Bitta sinfning BUGUNGI barcha darslari hisoboti (ketma-ket)."""
+    from apps.integrations.models import ExternalSchedule
+
+    today = timezone.now().astimezone(_TZ).date()
+    qs = ExternalSchedule.objects.filter(
+        date=today,
+        class_obj__class_degree=degree or None,
+        class_obj__class_name__iexact=name,
+    ).select_related("class_obj").order_by("start_at")
+    if organization_id is not None:
+        qs = qs.filter(organization__organization_id=organization_id)
+
+    scheds = list(qs)
+    if not scheds:
+        return f"{degree}-{name} uchun bugun dars topilmadi."
+    return "\n\n———————————\n\n".join(generate_lesson_report(s) for s in scheds)
+
+
 def find_unsent_finished_lessons(organization_id: int = None) -> list:
     """
     Bugun tugagan, lekin botga hali yuborilmagan darslar ro'yxati.
