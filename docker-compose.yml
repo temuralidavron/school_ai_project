@@ -155,6 +155,32 @@ services:
     volumes:
       - ./logs:/app/logs
 
+  # ─── Telegram davomat bot — IZOLYATSIYALANGAN ───────────────────────────────
+  # Davomat pipeline'ga TEGMAYDI: GPU yo'q, faqat DB read + BotSentReport write.
+  # Resurs limit (mem/cpu) — cameras GPU/CPU'siga ta'sir qilmaydi.
+  # Bot crash bo'lsa — cameras/web ishlayveradi (alohida konteyner).
+  bot:
+    image: school_ai:latest
+    container_name: school_ai_bot
+    restart: unless-stopped
+    command: ["python3.14", "manage.py", "run_bot"]
+    env_file: .env
+    environment:
+      DB_HOST: db
+      MINIO_HOST: minio
+    depends_on:
+      web:
+        condition: service_started
+      db:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"        # ko'pi bilan yarim yadro — cameras'ga tegmaydi
+          memory: 512M       # ko'pi bilan 512MB
+
 volumes:
   postgres_data:
   minio_data:

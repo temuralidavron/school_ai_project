@@ -128,6 +128,13 @@ SKUD_CLIENT_ID      = config('SKUD_CLIENT_ID',      default='faceid')
 SKUD_CLIENT_SECRET  = config('SKUD_CLIENT_SECRET',  default='')
 SKUD_ACCESS_TOKEN   = config('SKUD_ACCESS_TOKEN',   default='')
 
+# ─── Telegram bot (davomat hisoboti — ALOHIDA konteyner, read-only) ────────────
+# Bot davomat pipeline'ga tegmaydi: GPU yo'q, faqat DB read + BotSentReport write.
+TELEGRAM_BOT_TOKEN     = config('TELEGRAM_BOT_TOKEN',     default='')
+TELEGRAM_ADMIN_CHAT_ID = config('TELEGRAM_ADMIN_CHAT_ID', default='')
+TELEGRAM_GROUP_CHAT_ID = config('TELEGRAM_GROUP_CHAT_ID', default='')
+BOT_ORG_ID             = config('BOT_ORG_ID',             default=16,   cast=int)
+
 # ─── AI / InsightFace ─────────────────────────────────────────────────────────
 # GPU ID: -1=CPU, 0=birinchi GPU (RTX 5080 / Jetson Orin)
 AI_GPU_ID            = config('AI_GPU_ID',            default=-1,   cast=int)
