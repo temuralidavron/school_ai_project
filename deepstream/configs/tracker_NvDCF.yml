@@ -1,0 +1,44 @@
+%YAML:1.0
+# DeepStream NvDCF tracker konfiguratsiyasi
+# Hujjat: DeepStream SDK -> NvMultiObjectTracker
+
+BaseConfig:
+  minDetectorConfidence: 0.4
+
+TargetManagement:
+  enableBboxUnClipping: 1
+  maxTargetsPerStream: 150
+
+  minIouDiff4NewTarget: 0.5
+  minTrackerConfidence: 0.2
+  probationAge: 3
+  maxShadowTrackingAge: 30
+  earlyTerminationAge: 1
+
+TrajectoryManagement:
+  useUniqueID: 1
+
+DataAssociator:
+  dataAssociatorType: 0
+  associationMatcherType: 0
+  checkClassMatch: 1
+
+  minMatchingScore4Overall: 0.0
+  minMatchingScore4SizeSimilarity: 0.6
+  minMatchingScore4Iou: 0.0
+  minMatchingScore4VisualSimilarity: 0.7
+  thresholdMahalanobisDistance4SizeSimilarity: 3.0
+
+StateEstimator:
+  stateEstimatorType: 1
+
+VisualTracker:
+  visualTrackerType: 1
+
+  useColorNames: 1
+  useHog: 1
+  featureImgSizeLevel: 2
+  featureFocusOffsetFactor_y: -0.2
+  filterLr: 0.075
+  filterChannelWeightsLr: 0.1
+  gaussianSigma: 0.75

@@ -468,6 +468,8 @@ class RecognitionEventService:
     def __init__(self, lock_minutes: int = 45):
         self.lock_service = AttendanceLockService(lock_minutes=lock_minutes)
         self.search_service = RecognitionSearchService()
+        # Singleton — har yuz uchun yangi obyekt yaratmaslik (RAM va GC tejaydi)
+        self.track_service = FaceTrackService(lock_minutes=lock_minutes)
 
     def _maybe_record_review_attendance(self, best, camera_id, schedule, event, arrived_at):
         """
@@ -511,7 +513,7 @@ class RecognitionEventService:
             save_base64: bool = True,
             frontal_frames_used: int = 0,
     ):
-        track_service = FaceTrackService(lock_minutes=self.lock_service.lock_minutes)
+        track_service = self.track_service  # singleton — __init__ da bir marta yaratilgan
 
         # Track olish/yaratish alohida tranzaksiyada
         with transaction.atomic():

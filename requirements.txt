@@ -31,3 +31,6 @@ python-decouple==3.8
 
 # Server (Ubuntu deploy uchun)
 gunicorn==23.0.0
+
+# DeepStream Kafka consumer (opt-in)
+kafka-python==2.0.2

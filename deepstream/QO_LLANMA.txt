@@ -1,0 +1,106 @@
+╔══════════════════════════════════════════════════════════════════╗
+║  DeepStream POC — school_attendace_v1 ichida (INTEGRATSIYALANGAN)║
+╚══════════════════════════════════════════════════════════════════╝
+
+ASOSIY G'OYA
+────────────────────────────────────────────────────────────────────
+  DeepStream bu yerda — mavjud davomat pipeline'iga QO'SHIMCHA.
+  Faqat yuz topishni tezlashtiradi (NVDEC + nvinfer).
+  Recognition, lock, DB write, SKUD push — HAMMASI mavjud kodda.
+
+  Eski oqim (saqlanadi):
+    Kamera → CameraStreamService → buffalo_l → RecognitionEventService
+                                                     |
+                                                     v
+                                              PostgreSQL + SKUD
+
+  Yangi oqim (opt-in):
+    Video/RTSP → DeepStream pipeline → Kafka → kafka_consumer command
+                                                     |
+                                                     v
+                                              MAVJUD RecognitionEventService
+                                              MAVJUD AttendanceLockService
+                                              MAVJUD SkudClient
+                                                     |
+                                                     v
+                                              PostgreSQL + SKUD
+
+
+PAPKA TUZILISHI
+────────────────────────────────────────────────────────────────────
+  deepstream/
+  ├── pipeline/
+  │   ├── main.py           DeepStream pipeline + Kafka producer
+  │   ├── Dockerfile        DeepStream 7.1 + Python image
+  │   └── requirements.txt
+  ├── configs/
+  │   ├── pgie_config_face.txt   Yuz topish modeli
+  │   ├── tracker_NvDCF.yml      Tracker
+  │   └── labels_face.txt
+  ├── data/
+  │   └── sinf.mp4               SIZ qo'yasiz (test video)
+  ├── models/
+  │   └── facenet.etlt           download_models.sh yuklaydi
+  └── QO_LLANMA.txt              (bu fayl)
+
+
+ISHGA TUSHIRISH (Ubuntu Desktop'da)
+────────────────────────────────────────────────────────────────────
+  # 1. Modelni yuklash (bir martalik)
+  bash deepstream/scripts/download_models.sh   # yoki qo'lda
+
+  # 2. Video qo'yish
+  cp /path/to/sinf_video.mp4 deepstream/data/sinf.mp4
+
+  # 3. Camera ID — qaysi kameraga bog'lash
+  echo "DEEPSTREAM_CAMERA_ID=1" >> .env
+
+  # 4. Ishga tushirish (alohida profil)
+  docker compose --profile deepstream up -d
+
+  # 5. Loglar
+  docker compose logs -f deepstream         # pipeline
+  docker compose logs -f kafka_consumer     # davomat
+
+  # 6. Kafka UI
+  # http://localhost:8080
+
+
+ESKI/YANGI REJIM
+────────────────────────────────────────────────────────────────────
+  Eski (CameraStreamService):
+      docker compose up -d
+      → cameras container ishlaydi (OpenCV + InsightFace)
+
+  Yangi (DeepStream):
+      docker compose --profile deepstream up -d
+      → cameras container ham ishlaydi
+      → qo'shimcha: kafka, kafka-ui, deepstream, kafka_consumer
+
+  Ikkalasi parallel ishlashi mumkin — bir-biriga TEGMAYDI.
+  (cameras Camera A ni, deepstream Camera B ni boshqarsa)
+
+
+PHASE 1 (HOZIR — bu kod)
+────────────────────────────────────────────────────────────────────
+  ✓ DeepStream yuz topadi (FaceNet)
+  ✓ Face crop Kafka'ga (base64 JPG)
+  ✓ Django kafka_consumer buffalo_l ishlatadi
+  ✓ MAVJUD RecognitionEventService chaqiriladi
+  ✓ Lock, DB, SKUD — hammasi mavjud kodda
+  ✓ Bitta video bilan POC
+
+
+PHASE 2 (KEYIN — 1 hafta)
+────────────────────────────────────────────────────────────────────
+  [ ] buffalo_l w600k_r50.onnx → TensorRT engine
+  [ ] DeepStream SGIE sifatida qo'shish
+  [ ] Embedding to'g'ridan-to'g'ri Kafka'ga (face crop emas)
+
+
+PHASE 3 (PRODUCTION — 1+ oy)
+────────────────────────────────────────────────────────────────────
+  [ ] 10 ta RTSP source bitta DeepStream'da
+  [ ] nvstreammux batch (10 kamera × 1 fps = 10 fps batch)
+  [ ] kafka_consumer ko'p worker (Kafka consumer group)
+  [ ] Production'da CameraStreamService o'rniga DeepStream

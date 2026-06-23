@@ -1,0 +1,23 @@
+╔════════════════════════════════════════════════════════════╗
+║  🎬  VIDEO BU YERGA QO'YING                                 ║
+╚════════════════════════════════════════════════════════════╝
+
+Sizning videongiz nomi: sinf.mp4
+
+Qadamlar:
+  1. Sinf videosini bu papkaga ko'chiring
+  2. Nomini "sinf.mp4" deb o'zgartiring
+  3. Quyidagicha bo'lishi kerak:
+       data/sinf.mp4
+
+Ubuntu Desktop'da:
+  cp /path/to/your_video.mp4  data/sinf.mp4
+
+Keyin ishga tushiring:
+  ./scripts/demo.sh
+
+Tafsilot:
+  - Format:  MP4 (H.264) — eng yaxshi
+  - Hajm:    1080p — tavsiya
+  - Davom:   30 sekunddan bir necha daqiqagacha
+  - Yuzlar:  bolalar yuzi ko'rinib turishi kerak

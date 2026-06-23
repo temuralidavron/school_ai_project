@@ -1,0 +1,42 @@
+# Primary inference engine — yuz topish
+# Model: NVIDIA FaceDetectIR (NGC catalog dan yuklab olinadi)
+# Kelajakda: buffalo_l konvertatsiya qilingan TRT engine bu yerda almashtiriladi
+
+[property]
+gpu-id=0
+
+# Normalizatsiya
+net-scale-factor=0.0039215697906911373
+model-color-format=0
+
+# Model fayllari (download_models.sh skripti yuklaydi)
+# Birinchi sinov uchun NVIDIA FaceDetectIR (pre-trained, NGC dan)
+onnx-file=/workspace/models/facenet.onnx
+model-engine-file=/workspace/models/facenet.onnx_b1_gpu0_fp16.engine
+labelfile-path=/workspace/configs/labels_face.txt
+
+# Batch va precision
+batch-size=1
+network-mode=2
+# 0=FP32, 1=INT8, 2=FP16 (RTX 5080 da FP16 zo'r)
+
+# Sinflar
+num-detected-classes=1
+gie-unique-id=1
+output-blob-names=output_cov/Sigmoid;output_bbox/BiasAdd
+
+# Detection
+interval=0
+cluster-mode=2
+
+# Pre-process
+infer-dims=3;416;736
+maintain-aspect-ratio=1
+
+[class-attrs-all]
+pre-cluster-threshold=0.5
+group-threshold=1
+eps=0.2
+minBoxes=3
+detected-min-w=20
+detected-min-h=20

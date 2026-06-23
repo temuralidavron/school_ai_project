@@ -1,0 +1,12 @@
+# DeepStream Python POC paketlari
+# (pyds, gst-python — DeepStream image ichida allaqachon bor)
+
+# Tracking va statistik
+numpy>=1.24.0
+opencv-python-headless>=4.8.0
+
+# Kafka producer (Phase 3 — Consumer ga xabar yuborish)
+kafka-python==2.0.2
+
+# Logging
+colorlog>=6.7.0
