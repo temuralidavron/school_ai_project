@@ -315,9 +315,11 @@ def _recog_probe(pad, info, _u):
         _state["frames"] += 1
         _state["faces_total"] += n
         f = _state["frames"]
+        if f == 1:
+            _state["t0"] = time.time()  # fps o'lchovi model yuklashsiz
 
-        # ── MJPEG vizualizatsiya (har VIS_EVERY-kadrda) ──────────────────────
-        if VIS_EVERY > 0 and f % VIS_EVERY == 0:
+        # ── MJPEG vizualizatsiya (faqat 0-manba, har VIS_EVERY-kadrda) ───────
+        if VIS_EVERY > 0 and sid == 0 and f % VIS_EVERY == 0:
             if frame_bgr is None:
                 rgba = pyds.get_nvds_buf_surface(hash(buf), frame_meta.batch_id)
                 frame_bgr = np.ascontiguousarray(rgba[:, :, 2::-1])
@@ -375,16 +377,12 @@ def _cb_decoder_pad(decoder, pad, ghost):
         ghost.set_target(pad)
 
 
-def build_pipeline(video_path: str):
-    Gst.init(None)
-    pipeline = Gst.Pipeline()
-    loop = GLib.MainLoop()
-
-    src_bin = Gst.Bin.new("source-bin-0")
-    filesrc = Gst.ElementFactory.make("filesrc")
-    demux   = Gst.ElementFactory.make("qtdemux")
-    parse   = Gst.ElementFactory.make("h264parse")
-    decoder = Gst.ElementFactory.make("nvv4l2decoder")
+def _make_source_bin(index: int, video_path: str) -> Gst.Bin:
+    src_bin = Gst.Bin.new(f"source-bin-{index}")
+    filesrc = Gst.ElementFactory.make("filesrc", f"filesrc-{index}")
+    demux   = Gst.ElementFactory.make("qtdemux", f"demux-{index}")
+    parse   = Gst.ElementFactory.make("h264parse", f"parse-{index}")
+    decoder = Gst.ElementFactory.make("nvv4l2decoder", f"dec-{index}")
     filesrc.set_property("location", video_path)
     for el in (filesrc, demux, parse, decoder):
         src_bin.add(el)
@@ -397,18 +395,27 @@ def build_pipeline(video_path: str):
     static = decoder.get_static_pad("src")
     if static and not ghost.get_target():
         ghost.set_target(static)
+    return src_bin
+
+
+def build_pipeline(video_paths: list):
+    Gst.init(None)
+    pipeline = Gst.Pipeline()
+    loop = GLib.MainLoop()
+    n_src = len(video_paths)
 
     mux = Gst.ElementFactory.make("nvstreammux", "mux")
-    mux.set_property("batch-size", 1)
+    mux.set_property("batch-size", n_src)
     mux.set_property("width",  MUX_WIDTH)
     mux.set_property("height", MUX_HEIGHT)
-    mux.set_property("batched-push-timeout", 4000000)
+    mux.set_property("batched-push-timeout", 40000)
     mux.set_property("gpu-id", 0)
     # get_nvds_buf_surface uchun unified memory shart (dGPU)
     mux.set_property("nvbuf-memory-type", 3)
 
     pgie = Gst.ElementFactory.make("nvinfer", "pgie")
     pgie.set_property("config-file-path", PGIE_CFG)
+    # Engine qat'iy batch=1 (SCRFD) — nvinfer muxed batch kadrlarini ketma-ket ishlaydi
 
     tracker = Gst.ElementFactory.make("nvtracker", "tracker")
     tracker.set_property("ll-lib-file", TRACKER_LIB)
@@ -426,10 +433,14 @@ def build_pipeline(video_path: str):
     sink = Gst.ElementFactory.make("fakesink", "sink")
     sink.set_property("sync", False)
 
-    for el in (src_bin, mux, pgie, tracker, conv, caps, sink):
+    for el in (mux, pgie, tracker, conv, caps, sink):
         pipeline.add(el)
 
-    src_bin.get_static_pad("src").link(mux.request_pad_simple("sink_0"))
+    for i, vp in enumerate(video_paths):
+        sb = _make_source_bin(i, vp)
+        pipeline.add(sb)
+        sb.get_static_pad("src").link(mux.request_pad_simple(f"sink_{i}"))
+
     mux.link(pgie)
     pgie.link(tracker)
     tracker.link(conv)
@@ -462,17 +473,19 @@ def build_pipeline(video_path: str):
 def main():
     global _arcface, _kafka
     p = argparse.ArgumentParser()
-    p.add_argument("--video", required=True)
+    p.add_argument("--video", nargs="+", required=True,
+                   help="Bir yoki bir nechta video (har biri alohida manba)")
     p.add_argument("--max-frames", type=int, default=0)
     args = p.parse_args()
 
-    if not os.path.exists(args.video):
-        log.error("Video topilmadi: %s", args.video)
-        sys.exit(1)
+    for vp in args.video:
+        if not os.path.exists(vp):
+            log.error("Video topilmadi: %s", vp)
+            sys.exit(1)
 
-    log.info("B3: nvinfer + nvtracker + ArcFace gibrid + Kafka")
-    log.info("  video=%s kafka=%s cam_ids=%s cooldown=%.0fs pool=%d",
-             args.video, KAFKA_BOOTSTRAP or "OFF", CAMERA_IDS,
+    log.info("B4: multi-source batch pipeline — %d manba", len(args.video))
+    log.info("  kafka=%s cam_ids=%s cooldown=%.1fs pool=%d",
+             KAFKA_BOOTSTRAP or "OFF", CAMERA_IDS,
              TRACK_SEND_COOLDOWN, EMB_POOL)
 
     _arcface = ArcFaceRunner(
@@ -502,10 +515,13 @@ def main():
         _kafka.flush()
         f = _state["frames"]
         el = time.time() - _state["t0"]
+        n_src = len(args.video)
+        agg = f / max(el, 0.01)
         log.info("=" * 50)
-        log.info("YAKUN: kadr=%d (%.0f fps) | track/kadr avg=%.1f | "
-                 "unique_id=%d | kafka yuborildi=%d",
-                 f, f / max(el, 0.01),
+        log.info("YAKUN: kadr=%d | AGG %.0f fps | manba boshiga %.1f fps "
+                 "(real-time uchun >=27 kerak) | track/kadr avg=%.1f | "
+                 "unique_id=%d | kafka=%d",
+                 f, agg, agg / n_src,
                  _state["faces_total"] / max(f, 1),
                  len(_state["track_ids"]), _state["sent"])
         log.info("=" * 50)

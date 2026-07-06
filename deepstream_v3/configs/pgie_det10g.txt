@@ -4,6 +4,9 @@
 
 [property]
 gpu-id=0
+# det_10g kirishi qat'iy batch=1 (SCRFD ONNX) — dynamic batch mumkin emas.
+# nvinfer batch-size=1: muxed batchdagi har kadr ketma-ket TRT'da (0.49ms/kadr,
+# 20 manba = ~10ms/batch — bottleneck emas, Python probe og'irroq).
 model-engine-file=/engines/det_10g_batched_fp16.engine
 batch-size=1
 network-mode=2
