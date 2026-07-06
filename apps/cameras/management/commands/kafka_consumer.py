@@ -55,6 +55,27 @@ def _save_track_name(track_id: int, full_name: str, pinfl: str = "", score: floa
         pass
 
 
+# camera_id -> organization_id (comparison sahifa org filtri uchun;
+# busiz RecognitionEvent.organization_id=None bo'lib jadval bo'sh chiqadi)
+_org_cache: dict = {}
+
+
+def _org_for_camera(camera_id):
+    if camera_id in _org_cache:
+        return _org_cache[camera_id]
+    org = None
+    try:
+        from apps.integrations.models import ExternalClassroom
+        cr = (ExternalClassroom.objects.filter(camera_id=camera_id)
+              .select_related("organization").first())
+        if cr and cr.organization:
+            org = cr.organization.organization_id
+    except Exception:
+        pass
+    _org_cache[camera_id] = org
+    return org
+
+
 class Command(BaseCommand):
     help = "DeepStream face crop'larini Kafka'dan o'qib davomat yozadi"
 
@@ -201,12 +222,11 @@ class Command(BaseCommand):
                 tmp_path = ""
 
         try:
-            # Pipeline 1k3d68 bilan aniq landmark ishlatadi → embedding InsightFace bilan mos
             result = recognition_service.recognize_track_and_record_by_embedding(
                 track_key=track_key,
                 image_path=tmp_path,
                 query_embedding=embedding,
-                organization_id=None,
+                organization_id=_org_for_camera(camera_id),
                 camera_id=camera_id,
                 bbox=bbox,
                 accept_threshold=accept_threshold,

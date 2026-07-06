@@ -12,8 +12,9 @@ RUN pip3 install --break-system-packages --no-cache-dir \
     opencv-python-headless \
     "kafka-python-ng>=2.2.3"
 
-# ORT GPU — B3 gibrid ArcFace uchun (embedding Python probe'da)
-RUN pip3 install --break-system-packages --no-cache-dir onnxruntime-gpu
+# ORT GPU — B3 gibrid ArcFace uchun. 1.23.x = CUDA 12.x (DS 8.0 = CUDA 12.8);
+# yangiroq versiyalar CUDA 13 talab qiladi (libcudart.so.13 xatosi).
+RUN pip3 install --break-system-packages --no-cache-dir "onnxruntime-gpu==1.23.2"
 
 WORKDIR /ds3
 COPY pipeline/ ./pipeline/
