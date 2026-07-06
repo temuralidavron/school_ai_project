@@ -1,0 +1,19 @@
+# SCRFD (det_10g) — nvinfer PGIE, TensorRT engine sm_120
+# output-tensor-meta=1: xom tensorlar Python probe'ga uzatiladi (C++ parser kerak emas)
+# Preprocessing InsightFace bilan aynan mos: (x-127.5)/128, RGB, letterbox yuqori-chap
+
+[property]
+gpu-id=0
+model-engine-file=/engines/det_10g_batched_fp16.engine
+batch-size=1
+network-mode=2
+network-type=100
+output-tensor-meta=1
+infer-dims=3;640;640
+net-scale-factor=0.0078125
+offsets=127.5;127.5;127.5
+model-color-format=0
+maintain-aspect-ratio=1
+symmetric-padding=0
+interval=0
+gie-unique-id=1

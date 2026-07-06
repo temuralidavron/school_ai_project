@@ -71,3 +71,4 @@ harakat.json
 # Backup
 .env.backup
 *.backup*.pyc
+deepstream_v3/engines/
