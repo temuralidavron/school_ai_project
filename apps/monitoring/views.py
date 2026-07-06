@@ -3,7 +3,7 @@ import json
 import time
 from zoneinfo import ZoneInfo
 
-from django.db.models import Count, Q
+from django.db.models import Case, Count, IntegerField, Q, Value, When
 from django.db.models.functions import TruncHour
 from django.http import StreamingHttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404
@@ -32,6 +32,43 @@ from apps.integrations.models import (
 def dashboard(request):
     organizations = ExternalOrganization.objects.order_by("organization_name")
     return render(request, "monitoring/dashboard.html", {"organizations": organizations})
+
+
+def video_file_stream(request):
+    """Local video faylni brauzerga stream qiladi."""
+    import os
+    from django.http import FileResponse, Http404
+    path = "/app/deepstream_data/sinf.mp4"
+    if not os.path.exists(path):
+        raise Http404("Video fayl topilmadi")
+    return FileResponse(open(path, "rb"), content_type="video/mp4")
+
+
+def pipeline_stats_api(request):
+    """Kafka consumer statistikasi — deepstream panel uchun."""
+    from apps.attendance.models import TrackSession, LessonAttendance, RecognitionEvent
+    from django.utils import timezone
+    from datetime import timedelta
+
+    now = timezone.now()
+    since = now - timedelta(hours=3)
+
+    accepted = RecognitionEvent.objects.filter(
+        decision="accepted", recognized_at__gte=since
+    ).count()
+    rejected = RecognitionEvent.objects.filter(
+        decision="rejected", recognized_at__gte=since
+    ).count()
+    total_tracks = TrackSession.objects.filter(
+        camera_id=1, updated_at__gte=since
+    ).count()
+
+    return JsonResponse({
+        "accepted": accepted,
+        "rejected": rejected,
+        "total": total_tracks,
+        "skipped": max(0, total_tracks - accepted - rejected),
+    })
 
 
 # ─── LIVE ROOM ATTENDANCE ────────────────────────────────────────────────────
@@ -172,7 +209,7 @@ def _build_attendance_payload(camera_id: int, schedule: "ExternalSchedule", now)
                 "arrived_at": _local(la.arrived_at, "%H:%M"),
                 "is_late": la.is_late,
                 "status": la.status,
-                "recognition_image": ev.image.url if ev and ev.image else None,
+                "recognition_image": _fix_minio_url(ev.image.url) if ev and ev.image else None,
                 "front_photo": front,
             })
         else:
@@ -284,7 +321,7 @@ class MonitoringLiveAPIView(APIView):
                 "recognized_at": _local(e.recognized_at, "%H:%M:%S"),
                 "similarity": round(e.similarity * 100, 1) if e.similarity else None,
                 "decision": e.decision,
-                "image": e.image.url if e.image else None,
+                "image": _fix_minio_url(e.image.url) if e.image else None,
                 "reference_image": front_photos.get(e.pinfl),
             })
 
@@ -364,7 +401,7 @@ class MonitoringReviewAPIView(APIView):
                 "camera": str(e.camera) if e.camera else "—",
                 "recognized_at": _local(e.recognized_at, "%H:%M:%S"),
                 "similarity": round(e.similarity * 100, 1) if e.similarity else None,
-                "image": e.image.url if e.image else None,
+                "image": _fix_minio_url(e.image.url) if e.image else None,
                 "reference_image": front_photos.get(e.pinfl),
             })
 
@@ -568,6 +605,13 @@ def _get_class_students(camera_id: int, day: datetime.date) -> dict:
     return {s["pinfl"]: {"full_name": s["full_name"]} for s in students}
 
 
+def _fix_minio_url(url: str) -> str:
+    """Docker ichki minio:9000 → brauzer ko'ra oladigan localhost:9000."""
+    if url:
+        return url.replace("http://minio:9000", "http://localhost:9000")
+    return url
+
+
 def _get_front_photos(pinfls: list) -> dict:
     """pinfl → front foto URL"""
     if not pinfls:
@@ -585,7 +629,7 @@ def _get_front_photos(pinfls: list) -> dict:
     for p in photos:
         if p.image:
             try:
-                result[p.student.pinfl] = p.image.url
+                result[p.student.pinfl] = _fix_minio_url(p.image.url)
             except Exception:
                 pass
     return result
@@ -622,7 +666,16 @@ class MonitoringComparisonAPIView(APIView):
             RecognitionEvent.objects
             .filter(recognized_at__date=day)
             .select_related("student", "camera")
-            .order_by("-recognized_at")
+            .annotate(
+                decision_rank=Case(
+                    When(decision="accepted", then=Value(0)),
+                    When(decision="review",   then=Value(1)),
+                    When(decision="rejected", then=Value(2)),
+                    default=Value(3),
+                    output_field=IntegerField(),
+                )
+            )
+            .order_by("decision_rank", "-recognized_at")
         )
         if org_id:
             qs = qs.filter(organization_id=org_id)
@@ -644,7 +697,7 @@ class MonitoringComparisonAPIView(APIView):
                 "recognized_at":    _local(e.recognized_at, "%Y-%m-%d %H:%M:%S"),
                 "similarity":       round(e.similarity * 100, 1) if e.similarity else None,
                 "decision":         e.decision,
-                "attendance_image": e.image.url if e.image else None,
+                "attendance_image": _fix_minio_url(e.image.url) if e.image else None,
                 "reference_image":  front_photos.get(e.pinfl),
             })
 

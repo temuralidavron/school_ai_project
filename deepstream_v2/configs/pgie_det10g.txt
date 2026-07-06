@@ -1,0 +1,28 @@
+[property]
+gpu-id=0
+net-scale-factor=0.00784313  ; 1/127.5 — [-1,1] normalizatsiya
+offsets=127.5;127.5;127.5
+model-color-format=0          ; BGR
+onnx-file=/root/.insightface/models/buffalo_l/det_10g.onnx
+model-engine-file=/engines/det_10g_b1_fp16.engine
+batch-size=1
+
+; Network input: 640×640
+infer-dims=3;640;640
+maintain-aspect-ratio=1
+symmetric-padding=1
+
+; network-type=4 (OTHER): parser chaqirilmaydi,
+; tensorlar Python probe orqali o'qiladi
+network-type=4
+output-tensor-meta=1
+
+; FP16 — RTX seriyasida tez
+network-mode=2
+
+; Barcha 9 ta chiqish tensorini saqlash
+; (score*3 + bbox*3 + kps*3)
+num-detected-classes=1
+
+[class-attrs-all]
+threshold=0.0   ; Filtering Python probeda amalga oshiriladi

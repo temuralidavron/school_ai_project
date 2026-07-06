@@ -1,0 +1,44 @@
+[tracker]
+; NvDCF — DeepStream'ning GPU tracker
+EnableBatchProcessing=1
+EnablePastFrame=0
+
+; Yuz tracking uchun optimallashtirilgan parametrlar
+maxTargetsPerStream=100
+minDetectorConfidence=0.0     ; Filtr PGIE probeda qilinadi
+
+[costFunction]
+; Korelatsion filtr asosida tracker
+minTrackerConfidenceTh=0.0
+
+[stateEstimator]
+stateEstimatorType=1           ; Kalman
+processNoiseVar4Loc=2.0
+processNoiseVar4Size=1.0
+measurementNoiseVar4Loc=4.0
+measurementNoiseVar4Size=16.0
+
+[correlationFilter]
+filtType=0                     ; MOSSE
+initTrackingScore=0.5
+reportMissDetection=1
+rectRatioUpperBound=1.5
+rectRatioLowerBound=0.5
+minDetectionArea=40            ; Min 40px yuz
+useColorNames=0
+usePCA=0
+
+[dataAssociation]
+dataAssociationAlgo=0          ; Greedy
+minMatchingScore4Overall=0.0
+minMatchingScore4SizeSimilarity=0.5
+minMatchingScore4Iou=0.0
+minMatchingScore4VisualSimilarity=0.0
+maxSuspiciousScore=0.5
+tentativeDetRatioTh=0.5
+
+[trajectoryManagement]
+useUniqueID=1
+targetDuplicateRunInterval=-1
+minAge4TrackerAging=10
+minAge4TrackerAging4Inactive=-1

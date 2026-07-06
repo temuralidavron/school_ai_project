@@ -70,4 +70,4 @@ harakat.json
 
 # Backup
 .env.backup
-*.backup
+*.backup*.pyc

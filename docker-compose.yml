@@ -79,6 +79,7 @@ services:
       - static_data:/app/staticfiles
       - insightface_models:/root/.insightface
       - ./logs:/app/logs
+      - ./deepstream/data:/app/deepstream_data:ro
     ports:
       - "127.0.0.1:8000:8000"   # faqat server'ning o'zidan (panel tashqariga ochilmaydi)
     deploy:
@@ -185,33 +186,38 @@ services:
   # Faqat: docker compose --profile deepstream up -d
   # Mavjud cameras stream'ga TEGMAYDI (alohida pipeline)
   kafka:
-    image: bitnami/kafka:3.7
+    image: apache/kafka:latest
     container_name: school_ai_kafka
     restart: unless-stopped
-    profiles: ["deepstream"]
+    profiles: ["deepstream", "deepstream-v2"]
     ports:
       - "127.0.0.1:9092:9092"
     environment:
-      KAFKA_CFG_NODE_ID: "0"
-      KAFKA_CFG_PROCESS_ROLES: controller,broker
-      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
-      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: "0@kafka:9093"
-      ALLOW_PLAINTEXT_LISTENER: "yes"
-      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDVGMg=="
     healthcheck:
-      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list"]
-      interval: 10s
-      timeout: 5s
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 15s
+      timeout: 10s
       retries: 10
 
   kafka-ui:
-    image: provectuslabs/kafka-ui:latest
+    image: ghcr.io/kafbat/kafka-ui:latest
     container_name: school_ai_kafka_ui
     restart: unless-stopped
-    profiles: ["deepstream"]
+    profiles: ["deepstream", "deepstream-v2"]
     ports:
       - "0.0.0.0:8080:8080"
     environment:
@@ -221,7 +227,8 @@ services:
       kafka:
         condition: service_healthy
 
-  # DeepStream pipeline (yuz topish + Kafka producer)
+  # Face detection pipeline (InsightFace GPU + Kafka producer)
+  # NGC auth va nvinfer model fayli kerak emas
   deepstream:
     build:
       context: ./deepstream/pipeline
@@ -241,15 +248,15 @@ services:
       KAFKA_BOOTSTRAP: kafka:9092
       KAFKA_TOPIC: deepstream-faces
       CAMERA_ID: ${DEEPSTREAM_CAMERA_ID:-1}
-      DISPLAY: ${DISPLAY:-:0}
+      FRAME_SKIP: ${DEEPSTREAM_FRAME_SKIP:-15}
+      MIN_FACE_SIZE: ${MIN_FACE_SIZE:-80}
       NVIDIA_VISIBLE_DEVICES: all
-      NVIDIA_DRIVER_CAPABILITIES: compute,video,utility,graphics
+      NVIDIA_DRIVER_CAPABILITIES: compute,video,utility
+      INSIGHTFACE_HOME: /root/.insightface
     volumes:
       - ./deepstream/pipeline:/workspace/pipeline:ro
-      - ./deepstream/configs:/workspace/configs:ro
       - ./deepstream/data:/workspace/data:ro
-      - ./deepstream/models:/workspace/models
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - insightface_models:/root/.insightface
     depends_on:
       kafka:
         condition: service_healthy
@@ -286,6 +293,89 @@ services:
     volumes:
       - insightface_models:/root/.insightface
       - ./logs:/app/logs
+      - ./deepstream/data:/app/ds_data          # track_names.json uchun
+
+  # ── Haqiqiy NVIDIA DeepStream pipeline (v2) ─────────────────────────────────
+  # Ishlatish: docker compose --profile deepstream-v2 up deepstream_v2
+  # Avval: docker login nvcr.io (NGC API key kerak)
+  # Keyin: docker compose --profile deepstream-v2 run --rm deepstream_v2_build
+  deepstream_v2:
+    build:
+      context: ./deepstream_v2
+      dockerfile: Dockerfile
+    image: school_ai_deepstream_v2:latest
+    container_name: school_ai_deepstream_v2
+    restart: unless-stopped
+    profiles: ["deepstream-v2"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu, video, compute, utility]
+    environment:
+      KAFKA_BOOTSTRAP: kafka:9092
+      KAFKA_TOPIC: deepstream-faces
+      CAMERA_IDS: ${DEEPSTREAM_CAMERA_IDS:-1}
+      GPU_ID: 0
+      # Detection: video o'z o'lchamida (1920x1080) oqadi — downscale yo'q.
+      # 1280x720 ga tushirilsa uzoq/o'rta qatordagi yuzlar det bosqichida yo'qoladi.
+      MUX_WIDTH: "1920"
+      MUX_HEIGHT: "1080"
+      DET_THRESHOLD: "0.35"
+      MIN_FACE_PX: "20"
+      # Tez davomat: har track 3s da qayta tekshiriladi (10 juda sekin edi).
+      TRACK_SEND_COOLDOWN: "3"
+      # Frontal filtr yumshatildi (0.42→0.6) — yon burgan yuzlar ham qabul,
+      # dars boshida tez tanish uchun (recognition baribir noto'g'rini rad etadi).
+      MAX_YAW_RATIO: "0.6"
+      # Yozib olingan video'ni tez qayta ishlash: har 8-kadrda inference.
+      # Jonli RTSP'da bu 1 bo'lishi kerak (real-time). Faqat test video uchun.
+      FRAME_SKIP: "8"
+      # Tracker barqarorligi: yuz bir necha kadr ko'rinmasa ham track o'lmasin
+      # (max_lost oshirildi), harakatlanuvchi yuz uchun IOU biroz yumshoq.
+      TRACKER_MAX_LOST: "150"
+      TRACKER_IOU_THR: "0.25"
+      MODELS_DIR: /root/.insightface/models
+      PGIE_CONFIG: /ds_pipeline/configs/pgie_det10g.txt
+      TRACKER_CONFIG: /ds_pipeline/configs/tracker_nvdcf.txt
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,video,utility,graphics
+    ports:
+      - "8554:8554"    # MJPEG vizual stream
+    volumes:
+      - insightface_models:/root/.insightface:ro  # buffalo_l modellar
+      - ./deepstream/data:/data                   # sinf.mp4 + track_names.json
+      - ./deepstream_v2/pipeline:/ds_pipeline/pipeline:ro
+      - ./deepstream_v2/configs:/ds_pipeline/configs:ro
+      - deepstream_v2_engines:/engines           # TRT engine cache (alohida)
+    depends_on:
+      - kafka
+    # Video fayl uchun:
+    command: ["--video", "/data/sinf.mp4", "--camera-ids", "1"]
+
+  # TRT engine build (bir marta ishga tushiriladi)
+  deepstream_v2_build:
+    image: school_ai_deepstream_v2:latest
+    container_name: school_ai_ds_build
+    profiles: ["deepstream-v2"]
+    entrypoint: ["/ds_pipeline/scripts/build_engines.sh"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu, compute, utility]
+    environment:
+      MODELS_DIR: /root/.insightface/models
+      ENGINES_DIR: /engines
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+    volumes:
+      - insightface_models:/root/.insightface:ro
+      - deepstream_v2_engines:/engines
 
 volumes:
   postgres_data:
@@ -293,3 +383,4 @@ volumes:
   media_data:
   static_data:
   insightface_models:
+  deepstream_v2_engines:

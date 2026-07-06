@@ -1,6 +1,8 @@
 from django.urls import path
 from .views import (
     dashboard,
+    video_file_stream,
+    pipeline_stats_api,
     room_attendance,
     mjpeg_stream,
     room_attendance_api,
@@ -16,6 +18,8 @@ from .views import (
 
 urlpatterns = [
     path("", dashboard, name="monitoring-dashboard"),
+    path("video-file/", video_file_stream, name="monitoring-video-file"),
+    path("api/pipeline-stats/", pipeline_stats_api, name="monitoring-pipeline-stats"),
 
     # Rasm qiyosi sahifasi
     path("comparison/", attendance_comparison, name="monitoring-comparison"),

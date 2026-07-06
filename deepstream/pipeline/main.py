@@ -1,446 +1,329 @@
 #!/usr/bin/env python3
 """
-DeepStream POC — bitta video faylda yuz topish + tracking.
+Face detection + recognition pipeline — InsightFace buffalo_l + Kafka producer.
 
-Bu birinchi bosqich:
-  1. Video faylni o'qiydi (NVDEC bilan GPU da decode)
-  2. nvinfer plugin orqali yuz topadi (PeopleNet yoki FaceDetectIR)
-  3. nvtracker bilan ID beradi
-  4. Har kadrning metadatasini Python da o'qiydi
-  5. FPS, GPU, yuz soni statistikani chiqaradi
+Oqim (Phase 2):
+  video.mp4 → OpenCV kadr → InsightFace (det + recognition)
+            → embedding (512 float) → Kafka
+  Kafka → kafka_consumer (Django) → pgvector qidiruv → davomat yozuvi
 
-Keyingi bosqichlar (Phase 2/3):
-  - buffalo_l ni TRT engine ga aylantirish va embedding chiqarish
-  - Kafka producer qo'shish
-  - Davomat yozish biznes-logikasi (Python consumer)
+Avvalgi (Phase 1) bilan farqi:
+  - crop/JPEG yuborilmaydi (bandwidth kam, "no face" muammo yo'q)
+  - embedding to'g'ridan-to'g'ri Kafka'ga → kafka_consumer qayta detect qilmaydi
 """
+import json
+import logging
+import os
 import sys
 import time
-import os
-import json
-import base64
+from collections import OrderedDict
 from pathlib import Path
 
-import numpy as np
 import cv2
+import numpy as np
 
-import gi
-gi.require_version('Gst', '1.0')
-from gi.repository import Gst, GLib
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%H:%M:%S",
+)
+log = logging.getLogger(__name__)
 
-import pyds  # type: ignore  # DeepStream Python bindings (container ichida)
+KAFKA_BOOTSTRAP      = os.environ.get("KAFKA_BOOTSTRAP", "")
+KAFKA_TOPIC          = os.environ.get("KAFKA_TOPIC", "deepstream-faces")
+CAMERA_ID            = int(os.environ.get("CAMERA_ID", "1"))
+FRAME_SKIP           = int(os.environ.get("FRAME_SKIP", "25"))
+MIN_FACE_SIZE        = int(os.environ.get("MIN_FACE_SIZE", "40"))
+MAX_TRACK_AGE        = int(os.environ.get("MAX_TRACK_AGE", "30"))
+# Bir track uchun embedding qayta yuborishdan oldin kutish (soniya)
+# Tanilgan track uchun GPU/Kafka behuda sarflanmaydi
+TRACK_SEND_COOLDOWN  = int(os.environ.get("TRACK_SEND_COOLDOWN", "10"))
+# Katta kadrda kichik yuzlarni aniqlash uchun yuqori det_size
+DET_SIZE_FULL        = int(os.environ.get("DET_SIZE_FULL", "1280"))
+DET_SIZE_CROP        = int(os.environ.get("DET_SIZE_CROP", "320"))
 
-# ─── Kafka producer (yo'q bo'lsa skip) ───────────────────────
-KAFKA_BOOTSTRAP = os.environ.get("KAFKA_BOOTSTRAP", "")
-KAFKA_TOPIC = os.environ.get("KAFKA_TOPIC", "deepstream-faces")
 
-# Camera ID — Django bilan bog'lanish uchun
-# Bitta DeepStream container faqat bitta kamerani boshqaradi (multi-camera Phase 4)
-CAMERA_ID = int(os.environ.get("CAMERA_ID", "1"))
-
-_kafka_producer = None
-if KAFKA_BOOTSTRAP:
+# ─── Kafka producer ───────────────────────────────────────────────────────────
+def _make_producer():
+    if not KAFKA_BOOTSTRAP:
+        log.warning("KAFKA_BOOTSTRAP yo'q — Kafka off (faqat log)")
+        return None
     try:
         from kafka import KafkaProducer
         for attempt in range(15):
             try:
-                _kafka_producer = KafkaProducer(
+                p = KafkaProducer(
                     bootstrap_servers=KAFKA_BOOTSTRAP,
-                    value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+                    value_serializer=lambda v: json.dumps(v).encode(),
                     acks=1,
                     linger_ms=10,
                 )
-                print(f"✅  Kafka producer ulandi: {KAFKA_BOOTSTRAP}")
-                break
+                log.info("Kafka ulandi: %s", KAFKA_BOOTSTRAP)
+                return p
             except Exception as e:
-                print(f"⏳  Kafka kutilmoqda ({attempt+1}/15): {e}")
+                log.warning("Kafka kutilmoqda (%d/15): %s", attempt + 1, e)
                 time.sleep(2)
     except ImportError:
-        print("⚠️  kafka-python o'rnatilmagan — Kafka producer off")
+        log.warning("kafka-python o'rnatilmagan")
+    return None
 
 
-# ─────── KONFIGURATSIYA ───────
-DEFAULT_INFER_CONFIG = "/workspace/configs/pgie_config_face.txt"
-DEFAULT_TRACKER_CONFIG = "/workspace/configs/tracker_NvDCF.yml"
+# ─── Centroid tracker ─────────────────────────────────────────────────────────
+class CentroidTracker:
+    """Yuz markazlari asosida oddiy track ID berish."""
 
-MUXER_WIDTH = int(os.environ.get("MUXER_WIDTH", 1920))
-MUXER_HEIGHT = int(os.environ.get("MUXER_HEIGHT", 1080))
-MUXER_BATCH_SIZE = int(os.environ.get("MUXER_BATCH_SIZE", 1))
-MUXER_BATCHED_PUSH_TIMEOUT = 4000000  # mikrosekund (4 ms)
+    def __init__(self, max_age: int = MAX_TRACK_AGE):
+        self.next_id = 0
+        self.max_age = max_age
+        self._objects: OrderedDict[int, tuple[int, int]] = OrderedDict()
+        self._ages: dict[int, int] = {}
 
-# Output
-OUTPUT_DIR = os.environ.get("OUTPUT_DIR", "/workspace/output")
-SAVE_VIDEO = os.environ.get("SAVE_VIDEO", "true").lower() == "true"
+    def update(self, bboxes: list[tuple]) -> list[int]:
+        """bboxes: [(x1,y1,x2,y2),...] → track_ids (bir xil tartibda)"""
+        # Ko'rinmaganlarni qartaytirish
+        for oid in list(self._ages):
+            self._ages[oid] += 1
+            if self._ages[oid] > self.max_age:
+                del self._objects[oid]
+                del self._ages[oid]
 
+        if not bboxes:
+            return []
 
-# ─────── STATISTIKA ───────
-class Stats:
-    """Pipeline statistikasi — frame, FPS, GPU, yuz soni."""
-    def __init__(self):
-        self.frame_count = 0
-        self.face_count_total = 0
-        self.unique_tracks: set[int] = set()
-        self.start_time = time.time()
-        self.last_log_time = self.start_time
-        self.last_log_frame = 0
+        centroids = [((x1 + x2) // 2, (y1 + y2) // 2) for x1, y1, x2, y2 in bboxes]
 
-    def add_frame(self, faces_in_frame: int, track_ids: list[int]):
-        self.frame_count += 1
-        self.face_count_total += faces_in_frame
-        self.unique_tracks.update(track_ids)
+        if not self._objects:
+            ids = []
+            for c in centroids:
+                self._objects[self.next_id] = c
+                self._ages[self.next_id] = 0
+                ids.append(self.next_id)
+                self.next_id += 1
+            return ids
 
-    def maybe_log(self, log_every_n_frames: int = 30):
-        if self.frame_count % log_every_n_frames != 0:
-            return
-        now = time.time()
-        dt = now - self.last_log_time
-        df = self.frame_count - self.last_log_frame
-        instant_fps = df / dt if dt > 0 else 0
-        avg_fps = self.frame_count / (now - self.start_time)
-        print(
-            f"[Frame {self.frame_count:>5}] "
-            f"FPS: {instant_fps:>5.1f} (avg {avg_fps:>5.1f}) | "
-            f"Yuzlar: {self.face_count_total:>5} | "
-            f"Unique IDs: {len(self.unique_tracks):>3}",
-            flush=True,
+        obj_ids = list(self._objects.keys())
+        obj_cents = list(self._objects.values())
+
+        # Masofalar matritsasi
+        D = np.hypot(
+            np.array([c[0] for c in obj_cents])[:, None] - np.array([c[0] for c in centroids]),
+            np.array([c[1] for c in obj_cents])[:, None] - np.array([c[1] for c in centroids]),
         )
-        self.last_log_time = now
-        self.last_log_frame = self.frame_count
 
-    def final_report(self):
-        elapsed = time.time() - self.start_time
-        print("\n" + "=" * 60)
-        print("📊  YAKUNIY HISOBOT")
-        print("=" * 60)
-        print(f"Jami kadrlar:        {self.frame_count}")
-        print(f"Jami yuz aniqlandi:  {self.face_count_total}")
-        print(f"Unique track ID:     {len(self.unique_tracks)}")
-        print(f"Umumiy vaqt:         {elapsed:.1f} sekund")
-        print(f"O'rtacha FPS:        {self.frame_count / elapsed:.1f}")
-        print("=" * 60)
+        assigned_bbox: dict[int, int] = {}  # bbox_idx → obj_id
+        used_rows, used_cols = set(), set()
 
-
-# ─────── FACE CROP UTILITY ───────
-def _extract_face_crop_b64(gst_buffer, frame_meta, bbox) -> str:
-    """
-    Frame surface'idan yuz crop'ini olib base64 JPG ga aylantiradi.
-
-    DeepStream'da NV12/RGBA buffer GPU memory'da turadi.
-    pyds.get_nvds_buf_surface() bilan CPU ga ko'chiriladi.
-    """
-    try:
-        n_frame = pyds.get_nvds_buf_surface(hash(gst_buffer), frame_meta.batch_id)
-        # n_frame shape: (height, width, 4) — RGBA
-        frame_np = np.array(n_frame, copy=True, order='C')
-
-        # RGBA → BGR (OpenCV format)
-        frame_bgr = cv2.cvtColor(frame_np, cv2.COLOR_RGBA2BGR)
-
-        # Bbox koordinata (padding qo'shamiz)
-        h, w = frame_bgr.shape[:2]
-        pad = 0.2
-        x1 = max(0, int(bbox.left - bbox.width * pad))
-        y1 = max(0, int(bbox.top - bbox.height * pad))
-        x2 = min(w, int(bbox.left + bbox.width * (1 + pad)))
-        y2 = min(h, int(bbox.top + bbox.height * (1 + pad)))
-
-        crop = frame_bgr[y1:y2, x1:x2]
-        if crop.size == 0:
-            return ""
-
-        # JPG ga aylantirib base64
-        ok, jpg = cv2.imencode(".jpg", crop, [cv2.IMWRITE_JPEG_QUALITY, 85])
-        if not ok:
-            return ""
-        return base64.b64encode(jpg.tobytes()).decode("ascii")
-
-    except Exception as e:
-        # Crop muvaffaqiyatsiz bo'lsa, bo'sh string qaytarib oqimni davom ettiramiz
-        return ""
-
-
-# ─────── METADATA CALLBACK ───────
-def make_meta_callback(stats: Stats):
-    """
-    sink pad'iga ulanadigan probe — har kadrda chaqiriladi.
-    DeepStream metadatasidan yuz koordinatalari va track ID ni o'qiydi.
-    """
-    def callback(pad, info, user_data):
-        gst_buffer = info.get_buffer()
-        if not gst_buffer:
-            return Gst.PadProbeReturn.OK
-
-        batch_meta = pyds.gst_buffer_get_nvds_batch_meta(hash(gst_buffer))
-        if not batch_meta:
-            return Gst.PadProbeReturn.OK
-
-        l_frame = batch_meta.frame_meta_list
-        while l_frame is not None:
-            try:
-                frame_meta = pyds.NvDsFrameMeta.cast(l_frame.data)
-            except StopIteration:
+        for _ in range(min(len(obj_ids), len(centroids))):
+            if D.size == 0:
                 break
-
-            faces_in_frame = 0
-            track_ids_in_frame: list[int] = []
-
-            # Har bir topilgan obyekt (yuz) bo'yicha
-            l_obj = frame_meta.obj_meta_list
-            while l_obj is not None:
-                try:
-                    obj_meta = pyds.NvDsObjectMeta.cast(l_obj.data)
-                except StopIteration:
-                    break
-
-                faces_in_frame += 1
-                track_id = int(obj_meta.object_id)
-                track_ids_in_frame.append(track_id)
-
-                # Bbox + Kafka publish (face crop bilan)
-                if _kafka_producer is not None:
-                    bbox = obj_meta.rect_params
-                    # Frame surface'idan crop olish (GPU → CPU)
-                    face_crop_b64 = _extract_face_crop_b64(
-                        gst_buffer, frame_meta, bbox
-                    )
-
-                    msg = {
-                        "ts": time.time(),
-                        "camera_id": CAMERA_ID,
-                        "frame_id": int(frame_meta.frame_num),
-                        "track_id": track_id,
-                        "bbox": {
-                            "x": float(bbox.left),
-                            "y": float(bbox.top),
-                            "w": float(bbox.width),
-                            "h": float(bbox.height),
-                        },
-                        "confidence": float(obj_meta.confidence),
-                        "face_crop_b64": face_crop_b64,
-                    }
-                    try:
-                        _kafka_producer.send(KAFKA_TOPIC, msg)
-                    except Exception as e:
-                        if frame_meta.frame_num % 100 == 0:
-                            print(f"⚠️  Kafka send xato: {e}")
-
-                try:
-                    l_obj = l_obj.next
-                except StopIteration:
-                    break
-
-            stats.add_frame(faces_in_frame, track_ids_in_frame)
-            stats.maybe_log()
-
-            try:
-                l_frame = l_frame.next
-            except StopIteration:
+            r, c = np.unravel_index(D.argmin(), D.shape)
+            if D[r, c] > 160:  # 160 pikseldan uzoq — yangi ID
                 break
+            if r in used_rows or c in used_cols:
+                D[r, :] = 1e9
+                D[:, c] = 1e9
+                continue
+            obj_id = obj_ids[r]
+            self._objects[obj_id] = centroids[c]
+            self._ages[obj_id] = 0
+            assigned_bbox[c] = obj_id
+            used_rows.add(r)
+            used_cols.add(c)
+            D[r, :] = 1e9
+            D[:, c] = 1e9
 
-        return Gst.PadProbeReturn.OK
+        # Yangi yuzlar uchun yangi ID
+        for i, c in enumerate(centroids):
+            if i not in assigned_bbox:
+                self._objects[self.next_id] = c
+                self._ages[self.next_id] = 0
+                assigned_bbox[i] = self.next_id
+                self.next_id += 1
 
-    return callback
-
-
-# ─────── PIPELINE QURISH ───────
-def build_pipeline(video_path: str, infer_config: str,
-                   tracker_config: str, save_output: bool) -> Gst.Pipeline:
-    """
-    Pipeline:
-        filesrc → decodebin → nvstreammux → nvinfer (face)
-        → nvtracker → nvvideoconvert → (nvdsosd) → sink
-    """
-    Gst.init(None)
-    pipeline = Gst.Pipeline.new("face-pipeline")
-    if not pipeline:
-        raise RuntimeError("Pipeline yaratilmadi")
-
-    # 1. Source
-    source = Gst.ElementFactory.make("filesrc", "file-source")
-    source.set_property("location", video_path)
-
-    # 2. Decoder (NVDEC orqali GPU da)
-    decoder = Gst.ElementFactory.make("decodebin", "decoder")
-
-    # 3. Stream muxer (frame'larni batch qiladi)
-    streammux = Gst.ElementFactory.make("nvstreammux", "stream-muxer")
-    streammux.set_property("batch-size", MUXER_BATCH_SIZE)
-    streammux.set_property("width", MUXER_WIDTH)
-    streammux.set_property("height", MUXER_HEIGHT)
-    streammux.set_property("batched-push-timeout", MUXER_BATCHED_PUSH_TIMEOUT)
-    streammux.set_property("live-source", 0)
-
-    # 4. Primary inference (yuz topish)
-    pgie = Gst.ElementFactory.make("nvinfer", "primary-inference")
-    pgie.set_property("config-file-path", infer_config)
-
-    # 5. Tracker
-    tracker = Gst.ElementFactory.make("nvtracker", "tracker")
-    tracker.set_property("tracker-width", 640)
-    tracker.set_property("tracker-height", 384)
-    tracker.set_property("ll-lib-file",
-                        "/opt/nvidia/deepstream/deepstream/lib/libnvds_nvmultiobjecttracker.so")
-    tracker.set_property("ll-config-file", tracker_config)
-
-    # 6. Video converter (BBox chizish uchun NV12 → RGBA)
-    nvvidconv = Gst.ElementFactory.make("nvvideoconvert", "nvvidconv")
-
-    # 7. OSD — BBox va text chizadi
-    nvosd = Gst.ElementFactory.make("nvdsosd", "nvosd")
-
-    # 8. Sink — fakesink (faqat statistika) yoki fayl
-    if save_output:
-        # → encoder → mp4 fayl
-        nvvidconv2 = Gst.ElementFactory.make("nvvideoconvert", "nvvidconv-out")
-        encoder = Gst.ElementFactory.make("nvv4l2h264enc", "encoder")
-        encoder.set_property("bitrate", 4000000)
-        parser = Gst.ElementFactory.make("h264parse", "parser")
-        muxer = Gst.ElementFactory.make("qtmux", "muxer")
-        sink = Gst.ElementFactory.make("filesink", "filesink")
-        output_path = f"{OUTPUT_DIR}/output_{int(time.time())}.mp4"
-        Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
-        sink.set_property("location", output_path)
-        sink.set_property("sync", 0)
-        print(f"💾  Output: {output_path}")
-    else:
-        sink = Gst.ElementFactory.make("fakesink", "fakesink")
-        sink.set_property("sync", 0)
-
-    # Hammasini pipeline'ga qo'shish
-    for el in [source, decoder, streammux, pgie, tracker, nvvidconv, nvosd]:
-        if not el:
-            raise RuntimeError(f"Element yaratilmadi")
-        pipeline.add(el)
-
-    if save_output:
-        for el in [nvvidconv2, encoder, parser, muxer, sink]:
-            pipeline.add(el)
-    else:
-        pipeline.add(sink)
-
-    # Static linklar
-    source.link(decoder)
-    # decodebin pad'i dinamik — callback orqali ulanadi
-    decoder.connect("pad-added", _on_decoder_pad_added, streammux)
-
-    streammux.link(pgie)
-    pgie.link(tracker)
-    tracker.link(nvvidconv)
-    nvvidconv.link(nvosd)
-
-    if save_output:
-        nvosd.link(nvvidconv2)
-        nvvidconv2.link(encoder)
-        encoder.link(parser)
-        parser.link(muxer)
-        muxer.link(sink)
-    else:
-        nvosd.link(sink)
-
-    return pipeline, sink
+        return [assigned_bbox.get(i, -1) for i in range(len(bboxes))]
 
 
-def _on_decoder_pad_added(decoder, pad, streammux):
-    """decodebin video pad'ini streammux'ga ulaydi."""
-    caps = pad.get_current_caps()
-    if not caps:
-        caps = pad.query_caps(None)
-    if not caps or not caps.get_size():
-        return
+# ─── Statistika ───────────────────────────────────────────────────────────────
+class Stats:
+    def __init__(self):
+        self.frames = self.processed = self.faces = self.sent = 0
+        self.start = time.time()
+        self._last_t = self.start
+        self._last_p = 0
 
-    structure = caps.get_structure(0)
-    name = structure.get_name()
-    if not name.startswith("video"):
-        return
+    def frame(self, processed: bool, faces: int, sent: int):
+        self.frames += 1
+        if processed:
+            self.processed += 1
+        self.faces += faces
+        self.sent += sent
+        if self.processed % 30 == 0 and processed:
+            now = time.time()
+            fps = (self.processed - self._last_p) / max(now - self._last_t, 0.001)
+            log.info("Frame %5d (processed %4d) | FPS %.1f | Yuz %4d | Kafka %4d",
+                     self.frames, self.processed, fps, self.faces, self.sent)
+            self._last_t, self._last_p = now, self.processed
 
-    sinkpad = streammux.request_pad_simple("sink_0")
-    if not sinkpad:
-        print("⚠️  streammux sink pad olinmadi")
-        return
+    def final(self):
+        elapsed = time.time() - self.start
+        log.info("=" * 55)
+        log.info("YAKUNIY HISOBOT")
+        log.info("  Jami kadrlar:    %d", self.frames)
+        log.info("  Ishlangan:       %d", self.processed)
+        log.info("  Yuz topildi:     %d", self.faces)
+        log.info("  Kafka yuborildi: %d", self.sent)
+        log.info("  Umumiy vaqt:     %.1f s", elapsed)
+        log.info("  O'rtacha FPS:    %.1f", self.processed / max(elapsed, 1))
+        log.info("=" * 55)
 
-    pad.link(sinkpad)
 
-
-# ─────── MAIN ───────
+# ─── Main ─────────────────────────────────────────────────────────────────────
 def main():
     if len(sys.argv) < 2:
-        print(__doc__)
-        print("\nFoydalanish:")
-        print("  python3 main.py <video_path> [--no-save]")
-        print("\nMisol:")
-        print("  python3 main.py /workspace/data/test.mp4")
+        print("Foydalanish: python3 main.py <video_path>")
         sys.exit(1)
 
     video_path = sys.argv[1]
-    save_output = "--no-save" not in sys.argv
-
     if not Path(video_path).exists():
-        print(f"❌  Video topilmadi: {video_path}")
+        log.error("Video topilmadi: %s", video_path)
         sys.exit(1)
 
-    infer_config = DEFAULT_INFER_CONFIG
-    tracker_config = DEFAULT_TRACKER_CONFIG
+    log.info("=" * 55)
+    log.info("Face Detection Pipeline")
+    log.info("  Video:      %s", video_path)
+    log.info("  Camera ID:  %d", CAMERA_ID)
+    log.info("  Kafka:      %s", KAFKA_BOOTSTRAP or "off")
+    log.info("  Frame skip: %d", FRAME_SKIP)
+    log.info("=" * 55)
 
-    if not Path(infer_config).exists():
-        print(f"❌  Infer config topilmadi: {infer_config}")
-        sys.exit(1)
+    from insightface.app import FaceAnalysis
+    _providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
 
-    print("=" * 60)
-    print("🚀  DeepStream Face Detection POC")
-    print("=" * 60)
-    print(f"Video:           {video_path}")
-    print(f"Infer config:    {infer_config}")
-    print(f"Tracker config:  {tracker_config}")
-    print(f"Save output:     {save_output}")
-    print(f"Output dir:      {OUTPUT_DIR}")
-    print("=" * 60)
-    print()
-
-    # Pipeline
-    pipeline, sink_element = build_pipeline(
-        video_path, infer_config, tracker_config, save_output
+    # Katta kadrda kichik yuzlarni topish — yuqori det_size
+    log.info("InsightFace detector yuklanmoqda (det_size=%d)...", DET_SIZE_FULL)
+    detector = FaceAnalysis(
+        name="buffalo_l",
+        allowed_modules=["detection"],
+        providers=_providers,
     )
+    detector.prepare(ctx_id=0, det_size=(DET_SIZE_FULL, DET_SIZE_FULL))
 
-    # Statistika callback
+    # Crop ustida embedding — kichikroq det_size yetarli (yuz katta bo'ladi)
+    log.info("InsightFace recognizer yuklanmoqda (det_size=%d)...", DET_SIZE_CROP)
+    recognizer = FaceAnalysis(
+        name="buffalo_l",
+        allowed_modules=["detection", "recognition"],
+        providers=_providers,
+    )
+    recognizer.prepare(ctx_id=0, det_size=(DET_SIZE_CROP, DET_SIZE_CROP))
+    log.info("InsightFace tayyor: detector(%d) + recognizer(%d)", DET_SIZE_FULL, DET_SIZE_CROP)
+
+    producer = _make_producer()
+    tracker = CentroidTracker()
     stats = Stats()
-    sink_pad = sink_element.get_static_pad("sink")
-    if sink_pad:
-        sink_pad.add_probe(Gst.PadProbeType.BUFFER,
-                          make_meta_callback(stats), 0)
+    # Track uchun oxirgi yuborish vaqti — qayta yuborishdan oldin TRACK_SEND_COOLDOWN soniya kutamiz
+    track_last_sent: dict[int, float] = {}
 
-    # Bus message handler
-    loop = GLib.MainLoop()
-    bus = pipeline.get_bus()
-    bus.add_signal_watch()
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        log.error("Video ochilmadi")
+        sys.exit(1)
 
-    def on_message(bus, message):
-        t = message.type
-        if t == Gst.MessageType.EOS:
-            print("\n✅  Video oxiriga yetdi (EOS)")
-            stats.final_report()
-            loop.quit()
-        elif t == Gst.MessageType.ERROR:
-            err, debug = message.parse_error()
-            print(f"\n❌  XATO: {err}")
-            print(f"Debug: {debug}")
-            loop.quit()
-        elif t == Gst.MessageType.WARNING:
-            warn, debug = message.parse_warning()
-            print(f"⚠️   Ogohlantirish: {warn}")
+    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    fps_v = cap.get(cv2.CAP_PROP_FPS) or 25.0
+    log.info("Video: %.1f FPS, %d kadr (~%.0f daqiqa)", fps_v, total, total / fps_v / 60)
 
-    bus.connect("message", on_message)
-
-    # Boshlanish
-    pipeline.set_state(Gst.State.PLAYING)
-    print("▶️   Pipeline ishga tushdi...\n")
-
+    frame_idx = 0
     try:
-        loop.run()
+        while True:
+            ok, frame = cap.read()
+            if not ok:
+                break
+
+            frame_idx += 1
+            if frame_idx % FRAME_SKIP != 0:
+                stats.frame(processed=False, faces=0, sent=0)
+                continue
+
+            # Katta kadrda yuz topish — yuqori det_size bilan
+            faces = detector.get(frame)
+            h_img, w_img = frame.shape[:2]
+            now_ts = time.time()
+
+            bboxes = []
+            valid_faces = []
+            for f in faces:
+                x1, y1, x2, y2 = f.bbox.astype(int)
+                if (x2 - x1) < MIN_FACE_SIZE or (y2 - y1) < MIN_FACE_SIZE:
+                    continue
+                bboxes.append((x1, y1, x2, y2))
+                valid_faces.append(f)
+
+            track_ids = tracker.update(bboxes)
+            sent = 0
+
+            for i, (x1, y1, x2, y2) in enumerate(bboxes):
+                tid = track_ids[i] if i < len(track_ids) else -1
+
+                # Cooldown: bu track yaqinda yuborilgan bo'lsa o'tkazib yuboramiz
+                # (tanilgan yoki rad etilgan bo'lsin — GPU/Kafka tejaymiz)
+                if now_ts - track_last_sent.get(tid, 0) < TRACK_SEND_COOLDOWN:
+                    continue
+
+                # Yuz crop — katta padding alignment uchun yaxshiroq
+                px = int((x2 - x1) * 0.6)
+                py = int((y2 - y1) * 0.6)
+                crop = frame[
+                    max(0, y1 - py):min(h_img, y2 + py),
+                    max(0, x1 - px):min(w_img, x2 + px),
+                ]
+                if crop.size == 0:
+                    continue
+
+                # Crop ustida recognition — embedding olish
+                crop_faces = recognizer.get(crop)
+                if not crop_faces:
+                    continue
+
+                best_face = max(
+                    crop_faces,
+                    key=lambda f: (f.bbox[2] - f.bbox[0]) * (f.bbox[3] - f.bbox[1]),
+                )
+                if best_face.embedding is None:
+                    continue
+
+                msg = {
+                    "ts": time.time(),
+                    "camera_id": CAMERA_ID,
+                    "frame_id": frame_idx,
+                    "track_id": tid,
+                    "bbox": {
+                        "x": float(x1), "y": float(y1),
+                        "w": float(x2 - x1), "h": float(y2 - y1),
+                    },
+                    "confidence": float(face.det_score),
+                    "embedding": best_face.embedding.tolist(),
+                }
+
+                if producer:
+                    try:
+                        producer.send(KAFKA_TOPIC, msg)
+                        sent += 1
+                        track_last_sent[tid] = now_ts
+                    except Exception as e:
+                        if frame_idx % 500 == 0:
+                            log.warning("Kafka xato: %s", e)
+
+            stats.frame(processed=True, faces=len(bboxes), sent=sent)
+
     except KeyboardInterrupt:
-        print("\n⛔  Ctrl+C bosildi")
-        stats.final_report()
+        log.info("To'xtatildi (Ctrl+C)")
     finally:
-        pipeline.set_state(Gst.State.NULL)
+        cap.release()
+        if producer:
+            producer.flush()
+            log.info("Kafka producer yopildi")
+        stats.final()
 
 
 if __name__ == "__main__":

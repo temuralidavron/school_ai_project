@@ -19,15 +19,40 @@ import base64
 import json
 import logging
 import os
+import tempfile
 import time
-from typing import Optional
 
-import cv2
 import numpy as np
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
 logger = logging.getLogger(__name__)
+
+# /app/ds_data/track_names.json — pipeline MJPEG uchun ism ko'rsatadi
+_NAMES_FILE = os.path.join(
+    os.environ.get("DS_DATA_DIR", "/app/ds_data"),
+    "track_names.json",
+)
+_track_names: dict[int, str] = {}   # {track_id: full_name}
+_NAMES_MAX = 300                     # xotira nazorati
+
+
+def _save_track_name(track_id: int, full_name: str, pinfl: str = "", score: float | None = None) -> None:
+    """track_id → {name, pinfl, score} ni faylga yozadi (pipeline MJPEG vizualizatsiya uchun).
+    score = o'xshashlik (0..1) → foizga aylantirilib rectangle'da ko'rsatiladi."""
+    entry = {"name": full_name, "pinfl": pinfl}
+    if score is not None:
+        entry["score"] = round(float(score) * 100)
+    _track_names[track_id] = entry
+    if len(_track_names) > _NAMES_MAX:
+        for k in list(_track_names)[:50]:
+            _track_names.pop(k, None)
+    try:
+        os.makedirs(os.path.dirname(_NAMES_FILE), exist_ok=True)
+        with open(_NAMES_FILE, "w", encoding="utf-8") as f:
+            json.dump(_track_names, f, ensure_ascii=False)
+    except OSError:
+        pass
 
 
 class Command(BaseCommand):
@@ -56,28 +81,19 @@ class Command(BaseCommand):
         from apps.attendance.services import (
             LiveFrameProcessorService,
             RecognitionEventService,
-            _get_lesson_embedding_cache,
         )
-        from apps.face_data.services import get_face_app
 
         bootstrap = options["bootstrap"]
         topic = options["topic"]
         group_id = options["group_id"]
 
         self.stdout.write(self.style.SUCCESS("=" * 60))
-        self.stdout.write(
-            self.style.SUCCESS(f"  DeepStream Kafka Consumer")
-        )
+        self.stdout.write(self.style.SUCCESS("  DeepStream Kafka Consumer (Phase 2: embedding)"))
         self.stdout.write(self.style.SUCCESS("=" * 60))
         self.stdout.write(f"  Kafka:     {bootstrap}")
         self.stdout.write(f"  Topic:     {topic}")
         self.stdout.write(f"  Group:     {group_id}")
         self.stdout.write(self.style.SUCCESS("=" * 60))
-
-        # AI modelni avvaldan yuklash (birinchi xabarda kechikishni kamaytirish)
-        logger.info("Pre-loading face app...")
-        face_app = get_face_app()
-        logger.info("Face app ready")
 
         recognition_service = RecognitionEventService()
         processor = LiveFrameProcessorService()
@@ -93,7 +109,7 @@ class Command(BaseCommand):
                 stats.total += 1
                 try:
                     self._process_message(
-                        msg.value, face_app, processor, recognition_service, stats
+                        msg.value, processor, recognition_service, stats
                     )
                 except Exception as e:
                     stats.errors += 1
@@ -132,109 +148,111 @@ class Command(BaseCommand):
         raise RuntimeError("Kafka ga ulanib bo'lmadi")
 
     def _process_message(
-        self, data, face_app, processor, recognition_service, stats
+        self, data, processor, recognition_service, stats
     ):
         """
-        DeepStream xabarini qayta ishlash.
-        Format: {ts, frame_id, track_id, bbox, confidence, face_crop_b64, camera_id}
+        DeepStream xabarini qayta ishlash (Phase 2: embedding to'g'ridan-to'g'ri).
+        Format: {ts, frame_id, track_id, bbox, confidence, embedding, camera_id}
         """
         camera_id = data.get("camera_id")
         if camera_id is None:
             stats.skipped_no_camera += 1
             return
 
-        crop_b64 = data.get("face_crop_b64", "")
-        if not crop_b64:
+        # Phase 2: embedding to'g'ridan-to'g'ri DeepStream dan keladi
+        embedding_list = data.get("embedding")
+        if not embedding_list:
+            # Phase 1 xabarlari (eski format) — o'tkazib yuboramiz
             stats.skipped_no_crop += 1
             return
 
-        # Crop decode
         try:
-            crop_bytes = base64.b64decode(crop_b64)
-            crop_arr = np.frombuffer(crop_bytes, dtype=np.uint8)
-            crop_bgr = cv2.imdecode(crop_arr, cv2.IMREAD_COLOR)
+            embedding = np.array(embedding_list, dtype=np.float32)
         except Exception:
             stats.decode_errors += 1
             return
 
-        if crop_bgr is None or crop_bgr.size == 0:
-            stats.decode_errors += 1
-            return
-
-        # Embedding chiqarish — MAVJUD modeldan
-        faces = face_app.get(crop_bgr)
-        if not faces:
-            stats.no_face_in_crop += 1
-            return
-
-        best = max(
-            faces,
-            key=lambda f: (f.bbox[2] - f.bbox[0]) * (f.bbox[3] - f.bbox[1]),
+        track_id   = data.get("track_id", -1)
+        session_id = data.get("session_id", 0)  # har pipeline restart uchun unikal
+        track_key = f"deepstream_cam{camera_id}_t{track_id}_s{session_id}"
+        bbox_d = data.get("bbox", {})
+        bbox = (
+            int(bbox_d.get("x", 0)),
+            int(bbox_d.get("y", 0)),
+            int(bbox_d.get("x", 0) + bbox_d.get("w", 0)),
+            int(bbox_d.get("y", 0) + bbox_d.get("h", 0)),
         )
-        embedding = best.embedding
 
-        # Track key — DeepStream track_id ni ishlatamiz
-        track_id = data.get("track_id", -1)
-        frame_id = data.get("frame_id", -1)
-        track_key = f"deepstream_cam{camera_id}_track{track_id}"
+        accept_threshold = getattr(settings, "AI_ACCEPT_THRESHOLD", 0.55)
+        review_threshold = getattr(settings, "AI_REVIEW_THRESHOLD", 0.42)
 
-        # Crop ni vaqtinchalik faylga saqlash (RecognitionEventService talab qiladi)
-        # NOTE: kelajakda numpy to'g'ridan-to'g'ri uzatish optimizatsiya qilinishi mumkin
-        import tempfile
+        # SKUD push uchun face_crop (base64 JPEG) — pipeline dan keladi
+        face_crop_b64 = data.get("face_crop")
 
-        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
-            tmp_path = tmp.name
-        cv2.imwrite(tmp_path, crop_bgr)
+        # face_crop ni vaqtinchalik fayl orqali berish — _push_to_skud thread race yo'q
+        tmp_path = ""
+        if face_crop_b64:
+            try:
+                jpg_bytes = base64.b64decode(face_crop_b64)
+                tmp_fd, tmp_path = tempfile.mkstemp(suffix=".jpg")
+                with os.fdopen(tmp_fd, "wb") as f:
+                    f.write(jpg_bytes)
+            except Exception:
+                tmp_path = ""
 
         try:
-            # MAVJUD service'ni chaqiramiz — bir xil davomat yozish mantig'i
-            accept_threshold = getattr(settings, "AI_ACCEPT_THRESHOLD", 0.55)
-            review_threshold = getattr(settings, "AI_REVIEW_THRESHOLD", 0.42)
-
+            # Pipeline 1k3d68 bilan aniq landmark ishlatadi → embedding InsightFace bilan mos
             result = recognition_service.recognize_track_and_record_by_embedding(
                 track_key=track_key,
                 image_path=tmp_path,
                 query_embedding=embedding,
-                organization_id=None,  # Camera'dan olinadi
+                organization_id=None,
                 camera_id=camera_id,
-                bbox=(
-                    int(data.get("bbox", {}).get("x", 0)),
-                    int(data.get("bbox", {}).get("y", 0)),
-                    int(
-                        data.get("bbox", {}).get("x", 0)
-                        + data.get("bbox", {}).get("w", 0)
-                    ),
-                    int(
-                        data.get("bbox", {}).get("y", 0)
-                        + data.get("bbox", {}).get("h", 0)
-                    ),
-                ),
+                bbox=bbox,
                 accept_threshold=accept_threshold,
                 review_threshold=review_threshold,
-                save_base64=True,
+                save_base64=bool(tmp_path),
                 frontal_frames_used=1,
             )
-
-            status = result.get("status", "")
-            if status == "recorded_and_locked":
-                stats.accepted += 1
-                best_match = result.get("best_match", {})
-                logger.info(
-                    "DAVOMAT cam=%s %s sim=%.3f",
-                    camera_id,
-                    best_match.get("full_name", ""),
-                    best_match.get("best_score", 0),
-                )
-            elif status == "skipped_locked_after_search":
-                stats.skipped_locked += 1
-            elif status == "skipped_before_recognition":
-                stats.skipped_before += 1
-            elif status == "rejected":
-                stats.rejected += 1
-
         finally:
-            if os.path.exists(tmp_path):
-                os.remove(tmp_path)
+            if tmp_path and os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+
+        status     = result.get("status", "")
+        best_match = result.get("best_match") or {}
+        best_score = best_match.get("best_score", 0) or 0
+
+        # Rectangle da ism DARHOL ko'rinsin — review threshold dan yuqori bo'lsa yetarli
+        if best_match and best_score >= review_threshold:
+            _save_track_name(
+                track_id,
+                best_match.get("full_name", ""),
+                str(best_match.get("pinfl", "") or ""),
+                best_score,
+            )
+
+        if status == "recorded_and_locked":
+            stats.accepted += 1
+            logger.info(
+                "DAVOMAT cam=%s %s pinfl=%s sim=%.3f",
+                camera_id,
+                best_match.get("full_name", ""),
+                best_match.get("pinfl", ""),
+                best_score,
+            )
+        elif status == "skipped_locked_after_search":
+            stats.skipped_locked += 1
+        elif status == "skipped_before_recognition":
+            stats.skipped_before += 1
+        elif status == "rejected":
+            stats.rejected += 1
+            if stats.rejected <= 5 or stats.rejected % 200 == 0:
+                logger.warning(
+                    "REJECTED cam=%s track=%s best_score=%.4f best_name=%s",
+                    camera_id, track_id,
+                    best_score or best_match.get("effective_score", 0),
+                    best_match.get("full_name", "N/A"),
+                )
 
 
 class ConsumerStats:

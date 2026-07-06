@@ -837,11 +837,12 @@ class RecognitionEventService:
         )
 
         # Fayl saqlash tranzaksiyadan TASHQARIDA — DB fail bo'lsa fayl orphan bo'lmaydi
-        file_obj = self._to_file(image_path, file_name=image_path.split("/")[-1])
-        try:
-            event.image.save(file_obj.name, file_obj, save=True)
-        except Exception as exc:
-            logger.error("Event image save xatosi event_id=%s: %s", event.id, exc)
+        if image_path:
+            try:
+                file_obj = self._to_file(image_path, file_name=image_path.split("/")[-1])
+                event.image.save(file_obj.name, file_obj, save=True)
+            except Exception as exc:
+                logger.error("Event image save xatosi event_id=%s: %s", event.id, exc)
 
         push_result = self._push_to_skud(event)
         return {
@@ -948,11 +949,12 @@ class RecognitionEventService:
                     reason="attendance_done",
                 )
 
-        file_obj = self._to_file(image_path, file_name=image_path.split("/")[-1])
-        try:
-            event.image.save(file_obj.name, file_obj, save=True)
-        except Exception as exc:
-            logger.error("Event image save xatosi event_id=%s: %s", event.id, exc)
+        if image_path:
+            try:
+                file_obj = self._to_file(image_path, file_name=image_path.split("/")[-1])
+                event.image.save(file_obj.name, file_obj, save=True)
+            except Exception as exc:
+                logger.error("Event image save xatosi event_id=%s: %s", event.id, exc)
 
         if best and decision == "accepted":
             return {

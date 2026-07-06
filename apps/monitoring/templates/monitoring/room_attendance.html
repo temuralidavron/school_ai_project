@@ -108,28 +108,29 @@
     <!-- Kameralar yon-yon -->
     <div class="flex gap-3 flex-shrink-0" style="height: 48%;">
 
-      <!-- 1. ASL TASVIR (HLS) -->
+      <!-- 1. ASL TASVIR (video fayl yoki HLS) -->
       <div class="cam-panel flex-1">
         <span class="cam-label">Asl tasvir</span>
         <div class="cam-dot dot-green"></div>
-        {% if stream_url %}
-          <video id="original-video" autoplay muted playsinline></video>
-        {% else %}
-          <div class="flex items-center justify-center h-full text-slate-600 text-sm">
-            Stream URL topilmadi
-          </div>
-        {% endif %}
+        <video id="original-video" autoplay muted playsinline controls
+               src="/monitoring/video-file/"
+               style="width:100%;height:100%;object-fit:cover;"></video>
       </div>
 
-      <!-- 2. ANNOTATSIYALANGAN (MJPEG) -->
-      <div class="cam-panel flex-1">
-        <span class="cam-label" style="background:rgba(22,101,52,.75);">Yuz tanish</span>
-        <div class="cam-dot dot-orange"></div>
-        <img id="annotated-feed"
-             src="/monitoring/room/{{ camera_id }}/mjpeg/"
-             alt="Face detection stream"
+      <!-- 2. DEEPSTREAM MJPEG — yashil ramkalar + track ID -->
+      <div class="cam-panel flex-1" style="position:relative;">
+        <span class="cam-label" style="background:rgba(22,101,52,.75);">Yuz tanish (AI)</span>
+        <div class="cam-dot" id="mjpeg-dot" style="background:#f59e0b;"></div>
+        <img id="mjpeg-stream"
+             alt="AI stream"
              style="width:100%;height:100%;object-fit:cover;"
-             onerror="setTimeout(()=>{ this.src='/monitoring/room/{{ camera_id }}/mjpeg/?t='+Date.now() }, 2000)"/>
+             onerror="document.getElementById('mjpeg-placeholder').style.display='flex';document.getElementById('mjpeg-dot').style.background='#ef4444';">
+        <div id="mjpeg-placeholder"
+             style="width:100%;height:100%;display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#64748b;position:absolute;top:0;left:0;background:#000;">
+          <div style="font-size:2rem;">📷</div>
+          <div style="font-size:0.75rem;">AI pipeline ishga tushmoqda...</div>
+          <div style="font-size:0.65rem;" id="mjpeg-retry-txt"></div>
+        </div>
       </div>
 
     </div>
@@ -215,9 +216,10 @@ const CAMERA_ID  = {{ camera_id }};
 const STREAM_URL = "{{ stream_url|escapejs }}";
 const API_URL    = `/monitoring/room/${CAMERA_ID}/api/`;
 
-// ── HLS original stream ───────────────────────────────────────────────────
+// ── Video stream ─────────────────────────────────────────────────────────
 const video = document.getElementById('original-video');
-if (video && STREAM_URL) {
+// Agar video allaqachon src ga ega bo'lsa (local fayl) — HLS bilan ustiga yozmaymiz
+if (video && STREAM_URL && !video.getAttribute('src')) {
   if (Hls.isSupported()) {
     const hls = new Hls({ liveSyncDuration: 2, liveMaxLatencyDuration: 5 });
     hls.loadSource(STREAM_URL);
@@ -416,6 +418,29 @@ function getCsrf() {
 
 fetchAttendance();
 setInterval(fetchAttendance, 3000);
+
+// MJPEG URL — brauzer ochilgan serverning IP/hostname ishlatiladi (localhost emas)
+(function initMjpeg() {
+  const img = document.getElementById('mjpeg-stream');
+  const txt = document.getElementById('mjpeg-retry-txt');
+  const dot = document.getElementById('mjpeg-dot');
+  if (!img) return;
+  const url = `http://${location.hostname}:8554/mjpeg`;
+  if (txt) txt.textContent = url;
+  img.src = url;
+  // MJPEG uchun onload ishonchsiz — src qo'yilgandan keyin darhol ko'rsatamiz
+  dot.style.background = '#22c55e';
+})();
+
+// MJPEG stream qayta ulanish (10 soniyada bir — uzilsa reconnect)
+(function mjpegKeepAlive() {
+  const img = document.getElementById('mjpeg-stream');
+  if (!img) return;
+  setInterval(() => {
+    const base = `http://${location.hostname}:8554/mjpeg`;
+    img.src = base + '?t=' + Date.now();
+  }, 10000);
+})();
 </script>
 </body>
 </html>
