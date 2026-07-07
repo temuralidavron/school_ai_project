@@ -15,6 +15,7 @@ from .views import (
     MonitoringCameraAttendanceAPIView,
     MonitoringComparisonAPIView,
 )
+from .live_views import live_room, live_room_api, original_video
 
 urlpatterns = [
     path("", dashboard, name="monitoring-dashboard"),
@@ -28,6 +29,11 @@ urlpatterns = [
     path("room/<int:camera_id>/", room_attendance, name="monitoring-room"),
     path("room/<int:camera_id>/mjpeg/", mjpeg_stream, name="monitoring-mjpeg"),
     path("room/<int:camera_id>/api/", room_attendance_api, name="monitoring-room-api"),
+
+    # Jonli davomat — YANGI sahifa (foiz saralash + tab + lightbox)
+    path("live/<int:camera_id>/", live_room, name="monitoring-live-room"),
+    path("live/<int:camera_id>/api/", live_room_api, name="monitoring-live-room-api"),
+    path("live/<int:camera_id>/video/", original_video, name="monitoring-live-video"),
 
     # API endpointlar
     path("api/stats/", MonitoringStatsAPIView.as_view(), name="monitoring-stats"),

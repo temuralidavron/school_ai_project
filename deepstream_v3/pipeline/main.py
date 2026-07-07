@@ -318,8 +318,8 @@ def _recog_probe(pad, info, _u):
         if f == 1:
             _state["t0"] = time.time()  # fps o'lchovi model yuklashsiz
 
-        # ── MJPEG vizualizatsiya (faqat 0-manba, har VIS_EVERY-kadrda) ───────
-        if VIS_EVERY > 0 and sid == 0 and f % VIS_EVERY == 0:
+        # ── MJPEG vizualizatsiya (har manba uchun, har VIS_EVERY-kadrda) ─────
+        if VIS_EVERY > 0 and f % VIS_EVERY == 0:
             if frame_bgr is None:
                 rgba = pyds.get_nvds_buf_surface(hash(buf), frame_meta.batch_id)
                 frame_bgr = np.ascontiguousarray(rgba[:, :, 2::-1])
@@ -352,7 +352,7 @@ def _recog_probe(pad, info, _u):
                     l_obj = l_obj.next
                 except StopIteration:
                     break
-            push_frame(vis)
+            push_frame(vis, sid)
 
         if f <= 3 or f % 300 == 0:
             el = time.time() - _state["t0"]
@@ -493,7 +493,7 @@ def main():
     _kafka = KafkaClient(KAFKA_BOOTSTRAP, KAFKA_TOPIC)
     if VIS_EVERY > 0:
         mjpeg_start(port=8554)
-        log.info("MJPEG vizual: http://localhost:8554/mjpeg")
+        log.info("MJPEG vizual: http://localhost:8554/mjpeg/<source>")
 
     pipeline, loop = build_pipeline(args.video)
 

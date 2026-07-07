@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ camera.name }} — Jonli davomat</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.7/dist/hls.min.js"></script>
+  <style>
+    body { background:#0f172a; font-family:'Segoe UI', system-ui, sans-serif; }
+    .card { background:#1e293b; border:1px solid #334155; border-radius:10px; }
+    .cam-panel { position:relative; background:#000; border-radius:10px; overflow:hidden; }
+    .cam-panel video, .cam-panel img { width:100%; height:100%; object-fit:cover; display:block; }
+    .cam-label { position:absolute; top:8px; left:8px; z-index:5; background:rgba(0,0,0,.65);
+      color:#fff; font-size:11px; font-weight:600; padding:3px 8px; border-radius:5px; }
+    .cam-dot { position:absolute; top:10px; right:10px; z-index:5; width:8px; height:8px; border-radius:50%; }
+    .dot-green { background:#22c55e; animation:blink 1.5s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+    .arr-row { display:flex; align-items:center; gap:10px; background:#1e293b; border:1px solid #334155;
+      border-radius:8px; padding:7px 10px; margin-bottom:6px; }
+    .thumb { width:48px; height:48px; border-radius:7px; object-fit:cover; border:2px solid #334155;
+      background:#0f172a; flex-shrink:0; cursor:pointer; }
+    .thumb-ph { width:48px; height:48px; border-radius:7px; background:#1e3a5f; display:flex;
+      align-items:center; justify-content:center; color:#475569; font-size:20px; border:2px solid #334155; flex-shrink:0; }
+    .tcol { display:flex; flex-direction:column; align-items:center; gap:2px; flex-shrink:0; }
+    .tlab { font-size:9px; font-weight:600; line-height:1; }
+    .abs-row { display:flex; align-items:center; gap:8px; padding:5px 8px; border-radius:7px;
+      background:#1e293b; margin-bottom:5px; }
+    .abs-ph { width:36px; height:36px; border-radius:6px; background:#1e293b; border:1px solid #334155;
+      display:flex; align-items:center; justify-content:center; color:#475569; font-size:15px; flex-shrink:0; }
+    .abs-av { width:36px; height:36px; border-radius:6px; object-fit:cover; border:1px solid #334155; flex-shrink:0; }
+    .sim { font-weight:700; font-size:13px; padding:2px 8px; border-radius:6px; min-width:44px; text-align:center; }
+    .sim-hi { background:#14532d; color:#86efac; }
+    .sim-mid { background:#78350f; color:#fde68a; }
+    .sim-lo { background:#450a0a; color:#fca5a5; }
+    .sim-num { font-weight:700; font-size:15px; min-width:46px; text-align:right; flex-shrink:0; }
+    .fill-track { height:6px; background:#0f172a; border-radius:4px; overflow:hidden; margin-top:5px; }
+    .fill-bar { height:100%; width:0; border-radius:4px; background:#22c55e;
+      transition: width 1s cubic-bezier(.34,1.2,.64,1), background .4s ease; }
+    @keyframes arrIn { 0%{ background:#14532d; box-shadow:0 0 0 1px #22c55e inset; }
+      100%{ background:#1e293b; box-shadow:none; } }
+    .arr-new { animation: arrIn 1.3s ease; }
+    .tab { font-size:13px; padding:6px 14px; border-radius:8px; border:1px solid #334155; color:#94a3b8; }
+    .tab-active { background:#1d4ed8; border-color:#1d4ed8; color:#fff; font-weight:600; }
+    ::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-thumb { background:#475569; border-radius:2px; }
+  </style>
+</head>
+<body class="text-slate-200 min-h-screen flex flex-col" style="height:100vh; overflow:hidden;">
+
+<nav class="bg-slate-900 border-b border-slate-700 px-5 py-2.5 flex items-center justify-between flex-shrink-0">
+  <div class="flex items-center gap-3">
+    <a href="/monitoring/" class="text-slate-400 hover:text-white text-sm">&#8592; Monitoring</a>
+    <span class="text-slate-600">|</span>
+    <div class="flex items-center gap-2">
+      {% for c in nav_cameras %}
+        <a href="/monitoring/live/{{ c.id }}/"
+           class="tab {% if c.id == camera_id %}tab-active{% endif %}">{{ c.name }}</a>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="flex items-center gap-4">
+    <div id="schedule-info" class="hidden items-center gap-3 text-sm">
+      <span class="text-blue-400 font-semibold" id="bar-class"></span>
+      <span class="text-slate-500 font-mono" id="bar-time"></span>
+      <span class="text-slate-600" id="bar-lesson"></span>
+    </div>
+    <div id="clock" class="text-slate-400 text-xs font-mono"></div>
+  </div>
+</nav>
+
+<div class="flex flex-col flex-1 min-h-0 overflow-hidden p-3 gap-3">
+
+  <div class="flex gap-3 flex-shrink-0" style="height:42%;">
+    <div class="cam-panel flex-1">
+      <span class="cam-label">Asl video</span>
+      <div class="cam-dot dot-green"></div>
+      <video id="original-video" autoplay muted playsinline loop controls
+             src="/monitoring/live/{{ camera_id }}/video/"
+             style="width:100%;height:100%;object-fit:cover;"></video>
+    </div>
+    <div class="cam-panel flex-1">
+      <span class="cam-label" style="background:rgba(22,101,52,.75);">Yuz tanish (AI)</span>
+      <div class="cam-dot dot-green" id="mjpeg-dot" style="background:#f59e0b;"></div>
+      <img id="mjpeg-stream" alt="AI stream" style="width:100%;height:100%;object-fit:cover;"
+           onerror="document.getElementById('mjpeg-ph').style.display='flex';document.getElementById('mjpeg-dot').style.background='#ef4444';">
+      <div id="mjpeg-ph" style="width:100%;height:100%;display:none;flex-direction:column;align-items:center;
+           justify-content:center;gap:8px;color:#64748b;position:absolute;top:0;left:0;background:#000;">
+        <div style="font-size:1.6rem;">&#128247;</div>
+        <div style="font-size:.75rem;">AI pipeline ishga tushmoqda...</div>
+        <div style="font-size:.65rem;" id="mjpeg-url"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card px-3 py-2 flex-shrink-0 flex items-center gap-5 text-sm">
+    <span class="text-slate-400">Jami: <b id="m-total" class="text-slate-200">0</b></span>
+    <span class="text-green-400">Kelgan: <b id="m-arrived">0</b></span>
+    <span class="text-red-400">Kelmagan: <b id="m-absent">0</b></span>
+    <div class="flex-1 bg-slate-700 rounded-full h-2 overflow-hidden">
+      <div id="prog-bar" class="bg-green-500 h-2 rounded-full" style="width:0%; transition:width .6s ease;"></div>
+    </div>
+    <span class="text-slate-500"><b id="m-pct">0</b>%</span>
+  </div>
+
+  <div class="flex gap-3 flex-1 min-h-0 overflow-hidden">
+
+    <div class="flex flex-col flex-1 min-w-0 overflow-hidden">
+      <div class="flex items-center gap-2 mb-2 flex-shrink-0">
+        <span class="text-green-400 font-bold text-xs uppercase tracking-wider">Kelganlar</span>
+        <span id="arr-badge" class="text-xs bg-green-900 text-green-300 font-bold px-2 py-0.5 rounded-full">0</span>
+        <span class="text-slate-600 text-xs ml-1">o'xshashlik &#8595;</span>
+      </div>
+      <div id="arr-list" class="overflow-y-auto flex-1 min-h-0 pr-1">
+        <div id="arr-empty" class="text-center text-slate-600 text-sm py-6">Hali hech kim kelmadi</div>
+      </div>
+    </div>
+
+    <div class="flex flex-col overflow-hidden" style="width:270px; flex-shrink:0;">
+      <div class="flex items-center gap-2 mb-2 flex-shrink-0">
+        <span class="text-red-400 font-bold text-xs uppercase tracking-wider">Kelmaganlar</span>
+        <span id="abs-badge" class="text-xs bg-red-950 text-red-300 font-bold px-2 py-0.5 rounded-full">0</span>
+      </div>
+      <div id="abs-list" class="overflow-y-auto flex-1 min-h-0 pr-1">
+        <div id="abs-empty" class="text-center text-slate-600 text-sm py-6">Yuklanmoqda...</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="lightbox" onclick="closeLb()" style="display:none; position:fixed; inset:0; z-index:50;
+     background:rgba(0,0,0,.85); align-items:center; justify-content:center; padding:24px;">
+  <div onclick="event.stopPropagation()" class="card p-4" style="max-width:760px;">
+    <div class="flex items-center justify-between mb-3">
+      <span id="lb-name" class="font-semibold text-white"></span>
+      <button onclick="closeLb()" class="text-slate-400 hover:text-white text-xl leading-none">&times;</button>
+    </div>
+    <div class="flex gap-4">
+      <div class="text-center">
+        <img id="lb-ai" style="width:320px;height:320px;object-fit:cover;border-radius:8px;border:2px solid #166534;background:#0f172a;">
+        <div class="text-xs text-blue-400 font-semibold mt-1">Davomat (AI tanidi)</div>
+      </div>
+      <div class="text-center">
+        <img id="lb-ref" style="width:320px;height:320px;object-fit:cover;border-radius:8px;border:2px solid #334155;background:#0f172a;">
+        <div class="text-xs text-green-400 font-semibold mt-1">Asl rasm</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CAMERA_ID = {{ camera_id }};
+const AI_SOURCE = {{ ai_source }};
+const STREAM_URL = "{{ stream_url|escapejs }}";
+const API_URL = `/monitoring/live/${CAMERA_ID}/api/`;
+
+const video = document.getElementById('original-video');
+if (video && STREAM_URL && !video.getAttribute('src')) {
+  if (Hls.isSupported()) { const h = new Hls({liveSyncDuration:2}); h.loadSource(STREAM_URL); h.attachMedia(video); }
+  else if (video.canPlayType('application/vnd.apple.mpegurl')) { video.src = STREAM_URL; }
+}
+
+function updateClock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('uz-UZ', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+}
+setInterval(updateClock, 1000); updateClock();
+
+function simClass(v) { if (v == null) return 'sim-lo'; if (v >= 58) return 'sim-hi'; if (v >= 48) return 'sim-mid'; return 'sim-lo'; }
+function esc(s) { return (s||'').replace(/"/g,'&quot;'); }
+
+// aiSrc/refSrc har doim bir xil (recognition, front) — qaysi rasm bosilsa ham
+// lightbox to'g'ri ko'rsatadi (o'rin almashmaydi).
+function thumbImg(src, aiSrc, refSrc, name) {
+  if (src) return `<img src="${src}" class="thumb" alt="" data-ai="${esc(aiSrc||'')}" data-ref="${esc(refSrc||'')}" data-name="${esc(name||'')}" onerror="this.outerHTML='<div class=thumb-ph>&#128100;</div>'">`;
+  return `<div class="thumb-ph">&#128100;</div>`;
+}
+
+function render(data) {
+  if (data.classroom && data.classroom.name) document.title = `${data.classroom.name} — Jonli davomat`;
+
+  const si = document.getElementById('schedule-info');
+  if (data.no_schedule) {
+    si.classList.add('hidden');
+    document.getElementById('arr-empty').textContent = "Hozir bu xonada aktiv dars yo'q";
+    document.getElementById('arr-empty').classList.remove('hidden');
+    return;
+  }
+  si.classList.remove('hidden'); si.classList.add('flex');
+  document.getElementById('bar-class').textContent = data.schedule.class_name;
+  document.getElementById('bar-time').textContent = `${data.schedule.start_at}–${data.schedule.end_at}`;
+  document.getElementById('bar-lesson').textContent = `${data.schedule.lesson_number}-dars`;
+
+  const pct = data.total > 0 ? +(data.arrived_count / data.total * 100).toFixed(0) : 0;
+  document.getElementById('m-total').textContent = data.total;
+  document.getElementById('m-arrived').textContent = data.arrived_count;
+  document.getElementById('m-absent').textContent = data.not_arrived_count;
+  document.getElementById('m-pct').textContent = pct;
+  document.getElementById('prog-bar').style.width = pct + '%';
+  document.getElementById('arr-badge').textContent = data.arrived_count;
+  document.getElementById('abs-badge').textContent = data.not_arrived_count;
+
+  renderArrived(data.arrived || []);
+  renderAbsent(data.not_arrived || []);
+}
+
+const arrRows = new Map();
+function fillColor(v) { if (v == null) return '#64748b'; if (v >= 58) return '#22c55e'; if (v >= 48) return '#f59e0b'; return '#ef4444'; }
+
+// Keyed render: mavjud qatorlar qayta chizilmaydi — shuning uchun foiz bari
+// bir marta to'ladi va joyida qoladi (har poll da miltillamaydi).
+function renderArrived(list) {
+  const box = document.getElementById('arr-list');
+  const empty = document.getElementById('arr-empty');
+  if (!list.length) { arrRows.forEach(r => r.remove()); arrRows.clear(); empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+
+  const seen = new Set();
+  list.forEach(s => {
+    seen.add(s.pinfl);
+    const pct = s.similarity;
+    const pctTxt = pct == null ? '&mdash;' : Math.round(pct) + '%';
+    const w = pct == null ? 0 : Math.max(4, Math.min(100, pct));
+    const col = fillColor(pct);
+    const late = s.is_late ? '<span class="text-xs" style="color:#fbbf24;">kech</span>' : '';
+
+    let row = arrRows.get(s.pinfl);
+    if (!row) {
+      // Yangi kelgan — yashil chaqnab tushadi, foiz 0 dan to'ladi
+      row = document.createElement('div');
+      row.className = 'arr-row arr-new';
+      row.dataset.pinfl = s.pinfl;
+      row.innerHTML = `
+        <div class="tcol">${thumbImg(s.recognition_image, s.recognition_image, s.front_photo, s.full_name)}<span class="tlab" style="color:#60a5fa;">Davomat</span></div>
+        <div class="tcol">${thumbImg(s.front_photo, s.recognition_image, s.front_photo, s.full_name)}<span class="tlab" style="color:#34d399;">Asl</span></div>
+        <div class="flex-1 min-w-0">
+          <div class="font-semibold text-sm text-white truncate">${s.full_name}</div>
+          <div class="text-xs text-green-400 font-mono time">${s.arrived_at || ''} ${late}</div>
+          <div class="fill-track"><div class="fill-bar"></div></div>
+        </div>
+        <span class="sim-num">${pctTxt}</span>`;
+      arrRows.set(s.pinfl, row);
+      box.appendChild(row);
+      const bar = row.querySelector('.fill-bar');
+      row.querySelector('.sim-num').style.color = col;
+      requestAnimationFrame(() => { bar.style.width = w + '%'; bar.style.background = col; });
+      setTimeout(() => row.classList.remove('arr-new'), 1300);
+    } else {
+      // Mavjud — foiz/vaqt yangilanadi (rasm qayta yuklanmaydi)
+      row.querySelector('.fill-bar').style.width = w + '%';
+      row.querySelector('.fill-bar').style.background = col;
+      const num = row.querySelector('.sim-num');
+      num.innerHTML = pctTxt; num.style.color = col;
+      row.querySelector('.time').innerHTML = `${s.arrived_at || ''} ${late}`;
+    }
+  });
+
+  // Saralangan tartibga qarab DOM ni qayta joylashtirish
+  list.forEach(s => { const r = arrRows.get(s.pinfl); if (r) box.appendChild(r); });
+  // Ro'yxatda qolmaganlarni tozalash
+  arrRows.forEach((r, pinfl) => { if (!seen.has(pinfl)) { r.remove(); arrRows.delete(pinfl); } });
+}
+
+function renderAbsent(list) {
+  const box = document.getElementById('abs-list');
+  const empty = document.getElementById('abs-empty');
+  if (!list.length) { box.innerHTML = ''; box.appendChild(empty); empty.textContent = 'Hammasi keldi!'; empty.classList.remove('hidden'); return; }
+  box.innerHTML = list.map(s => {
+    const av = s.front_photo
+      ? `<img src="${s.front_photo}" class="abs-av" alt="" onerror="this.outerHTML='<div class=abs-ph>&#128100;</div>'">`
+      : `<div class="abs-ph">&#128100;</div>`;
+    return `<div class="abs-row">${av}
+      <div class="flex-1 min-w-0">
+        <div class="truncate text-slate-300 text-sm">${s.full_name}</div>
+        <div class="font-mono text-xs text-slate-600">${s.pinfl}</div>
+      </div></div>`;
+  }).join('');
+}
+
+// Lightbox — AI rasmi + asl rasm yonma-yon
+document.getElementById('arr-list').addEventListener('click', e => {
+  const img = e.target.closest('.thumb');
+  if (!img) return;
+  const ai = img.dataset.ai, ref = img.dataset.ref, name = img.dataset.name;
+  document.getElementById('lb-name').textContent = name || '';
+  document.getElementById('lb-ai').src = ai || '';
+  document.getElementById('lb-ref').src = ref || '';
+  document.getElementById('lightbox').style.display = 'flex';
+});
+function closeLb() { document.getElementById('lightbox').style.display = 'none'; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLb(); });
+
+async function poll() {
+  try { const r = await fetch(API_URL); if (r.ok) render(await r.json()); }
+  catch (e) { console.warn(e); }
+}
+poll(); setInterval(poll, 3000);
+
+// AI MJPEG — per-source (DeepStream nvstreammux manba indeksi bo'yicha)
+(function initMjpeg() {
+  const img = document.getElementById('mjpeg-stream');
+  const base = `http://${location.hostname}:8554/mjpeg/${AI_SOURCE}`;
+  document.getElementById('mjpeg-url').textContent = base;
+  img.src = base;
+  document.getElementById('mjpeg-dot').style.background = '#22c55e';
+  setInterval(() => { img.src = base + '?t=' + Date.now(); }, 10000);
+})();
+</script>
+</body>
+</html>
