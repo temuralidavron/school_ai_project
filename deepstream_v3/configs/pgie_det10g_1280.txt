@@ -1,0 +1,21 @@
+# SCRFD (det_10g) 1280x1280 — nvinfer PGIE, TensorRT engine sm_120
+# 640 varianti: pgie_det10g.txt. 1280 = orqa qatordagi kichik yuzlar uchun:
+# 1920 kadr 640 ga emas 1280 ga letterbox bo'ladi (masshtab 1/3 -> 2/3).
+# ISHLATISH: PGIE_CONFIG=/ds3/configs/pgie_det10g_1280.txt DET_INPUT_SZ=1280
+# (ikkalasi birga — aks holda anchor decode noto'g'ri bo'ladi)
+
+[property]
+gpu-id=0
+model-engine-file=/engines/det_10g_1280_fp16.engine
+batch-size=1
+network-mode=2
+network-type=100
+output-tensor-meta=1
+infer-dims=3;1280;1280
+net-scale-factor=0.0078125
+offsets=127.5;127.5;127.5
+model-color-format=0
+maintain-aspect-ratio=1
+symmetric-padding=0
+interval=0
+gie-unique-id=1

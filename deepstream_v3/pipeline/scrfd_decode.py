@@ -6,13 +6,17 @@ farqi: ORT sessiya emas, tayyor numpy massivlar qabul qiladi.
 Layer'lar nomga emas, SHAKLga qarab tasniflanadi (engine binding tartibi
 ONNX'dan farq qilishi mumkin — shakl ishonchli).
 """
+import os
+
 import numpy as np
 
 _STRIDES     = [8, 16, 32]
 _NUM_ANCHORS = 2
-INPUT_SZ     = 640
+# Engine kirish o'lchami — pgie config'dagi infer-dims bilan mos bo'lishi SHART
+# (640: s8=12800 s16=3200 s32=800; 1280: s8=51200 s16=12800 s32=3200)
+INPUT_SZ     = int(os.getenv("DET_INPUT_SZ", "640"))
 
-# stride -> anchor soni (640 uchun): s8=12800, s16=3200, s32=800
+# stride -> anchor soni
 _COUNT_TO_STRIDE = {
     (INPUT_SZ // s) ** 2 * _NUM_ANCHORS: s for s in _STRIDES
 }

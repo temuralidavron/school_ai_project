@@ -102,10 +102,16 @@ def _load_names():
     except (OSError, ValueError):
         pass
 
+# layer nomi -> (stride, ustun); anchor soni INPUT_SZ dan: (sz/stride)^2 * 2
+# (inferDims meta ishonchsiz — B1 tuzoq #3, shuning uchun shakl shu yerda)
+_DET10G_LAYERS = {
+    "448": (8, 1), "471": (16, 1), "494": (32, 1),
+    "451": (8, 4), "474": (16, 4), "497": (32, 4),
+    "454": (8, 10), "477": (16, 10), "500": (32, 10),
+}
 _DET10G_SHAPES = {
-    "448": (12800, 1), "471": (3200, 1), "494": (800, 1),
-    "451": (12800, 4), "474": (3200, 4), "497": (800, 4),
-    "454": (12800, 10), "477": (3200, 10), "500": (800, 10),
+    name: ((INPUT_SZ // stride) ** 2 * 2, w)
+    for name, (stride, w) in _DET10G_LAYERS.items()
 }
 _DET10G_SHAPES.update({k + "_b": v for k, v in list(_DET10G_SHAPES.items())})
 
