@@ -33,7 +33,7 @@ docker rm -f school_ai_ds3_run 2>/dev/null || true
 docker run -d --name school_ai_ds3_run --gpus all \
   --network school_ai_project_default -p 8554:8554 \
   -e KAFKA_BOOTSTRAP=kafka:9092 -e CAMERA_IDS=1,2 \
-  -e TRACK_SEND_COOLDOWN=3 -e VIS_EVERY=2 \
+  -e TRACK_SEND_COOLDOWN=3 -e VIS_EVERY=2 -e REALTIME=1 \
   -e PGIE_CONFIG=/ds3/configs/pgie_det10g_1280.txt -e DET_INPUT_SZ=1280 \
   -v school_ai_project_insightface_models:/root/.insightface:ro \
   -v "$(pwd)/deepstream_v3/engines:/engines:ro" \

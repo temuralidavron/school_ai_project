@@ -61,6 +61,9 @@ EMB_POOL            = int(os.getenv("EMB_POOL", "3"))
 MAX_YAW_RATIO       = float(os.getenv("MAX_YAW_RATIO", "0.6"))
 MODELS_DIR          = os.getenv("MODELS_DIR", "/root/.insightface/models")
 GPU_ID              = int(os.getenv("GPU_ID", "0"))
+# Video fayl real vaqtda (30fps, jonli kameradek) o'qiladi. Stress-test/A/B
+# uchun REALTIME=0 — eski "qancha tez bo'lsa shuncha" xulq.
+REALTIME            = os.getenv("REALTIME", "1") == "1"
 
 # source_id -> camera_id (B4 multi-source uchun tayyor)
 _cam_ids_env = os.getenv("CAMERA_IDS", "1")
@@ -390,11 +393,22 @@ def _make_source_bin(index: int, video_path: str) -> Gst.Bin:
     parse   = Gst.ElementFactory.make("h264parse", f"parse-{index}")
     decoder = Gst.ElementFactory.make("nvv4l2decoder", f"dec-{index}")
     filesrc.set_property("location", video_path)
-    for el in (filesrc, demux, parse, decoder):
+    elements = [filesrc, demux, parse, decoder]
+    throttle = None
+    if REALTIME:
+        # identity sync=true — kadrlar o'z PTS vaqtida uzatiladi (real tezlik)
+        throttle = Gst.ElementFactory.make("identity", f"throttle-{index}")
+        throttle.set_property("sync", True)
+        elements.insert(3, throttle)
+    for el in elements:
         src_bin.add(el)
     filesrc.link(demux)
     demux.connect("pad-added", _cb_demux_pad, parse)
-    parse.link(decoder)
+    if throttle is not None:
+        parse.link(throttle)
+        throttle.link(decoder)
+    else:
+        parse.link(decoder)
     ghost = Gst.GhostPad.new_no_target("src", Gst.PadDirection.SRC)
     src_bin.add_pad(ghost)
     decoder.connect("pad-added", _cb_decoder_pad, ghost)

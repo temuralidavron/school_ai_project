@@ -146,6 +146,7 @@ KAFKA_GROUP_ID=attendance-consumer
 
 ## Bog'liq fayllar
 
+- [JAMI_2.md](JAMI_2.md) — **ENG YANGI holat (iyul-2026): 1280 detection, B5 margin, realtime, F0-F5 reja. AVVAL SHUNI O'QI** (bu CLAUDE.md ning ba'zi qismlari eskirgan)
 - [LOYIHA.md](LOYIHA.md) — to'liq loyiha tafsilotlari
 - [deepstream/QO_LLANMA.txt](deepstream/QO_LLANMA.txt) — DeepStream qo'llanmasi
 - [docker-compose.yml](docker-compose.yml) — barcha service'lar (eski + yangi)

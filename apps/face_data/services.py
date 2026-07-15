@@ -14,6 +14,7 @@ from pgvector.django import CosineDistance
 from insightface.app import FaceAnalysis
 
 from apps.face_data.models import EnrollmentPhoto, StudentEmbedding
+from apps.face_data.decision import decide as decide_margin
 from apps.integrations.models import ExternalStudent, ExternalStudentPhoto
 
 # buffalo_l bir marta yuklanadi — har yangi service obyektida qayta disk o'qilmaydi
@@ -617,15 +618,13 @@ class LessonEmbeddingCache:
 
         best = top[0]
         score = best["best_score"]
-        if score >= accept_threshold:
-            decision = "accepted"
-        elif score >= review_threshold:
-            decision = "review"
-        else:
-            decision = "rejected"
+        margin = score - top[1]["best_score"] if len(top) > 1 else None
+        decision, rule = decide_margin(score, margin, accept_threshold, review_threshold)
 
         return {
             "decision": decision,
+            "decision_rule": rule,
+            "margin": round(margin, 6) if margin is not None else None,
             "accept_threshold": accept_threshold,
             "review_threshold": review_threshold,
             "best_match": {**best, "effective_score": score},
@@ -671,12 +670,10 @@ class RecognitionSearchService:
         # ham kiritib natijani pasaytiradi.
         effective_score = best["best_score"]
 
-        if effective_score >= accept_threshold:
-            decision = "accepted"
-        elif effective_score >= review_threshold:
-            decision = "review"
-        else:
-            decision = "rejected"
+        margin = None
+        if len(rows) > 1:
+            margin = effective_score - rows[1]["best_score"]
+        decision, rule = decide_margin(effective_score, margin, accept_threshold, review_threshold)
 
         best = dict(best)
         best["effective_score"] = round(effective_score, 6)
@@ -684,6 +681,8 @@ class RecognitionSearchService:
         return {
             "organization_id": organization_id,
             "decision": decision,
+            "decision_rule": rule,
+            "margin": round(margin, 6) if margin is not None else None,
             "accept_threshold": accept_threshold,
             "review_threshold": review_threshold,
             "best_match": best,
