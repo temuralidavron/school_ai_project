@@ -17,7 +17,9 @@
 | F1 jonli manba | **BAJARILDI (2026-07-15)**: nvurisrcbin (file/rtsp/HLS), live-source=1, bus-fix (bitta manba xatosi loopni o'ldirmaydi — sinalgan), watchdog+healthcheck, `export_ds_sources` komandasi, compose `ds3` servisi, DEPLOY.md. cam16_2 bilan jonli sinov: 30fps, bo'sh xonada 0 FP, tarmoq uzilishiga chidadi. run_demo.sh regressiya o'tdi |
 | Image'lar | `school_ai:latest` va `school_ai_ds3:latest` — evrika-2 kodi bilan qurilgan |
 
-**Yangi sessiyada birinchi ish:** F2 — qaror-jurnali (har sighting log; qancha erta yoqilsa kuzga shuncha ko'p ma'lumot). Parallel: SKUD'ga 2 savol yuborilganmi — tekshirish (F2c bloklovchisi).
+**F2 qaror-jurnali BAJARILDI (2026-07-15):** `apps/attendance/sighting_log.py` — har sighting `logs/sightings-YYYY-MM-DD.jsonl` ga (ts, cam, sched, track, decision, rule, margin, top-5). SIGHTING_LOG=0 bilan o'chadi. B5 ketma-ketlik validatsiyasi shu fayllarda qilinadi.
+
+**Keyingi ishlar:** F2b (bosqichli tasdiqlash + elimination — endi jurnal bor), F3 (review UI). Parallel: SKUD'ga 2 savol yuborilganmi — tekshirish (F2c bloklovchisi; matn JAMI_2 suhbatida tayyor edi).
 
 ---
 

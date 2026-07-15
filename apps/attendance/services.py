@@ -566,6 +566,14 @@ class RecognitionEventService:
         best = result["best_match"]
         decision = result["decision"]
 
+        # F2: har sighting jurnalga (ketma-ketlik tahlili uchun; xato bo'lsa jim)
+        from apps.attendance.sighting_log import log_sighting
+        log_sighting(
+            track_key=track_key, camera_id=camera_id,
+            schedule_id=_active_schedule.id if _active_schedule else None,
+            result=result,
+        )
+
         # ── 1. Mos talaba topilmadi ──────────────────────────────────────────────
         if best is None:
             logger.debug(
