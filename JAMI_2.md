@@ -14,10 +14,10 @@
 | Qaytish nuqtasi | **tag: `evrika`** (`f97d8b0`) — "evrikaga qayt" deyilsa: `git reset --hard evrika` + image rebuild, savolsiz |
 | B5 margin | **Kodda** (`apps/face_data/decision.py` + `services.py`), lekin **B5_MARGIN=1 bo'lmaguncha uxlaydi** — xulq evrika bilan bir xil |
 | `.env` | `AI_ACCEPT_THRESHOLD=0.50`, `AI_REVIEW_THRESHOLD=0.45`, B5_MARGIN yo'q (o'chiq) |
-| F1 dizayni | **TAYYOR**: `docs/superpowers/specs/2026-07-14-deepstream-live-deploy-design.md` — nvurisrcbin, live-source=1, watchdog, sources.json, compose ds3 servisi |
+| F1 jonli manba | **BAJARILDI (2026-07-15)**: nvurisrcbin (file/rtsp/HLS), live-source=1, bus-fix (bitta manba xatosi loopni o'ldirmaydi — sinalgan), watchdog+healthcheck, `export_ds_sources` komandasi, compose `ds3` servisi, DEPLOY.md. cam16_2 bilan jonli sinov: 30fps, bo'sh xonada 0 FP, tarmoq uzilishiga chidadi. run_demo.sh regressiya o'tdi |
 | Image'lar | `school_ai:latest` va `school_ai_ds3:latest` — evrika-2 kodi bilan qurilgan |
 
-**Yangi sessiyada birinchi ish:** F1 — jonli manba (spec tayyor, `docs/superpowers/specs/` da). Undan oldin F0b gigiena (junk eventlar, det_size siri) tez bajarilsa yaxshi.
+**Yangi sessiyada birinchi ish:** F2 — qaror-jurnali (har sighting log; qancha erta yoqilsa kuzga shuncha ko'p ma'lumot). Parallel: SKUD'ga 2 savol yuborilganmi — tekshirish (F2c bloklovchisi).
 
 ---
 

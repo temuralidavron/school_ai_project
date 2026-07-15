@@ -298,6 +298,51 @@ services:
       - ./logs:/app/logs
       - ./deepstream/data:/app/ds_data          # track_names.json uchun
 
+  # ── DeepStream v3 — JONLI production pipeline (F1) ──────────────────────────
+  # Manbalar: deepstream_v3/configs/sources.json (manage.py export_ds_sources).
+  # Ishga tushirish: docker compose --profile deepstream up -d ds3
+  ds3:
+    build:
+      context: ./deepstream_v3
+      dockerfile: Dockerfile
+    image: school_ai_ds3:latest
+    container_name: school_ai_ds3
+    restart: unless-stopped
+    profiles: ["deepstream"]
+    environment:
+      KAFKA_BOOTSTRAP: kafka:9092
+      CAMERA_IDS: ""                            # sources.json'dan olinadi
+      PGIE_CONFIG: /ds3/configs/pgie_det10g_1280.txt
+      DET_INPUT_SZ: "1280"
+      REALTIME: "1"
+      VIS_EVERY: "2"
+      TRACK_SEND_COOLDOWN: "3"
+      SOURCE_STALE_SEC: "30"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8554:8554"                             # MJPEG jonli ko'rish
+    volumes:
+      - insightface_models:/root/.insightface:ro
+      - ./deepstream_v3/engines:/engines:ro
+      - ./deepstream_v3/configs:/ds3/configs:ro # sources.json shu yerda
+      - ./deepstream/data:/data:ro              # file:// A/B uchun
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    # so'nggi kadr 60s ichida bo'lmasa unhealthy -> restart
+    healthcheck:
+      test: ["CMD-SHELL", "test $$(( $$(date +%s) - $$(stat -c %Y /tmp/ds3_health 2>/dev/null || echo 0) )) -lt 60"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 120s
+
   # ── Haqiqiy NVIDIA DeepStream pipeline (v2) ─────────────────────────────────
   # Ishlatish: docker compose --profile deepstream-v2 up deepstream_v2
   # Avval: docker login nvcr.io (NGC API key kerak)

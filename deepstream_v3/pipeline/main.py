@@ -64,6 +64,10 @@ GPU_ID              = int(os.getenv("GPU_ID", "0"))
 # Video fayl real vaqtda (30fps, jonli kameradek) o'qiladi. Stress-test/A/B
 # uchun REALTIME=0 — eski "qancha tez bo'lsa shuncha" xulq.
 REALTIME            = os.getenv("REALTIME", "1") == "1"
+# Jonli manba (F1): sources.json yo'li va watchdog sozlamalari
+SOURCES_JSON        = os.getenv("SOURCES_JSON", "/ds3/configs/sources.json")
+SOURCE_STALE_SEC    = int(os.getenv("SOURCE_STALE_SEC", "30"))
+HEALTH_FILE         = os.getenv("HEALTH_FILE", "/tmp/ds3_health")
 
 # source_id -> camera_id (B4 multi-source uchun tayyor)
 _cam_ids_env = os.getenv("CAMERA_IDS", "1")
@@ -322,6 +326,7 @@ def _recog_probe(pad, info, _u):
                 _state["sent"] += 1
 
         _state["frames"] += 1
+        _state["last_frame"] = time.time()   # watchdog uchun
         _state["faces_total"] += n
         f = _state["frames"]
         if f == 1:
@@ -418,11 +423,54 @@ def _make_source_bin(index: int, video_path: str) -> Gst.Bin:
     return src_bin
 
 
-def build_pipeline(video_paths: list):
+def _normalize_uri(uri: str) -> str:
+    """HLS proxy bare URL -> /index.m3u8 (301 redirect'dan qochish).
+    rtsp:// va file:// o'zgarmaydi."""
+    if uri.startswith(("rtsp://", "rtsps://", "file://")):
+        return uri
+    if uri.startswith(("http://", "https://")):
+        base = uri.split("?", 1)[0]
+        if not base.endswith(".m3u8"):
+            return uri.rstrip("/") + "/index.m3u8"
+    return uri
+
+
+def _make_uri_source_bin(index: int, uri: str, mux) -> Gst.Element:
+    """nvurisrcbin — file/rtsp/https-HLS universal manba, NVMM chiqaradi.
+    Pad dinamik: pad-added'da mux sink_%u ga ulanadi."""
+    src = Gst.ElementFactory.make("nvurisrcbin", f"src-{index}")
+    src.set_property("uri", uri)
+    # RTSP qisqa uzilishlarni nvurisrcbin o'zi tiklaydi
+    for prop, val in (("rtsp-reconnect-interval", 5),
+                      ("select-rtp-protocol", 4),   # TCP
+                      ("latency", 200)):
+        try:
+            src.set_property(prop, val)
+        except TypeError:
+            pass
+
+    def _on_pad(bin_, pad, sink_idx=index):
+        caps = pad.get_current_caps() or pad.query_caps(None)
+        s = caps.to_string() if caps else ""
+        if "video" not in s:
+            return
+        sink_pad = mux.request_pad_simple(f"sink_{sink_idx}")
+        if sink_pad and not sink_pad.is_linked():
+            pad.link(sink_pad)
+            log.info("source %d ulandi: %s", sink_idx, uri.split("?")[0])
+
+    src.connect("pad-added", _on_pad)
+    return src
+
+
+def build_pipeline(sources: list):
+    """sources: [{"uri": str, "mode": "file"|"uri", "live": bool}, ...]"""
     Gst.init(None)
     pipeline = Gst.Pipeline()
     loop = GLib.MainLoop()
-    n_src = len(video_paths)
+    n_src = len(sources)
+    has_live = any(s["live"] for s in sources)
+    pure_file = all(s["mode"] == "file" for s in sources)
 
     mux = Gst.ElementFactory.make("nvstreammux", "mux")
     mux.set_property("batch-size", n_src)
@@ -432,6 +480,9 @@ def build_pipeline(video_paths: list):
     mux.set_property("gpu-id", 0)
     # get_nvds_buf_surface uchun unified memory shart (dGPU)
     mux.set_property("nvbuf-memory-type", 3)
+    if has_live:
+        # jonli manba: wall-clock timing, kechikkan kadr batch'ni bloklamaydi
+        mux.set_property("live-source", 1)
 
     pgie = Gst.ElementFactory.make("nvinfer", "pgie")
     pgie.set_property("config-file-path", PGIE_CFG)
@@ -456,10 +507,14 @@ def build_pipeline(video_paths: list):
     for el in (mux, pgie, tracker, conv, caps, sink):
         pipeline.add(el)
 
-    for i, vp in enumerate(video_paths):
-        sb = _make_source_bin(i, vp)
-        pipeline.add(sb)
-        sb.get_static_pad("src").link(mux.request_pad_simple(f"sink_{i}"))
+    for i, s in enumerate(sources):
+        if s["mode"] == "file":
+            sb = _make_source_bin(i, s["uri"])
+            pipeline.add(sb)
+            sb.get_static_pad("src").link(mux.request_pad_simple(f"sink_{i}"))
+        else:
+            sb = _make_uri_source_bin(i, s["uri"], mux)
+            pipeline.add(sb)
 
     mux.link(pgie)
     pgie.link(tracker)
@@ -477,33 +532,110 @@ def build_pipeline(video_paths: list):
 
     def _bus(bus, msg):
         t = msg.type
+        src_name = msg.src.get_name() if msg.src else "?"
         if t == Gst.MessageType.EOS:
-            log.info("EOS")
-            loop.quit()
+            if pure_file:
+                log.info("EOS")
+                loop.quit()
+            else:
+                # jonli rejim: HLS/RTSP vaqtinchalik EOS berishi mumkin —
+                # loop to'xtamaydi, nvurisrcbin/watchdog tiklaydi
+                log.warning("EOS (live rejim, e'tiborsiz): %s", src_name)
         elif t == Gst.MessageType.ERROR:
             err, dbg = msg.parse_error()
-            log.error("GStreamer xato: %s — %s", err, dbg)
-            loop.quit()
+            from_source = src_name.startswith(("src-", "source-bin"))
+            if has_live and from_source:
+                # bitta kamera xatosi qolgan kameralarni o'ldirmasin
+                log.error("SOURCE DOWN %s: %s — %s (davom etilmoqda)",
+                          src_name, err, dbg)
+            else:
+                log.error("GStreamer xato [%s]: %s — %s", src_name, err, dbg)
+                loop.quit()
         return True
 
     bus.connect("message", _bus)
+
+    # ── Watchdog: so'nggi kadr yangi bo'lsa health fayl yangilanadi.
+    # Kadr SOURCE_STALE_SEC dan uzoq to'xtasa fayl eskiradi ->
+    # docker healthcheck unhealthy -> restart policy qayta ko'taradi.
+    def _health_tick():
+        last = _state.get("last_frame", 0.0)
+        if last and time.time() - last <= SOURCE_STALE_SEC:
+            try:
+                with open(HEALTH_FILE, "w") as f:
+                    f.write(str(int(last)))
+            except OSError:
+                pass
+        elif last:
+            log.warning("WATCHDOG: %.0fs dan beri kadr yo'q", time.time() - last)
+        return True
+    GLib.timeout_add_seconds(5, _health_tick)
+
     return pipeline, loop
+
+
+def _resolve_sources(args) -> list:
+    """Ustuvorlik: --uri (camera_id=uri) -> sources.json -> --video (fayl).
+    CAMERA_IDS ni ham mos ravishda yangilaydi."""
+    import json
+
+    def _entry(uri):
+        uri = _normalize_uri(uri)
+        live = not uri.startswith("file://")
+        return {"uri": uri, "mode": "uri", "live": live}
+
+    if args.uri:
+        sources, cam_map = [], {}
+        for i, spec in enumerate(args.uri):
+            if "=" not in spec:
+                log.error("--uri formati: camera_id=uri (kelgan: %s)", spec)
+                sys.exit(1)
+            cid, uri = spec.split("=", 1)
+            cam_map[i] = int(cid)
+            sources.append(_entry(uri))
+        CAMERA_IDS.clear(); CAMERA_IDS.update(cam_map)
+        return sources
+
+    if args.video:
+        for vp in args.video:
+            if not os.path.exists(vp):
+                log.error("Video topilmadi: %s", vp)
+                sys.exit(1)
+        return [{"uri": vp, "mode": "file", "live": False} for vp in args.video]
+
+    if os.path.exists(SOURCES_JSON):
+        with open(SOURCES_JSON) as f:
+            data = json.load(f)
+        if not data:
+            log.error("sources.json bo'sh: %s", SOURCES_JSON)
+            sys.exit(1)
+        sources, cam_map = [], {}
+        for i, (cid, uri) in enumerate(sorted(data.items(), key=lambda x: int(x[0]))):
+            cam_map[i] = int(cid)
+            sources.append(_entry(uri))
+        CAMERA_IDS.clear(); CAMERA_IDS.update(cam_map)
+        log.info("sources.json: %d manba (%s)", len(sources), SOURCES_JSON)
+        return sources
+
+    log.error("Manba yo'q: --uri yoki --video bering, yoki %s yarating "
+              "(manage.py export_ds_sources)", SOURCES_JSON)
+    sys.exit(1)
 
 
 def main():
     global _arcface, _kafka
     p = argparse.ArgumentParser()
-    p.add_argument("--video", nargs="+", required=True,
-                   help="Bir yoki bir nechta video (har biri alohida manba)")
+    p.add_argument("--video", nargs="+",
+                   help="Video fayllar (dev/A-B; REALTIME throttle bilan)")
+    p.add_argument("--uri", nargs="+",
+                   help="Jonli manba: camera_id=uri (file/rtsp/https-HLS)")
     p.add_argument("--max-frames", type=int, default=0)
     args = p.parse_args()
 
-    for vp in args.video:
-        if not os.path.exists(vp):
-            log.error("Video topilmadi: %s", vp)
-            sys.exit(1)
+    sources = _resolve_sources(args)
 
-    log.info("B4: multi-source batch pipeline — %d manba", len(args.video))
+    log.info("F1: pipeline — %d manba (live=%s)",
+             len(sources), any(s["live"] for s in sources))
     log.info("  kafka=%s cam_ids=%s cooldown=%.1fs pool=%d",
              KAFKA_BOOTSTRAP or "OFF", CAMERA_IDS,
              TRACK_SEND_COOLDOWN, EMB_POOL)
@@ -515,7 +647,7 @@ def main():
         mjpeg_start(port=8554)
         log.info("MJPEG vizual: http://localhost:8554/mjpeg/<source>")
 
-    pipeline, loop = build_pipeline(args.video)
+    pipeline, loop = build_pipeline(sources)
 
     if args.max_frames > 0:
         def _check():
@@ -535,7 +667,7 @@ def main():
         _kafka.flush()
         f = _state["frames"]
         el = time.time() - _state["t0"]
-        n_src = len(args.video)
+        n_src = len(sources)
         agg = f / max(el, 0.01)
         log.info("=" * 50)
         log.info("YAKUN: kadr=%d | AGG %.0f fps | manba boshiga %.1f fps "

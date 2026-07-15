@@ -139,3 +139,28 @@ git pull && docker compose build web && docker compose up -d web cameras
 `cameras` konteyner RTSP orqali kameralarga ulanadi (outbound). Agar kameralar
 boshqa VLAN/subnetda bo'lsa va bridge tarmoq yetmasa, `cameras` servisiga
 `network_mode: host` qo'shing (compose da) — u holda GPU bilan birga ishlaydi.
+
+---
+
+## DeepStream jonli deploy (F1, 2026-07)
+
+Pipeline endi jonli kameralar bilan ishlaydi (HLS/RTSP), fayl rejimi dev/A-B uchun qoladi.
+
+```bash
+# 1. Kameralardan sources.json yaratish (yagona haqiqat manbasi — Camera.stream_url)
+docker exec school_ai_web python3.14 manage.py export_ds_sources \
+    --out /app/deepstream_data/../deepstream_v3/configs/sources.json   # yoki hostda
+
+# 2. Jonli pipeline'ni ko'tarish
+docker compose --profile deepstream up -d ds3
+
+# 3. Tekshirish
+docker logs -f school_ai_ds3            # "source N ulandi" + frame oqimi
+curl -I http://localhost:8554/mjpeg/0   # jonli AI ko'rinish
+docker inspect --format='{{.State.Health.Status}}' school_ai_ds3   # healthy
+```
+
+Chidamlilik: RTSP qisqa uzilish — nvurisrcbin o'zi tiklaydi; bitta kamera xatosi
+boshqalarini to'xtatmaydi; kadr 60s to'xtasa healthcheck -> avto-restart.
+Sinov uchun bitta kamera: `--camera-id N` bilan export yoki pipeline'ga
+to'g'ridan `--uri "N=https://..."`.
