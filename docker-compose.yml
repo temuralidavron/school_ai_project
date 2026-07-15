@@ -164,6 +164,9 @@ services:
     image: school_ai:latest
     container_name: school_ai_bot
     restart: unless-stopped
+    # TELEGRAM_BOT_TOKEN yo'qligi sabab restart-loop edi — opt-in qilindi.
+    # Yoqish: TOKEN qo'shib `docker compose --profile bot up -d bot`
+    profiles: ["bot"]
     command: ["python3.14", "manage.py", "run_bot"]
     env_file: .env
     environment:
