@@ -119,6 +119,19 @@ class Command(BaseCommand):
         recognition_service = RecognitionEventService()
         processor = LiveFrameProcessorService()
 
+        # F2 L2: run-sarlavha — jurnal qatorlari qaysi konfiguratsiyada
+        # yozilganini belgilaydi (busiz keyin tahlil qilib bo'lmaydi)
+        from django.conf import settings as _settings
+        from apps.attendance.sighting_log import log_run
+        from apps.face_data import decision as _decision
+        log_run(
+            accept=getattr(_settings, "AI_ACCEPT_THRESHOLD", 0.55),
+            review=getattr(_settings, "AI_REVIEW_THRESHOLD", 0.42),
+            b5_margin=_decision.B5_ENABLED,
+            b5=[_decision.FLOOR1, _decision.MARGIN1,
+                _decision.FLOOR2, _decision.MARGIN2],
+        )
+
         # Kafka ulanish (qayta urinish bilan)
         consumer = self._connect_kafka(bootstrap, topic, group_id)
 

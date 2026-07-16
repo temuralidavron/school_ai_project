@@ -24,6 +24,26 @@ _lock = threading.Lock()
 _warned = False
 
 
+def log_run(**meta):
+    """Run-sarlavha: consumer start paytidagi konfiguratsiya (L2 qatlam).
+    Busiz jurnal qatorlari 'qaysi qoidada yozilgan?' savoliga javobsiz qoladi."""
+    if not ENABLED:
+        return
+    try:
+        row = {
+            "type": "run",
+            "ts": datetime.datetime.now().isoformat(timespec="seconds"),
+            **meta,
+        }
+        day = datetime.date.today().isoformat()
+        path = os.path.join(LOG_DIR, f"sightings-{day}.jsonl")
+        with _lock:
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(row, ensure_ascii=False, default=str) + "\n")
+    except OSError:
+        pass
+
+
 def log_sighting(*, track_key: str, camera_id, schedule_id, result: dict,
                  extra: dict | None = None):
     """result — decide_match/decide_match_by_embedding qaytargan dict."""
