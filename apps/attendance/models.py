@@ -217,3 +217,34 @@ class TrackSession(BaseModel):
 
     def __str__(self):
         return f"{self.track_key} - {self.status}"
+
+
+class StagedCount(BaseModel):
+    """
+    B5 bosqichli tasdiqlash hisoblagichi: (dars, bola) bo'yicha nechta
+    sifatli review-ko'rinish yig'ilgani. DB'da — multi-worker consumer'ga tayyor.
+    Bola qabul qilinganda qator o'chiriladi; boshqa dars = boshqa schedule = yangi qator.
+    """
+    schedule = models.ForeignKey(
+        "integrations.ExternalSchedule",
+        on_delete=models.CASCADE,
+        related_name="staged_counts",
+    )
+    student = models.ForeignKey(
+        "integrations.ExternalStudent",
+        on_delete=models.CASCADE,
+        related_name="staged_counts",
+    )
+    count = models.SmallIntegerField(default=0)
+    best_score = models.FloatField(default=0.0)
+    best_margin = models.FloatField(default=0.0)
+
+    class Meta:
+        db_table = "staged_counts"
+        constraints = [
+            models.UniqueConstraint(fields=["schedule", "student"],
+                                    name="staged_count_unique"),
+        ]
+
+    def __str__(self):
+        return f"{self.student_id}@{self.schedule_id}: {self.count}"

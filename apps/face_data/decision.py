@@ -22,6 +22,15 @@ MARGIN1 = _f("B5_MARGIN1", 0.15)
 FLOOR2 = _f("B5_FLOOR2", 0.45)
 MARGIN2 = _f("B5_MARGIN2", 0.22)
 
+# F2b: elimination — dars ichida qabul qilinganlar nomzodlardan chiqariladi
+# (top-2 ni bo'shatib, margin'ni ochadi). Faqat top-1 LOCKED bo'lmaganda.
+ELIM_ENABLED = os.getenv("B5_ELIM", "0") == "1"
+# F2b: bosqichli tasdiqlash — past ball, lekin N marta izchil bir xil bola
+STAGED_ENABLED = os.getenv("B5_STAGED", "0") == "1"
+STAGED_FLOOR = _f("B5_STAGED_FLOOR", 0.48)
+STAGED_MARGIN = _f("B5_STAGED_MARGIN", 0.08)
+STAGED_N = int(_f("B5_STAGED_N", 5))
+
 
 def decide(score: float, margin: float | None,
            accept_threshold: float, review_threshold: float) -> tuple[str, str]:

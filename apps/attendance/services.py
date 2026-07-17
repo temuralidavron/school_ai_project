@@ -563,10 +563,23 @@ class RecognitionEventService:
                 review_threshold=review_threshold,
             )
 
+        # F2b: elimination + bosqichli tasdiqlash (flaglar o'chiq — hech narsa o'zgarmaydi)
+        from apps.attendance.staged import (
+            ELIM_ENABLED, STAGED_ENABLED, get_locked_ids,
+            apply_elimination, staged_bump_and_check,
+        )
+        if result["decision"] != "accepted" and (ELIM_ENABLED or STAGED_ENABLED):
+            _locked = get_locked_ids(_active_schedule)
+            if ELIM_ENABLED:
+                result = apply_elimination(
+                    result, _locked, accept_threshold, review_threshold)
+            if STAGED_ENABLED and result["decision"] == "review":
+                result = staged_bump_and_check(_active_schedule, result)
+
         best = result["best_match"]
         decision = result["decision"]
 
-        # F2: har sighting jurnalga (ketma-ketlik tahlili uchun; xato bo'lsa jim)
+        # F2: har sighting jurnalga — YAKUNIY qaror bilan (elim/staged'dan keyin)
         from apps.attendance.sighting_log import log_sighting
         log_sighting(
             track_key=track_key, camera_id=camera_id,
@@ -851,6 +864,10 @@ class RecognitionEventService:
                 event.image.save(file_obj.name, file_obj, save=True)
             except Exception as exc:
                 logger.error("Event image save xatosi event_id=%s: %s", event.id, exc)
+
+        # F2b: qabul qilindi — bosqichli hisoblagich qatori endi keraksiz
+        from apps.attendance.staged import staged_clear
+        staged_clear(_active_schedule, best["student_id"])
 
         push_result = self._push_to_skud(event)
         return {
