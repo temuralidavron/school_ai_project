@@ -6,20 +6,57 @@
 
 ---
 
-## 1. HOZIRGI HOLAT (eng muhim)
+## 1. HOZIRGI HOLAT (eng muhim) — YANGILANDI 2026-07-16
 
 | Narsa | Holat |
 |---|---|
-| Git HEAD | **tag: `evrika-2`** — realtime video + B5 margin (flag-o'chiq) + JAMI_2 + F1 spec. GitHub'da ham bor |
-| Qaytish nuqtasi | **tag: `evrika`** (`f97d8b0`) — "evrikaga qayt" deyilsa: `git reset --hard evrika` + image rebuild, savolsiz |
-| B5 margin | **Kodda** (`apps/face_data/decision.py` + `services.py`), lekin **B5_MARGIN=1 bo'lmaguncha uxlaydi** — xulq evrika bilan bir xil |
-| `.env` | `AI_ACCEPT_THRESHOLD=0.50`, `AI_REVIEW_THRESHOLD=0.45`, B5_MARGIN yo'q (o'chiq) |
-| F1 jonli manba | **BAJARILDI (2026-07-15)**: nvurisrcbin (file/rtsp/HLS), live-source=1, bus-fix (bitta manba xatosi loopni o'ldirmaydi — sinalgan), watchdog+healthcheck, `export_ds_sources` komandasi, compose `ds3` servisi, DEPLOY.md. cam16_2 bilan jonli sinov: 30fps, bo'sh xonada 0 FP, tarmoq uzilishiga chidadi. run_demo.sh regressiya o'tdi |
-| Image'lar | `school_ai:latest` va `school_ai_ds3:latest` — evrika-2 kodi bilan qurilgan |
+| Git HEAD | `00c0ca5` — **F2b** (bosqichli tasdiqlash + elimination, flag-o'chiq). GitHub'da |
+| Qaytish nuqtasi | **tag: `evrika`** (`f97d8b0`) — "evrikaga qayt" = `git reset --hard evrika` + image rebuild, savolsiz. Oraliq: `evrika-2` |
+| Barcha yangi mantiq | **flag ostida, DEFAULT O'CHIQ** — .env'da flag yo'q bo'lsa xulq evrika bilan bir xil |
+| `.env` | `AI_ACCEPT_THRESHOLD=0.50`, `AI_REVIEW_THRESHOLD=0.45`, **hech qanday B5_ flag yo'q (hammasi o'chiq)** |
+| Image'lar | `school_ai:latest` + `school_ai_ds3:latest` — HEAD kodi bilan qurilgan |
+| Migratsiya | `attendance/0014_staged_count` qo'llangan (staged_counts jadvali bor) |
 
-**F2 qaror-jurnali BAJARILDI (2026-07-15):** `apps/attendance/sighting_log.py` — har sighting `logs/sightings-YYYY-MM-DD.jsonl` ga (ts, cam, sched, track, decision, rule, margin, top-5). SIGHTING_LOG=0 bilan o'chadi. B5 ketma-ketlik validatsiyasi shu fayllarda qilinadi.
+**Ishlaydigan flaglar (.env'ga qo'yiladi, hammasi mustaqil):**
+- `B5_MARGIN=1` — margin qabul yo'llari (top1≥0.48 & margin≥0.15, yoki ≥0.45 & ≥0.22)
+- `B5_ELIM=1` — dars ichida qabul qilinganlarni top-5 nomzoddan chiqarish (top-1 locked bo'lsa tegilmaydi)
+- `B5_STAGED=1` — past-ball, N marta izchil (default 5) → qabul; hisoblagich `StagedCount` (DB)
+- `SIGHTING_LOG=0` — jurnalni o'chirish (default yoniq)
 
-**Keyingi ishlar:** F2b (bosqichli tasdiqlash + elimination — endi jurnal bor), F3 (review UI). Parallel: SKUD'ga 2 savol yuborilganmi — tekshirish (F2c bloklovchisi; matn JAMI_2 suhbatida tayyor edi).
+**Keyingi ishlar:** F3 (review UI — kamchilik paneli + bir-bosishli tasdiqlash), F2c (SKUD savollari — matn tayyor, YUBORILISHI kerak), F3c (galereya boyitish — tajriba o'tgan, dry-run kutmoqda). Staged jonli sentabrda sinaladi (o'tirgan holatda video'da hosil kam).
+
+---
+
+## 1b. 2026-07-16 SESSIYASI (F0b→F2b + tajribalar)
+
+Kommitlar ketma-ketligi (evrika-2 dan keyin):
+| Commit | Ish |
+|---|---|
+| `096b665` | Gigiena: bot opt-in; (.env) AI_DET_SIZE 640→1280; 42 892 junk event o'chirildi |
+| `4e3092e` | **F1 jonli manba**: nvurisrcbin, watchdog, export_ds_sources, compose ds3 |
+| `17d741f` | **F2 sighting-jurnal**: logs/sightings-*.jsonl |
+| `b5490fd` | Testlash+log spec + `deepstream_v3/tests/smoke.sh` (T1/T2) |
+| `00c0ca5` | **F2b**: elimination + bosqichli tasdiqlash (flag-off) |
+
+**Test to'plami bor:** `bash deepstream_v3/tests/smoke.sh` (fayl) / `--live` (cam16_2).
+Har kod o'zgarishidan keyin ishga tushiriladi — PASS/FAIL. Spec:
+`docs/superpowers/specs/2026-07-15-testlash-log-rejasi.md` (5 log qatlami, T1-T6).
+
+**F2b sinov natijasi** (90s demo, flaglar YONIQ): 35/65 kelgan; qoidalar taqsimoti —
+margin1=12, margin2=12, elim_margin2=2 (elimination haqiqiy qabullar berdi), review=7.
+Consumer'da 0 xato. Flag-off T1 smoke PASS (regressiya yo'q).
+
+**Galereya boyitish tajribasi** (F3c, scratchpad — GITGA KIRMAGAN, ataylab):
+video A/B yarim split, 665 bolalik galereya. Natija: shablonli bolalar balli +0.054,
+tabiiy drift 1/253 (threshold ostida, zararsiz). **ZAHAR-SINOV**: ataylab 1 noto'g'ri
+shablon = 121 yuzdan 3 xato qabul → himoyasiz qilib BO'LMAYDI (isbotlangan). Temir
+darvoza (≥0.60 + margin≥0.20 + ≥80px + Laplacian) dan noto'g'ri o'tish: 0/320.
+Xulosa: F3c joriy qilinadi LEKIN himoya to'plami bilan, dry-run → sentabr jonli → yoqish,
+source="camera" teg bilan bir-buyruqlik rollback. Batafsil: task #11 tavsifi.
+
+**INFRA ESLATMASI (2026-07-16):** GPU drayveri buzilgan edi (kernel 7.0.0-28 ga yondi,
+595.71 open modul kerak bo'ldi). Hal: `sudo apt install linux-modules-nvidia-595-open-$(uname -r)`
++ reboot. RTX 5080 uchun **open variant SHART**. Kelajakda GPU yo'qolsa — shu yerga qara.
 
 ---
 
