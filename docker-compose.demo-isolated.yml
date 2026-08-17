@@ -1,0 +1,11 @@
+# DEMO IZOLYATSIYASI — video replay paytida prod SKUD (edu.devel.uz) ni uzadi.
+#
+# Faqat run_demo_isolated.sh orqali ishlatiladi:
+#   docker compose -f docker-compose.yml -f docker-compose.demo-isolated.yml --profile deepstream up -d kafka_consumer
+#
+# Asosiy docker-compose.yml ga TEGMAYDI — bu override qatlam.
+services:
+  kafka_consumer:
+    environment:
+      # 127.0.0.1:9 (discard) — ulanish darhol rad etiladi, push hech qayerga ketmaydi
+      SKUD_API_BASE_URL: "http://127.0.0.1:9"
