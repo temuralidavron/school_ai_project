@@ -22,8 +22,9 @@
 - `B5_ELIM=1` — dars ichida qabul qilinganlarni top-5 nomzoddan chiqarish (top-1 locked bo'lsa tegilmaydi)
 - `B5_STAGED=1` — past-ball, N marta izchil (default 5) → qabul; hisoblagich `StagedCount` (DB)
 - `SIGHTING_LOG=0` — jurnalni o'chirish (default yoniq)
+- `GALLERY_CANDIDATES=1` — F3c galereya-nomzod jurnali (temir darvoza: 0.60/0.20/80px/blur60); qo'shish faqat `gallery_enrich --apply` bilan, rollback `--rollback`
 
-**Keyingi ishlar:** F3 (review UI — kamchilik paneli + bir-bosishli tasdiqlash), F2c (SKUD savollari — matn tayyor, YUBORILISHI kerak), F3c (galereya boyitish — tajriba o'tgan, dry-run kutmoqda). Staged jonli sentabrda sinaladi (o'tirgan holatda video'da hosil kam).
+**Keyingi ishlar:** F2c (SKUD savollari — matn tayyor, YUBORILISHI kerak), F3c (galereya boyitish — kod + jonli smoke TASDIQLANDI 2026-07-21; qoldi: avgust dry-run/chegara kalibratsiya, keyin --apply). Staged jonli sentabrda sinaladi (o'tirgan holatda video'da hosil kam). F3 (review UI) — BEKOR: admin panel yetarli deb qaror qilindi, 2026-07-20.
 
 ---
 
@@ -57,6 +58,32 @@ source="camera" teg bilan bir-buyruqlik rollback. Batafsil: task #11 tavsifi.
 **INFRA ESLATMASI (2026-07-16):** GPU drayveri buzilgan edi (kernel 7.0.0-28 ga yondi,
 595.71 open modul kerak bo'ldi). Hal: `sudo apt install linux-modules-nvidia-595-open-$(uname -r)`
 + reboot. RTX 5080 uchun **open variant SHART**. Kelajakda GPU yo'qolsa — shu yerga qara.
+
+---
+
+## 1c. 2026-07-21 SESSIYASI (F3c jonli smoke + kalibratsiya)
+
+**F3c kod-daraja verifikatsiya PASS:** 22 unit test (`apps/face_data/tests_gallery.py`),
+migratsiyalar toza qo'llandi (face_data 0007/0008, monitoring 0001). Ulanish nuqtasi
+`apps/attendance/services.py:591` — flag-off holatda haqiqiy no-op (barcha argument
+scope'da, `RecognitionEvent.DECISION_ACCEPTED`/`best`/`bbox`/`margin` None-xavfsiz).
+
+**Jonli smoke** (izolyatsiyalangan vaqtinchalik consumer + o'lik SKUD URL, ds3 demo replay):
+- Flag-off: Traceback 0, davomat 27, sighting +336, gallery-candidates jurnal **yaratilmadi** — regressiya yo'q.
+- Flag-on: JSONL yaratildi, qator to'liq (emb=512, crop_b64 real JPEG ~8.5KB, blur hisoblangan). 28/28 accept `log_candidate`'ga to'g'ri `score/margin/face` bilan yetdi.
+- `gallery_enrich` dry-run real jurnalda: 10 nomzod, self_sim (real etalonlar), ismli hisobot, **DB'ga yozmadi**.
+
+**KALIBRATSIYA — aniq raqam (avgust dry-run boshlanish nuqtasi):** jonli pipeline crop'lari
+default darvozadan ANCHA past, chegara pasaytirilishi shart:
+- `GALLERY_MIN_FACE=80` juda baland — o'tirgan sinfda yuzlar 30–60px (bittasi 87x98 chiqdi).
+- `GALLERY_MIN_BLUR=60` juda baland — crop Laplacian ~4–56 (namuna 6.4). ENG bog'lovchi shart.
+- `score≥0.60` va `margin≥0.20` erishsa bo'ladi; uch shart BIRGA hozircha 0 → MIN_FACE≈40, MIN_BLUR≈10-15 dan boshlab kalibrlansin.
+
+**INCIDENT (SKUD leak, hal qilingan):** izolyatsiyada Kafka backlog e'tibordan qoldi —
+prod consumer tiklanganda topic backlog'ini drenaj qilib 2 event (KIRAKOSYAN, UMIDJONOV,
+11-G) real `edu.devel.uz`'ga push qildi. Consumer ~4s da to'xtatildi, mahalliy tozalandi
+(event/davomat delete), group lag=0. SKUD API push-only (retract endpoint YO'Q). Kelajakda
+replay izolyatsiyasida prod consumer tiklashdan OLDIN offset `--to-latest` reset SHART.
 
 ---
 

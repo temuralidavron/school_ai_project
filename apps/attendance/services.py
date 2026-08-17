@@ -587,6 +587,20 @@ class RecognitionEventService:
             result=result,
         )
 
+        # F3c: galereya-nomzod jurnali (GALLERY_CANDIDATES=1 bo'lmasa no-op)
+        if decision == RecognitionEvent.DECISION_ACCEPTED and best is not None:
+            from apps.face_data.gallery_candidates import log_candidate
+            log_candidate(
+                student_id=best.get("student_id"),
+                camera_id=camera_id,
+                schedule_id=_active_schedule.id if _active_schedule else None,
+                score=best.get("best_score", 0.0),
+                margin=result.get("margin"),
+                bbox=bbox,
+                image_path=image_path,
+                embedding=query_embedding,
+            )
+
         # ── 1. Mos talaba topilmadi ──────────────────────────────────────────────
         if best is None:
             logger.debug(

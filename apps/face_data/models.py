@@ -60,6 +60,14 @@ class StudentEmbedding(BaseModel):
         (MODEL_CUSTOM, "Custom"),
     )
 
+    SOURCE_ENROLLMENT = "enrollment"
+    SOURCE_CAMERA = "camera"
+
+    SOURCE_CHOICES = (
+        (SOURCE_ENROLLMENT, "Enrollment"),
+        (SOURCE_CAMERA, "Camera"),
+    )
+
     student = models.ForeignKey(
         "integrations.ExternalStudent",
         on_delete=models.CASCADE,
@@ -69,6 +77,8 @@ class StudentEmbedding(BaseModel):
         EnrollmentPhoto,
         on_delete=models.CASCADE,
         related_name="embeddings",
+        null=True,
+        blank=True,
     )
     model_name = models.CharField(max_length=32, choices=MODEL_CHOICES, default=MODEL_ARCFACE)
     model_version = models.CharField(max_length=64, blank=True, default="")
@@ -77,6 +87,9 @@ class StudentEmbedding(BaseModel):
     is_primary = models.BooleanField(default=False)
     quality_score = models.FloatField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    source = models.CharField(
+        max_length=16, choices=SOURCE_CHOICES, default=SOURCE_ENROLLMENT)
+    source_meta = models.JSONField(null=True, blank=True)
 
     class Meta:
         db_table = "student_embeddings"
