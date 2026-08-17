@@ -53,9 +53,17 @@ wheels/
 # OS / IDE
 .DS_Store
 
-# Loglar (serverda alohida yoziladi)
-logs/*.log
-logs/*.log.*
+# Loglar (serverda alohida yoziladi).
+# BUTUN papka — ichida sighting JSONL, yuz croplari (JPG) va tasodifan
+# tashlangan model fayllari bo'ladi (bir marta 456 MB to'plangan edi).
+logs/
+
+# SHAXSIY MA'LUMOT — hech qachon repoga tushmasin
+# cameras_*.csv ichida kamera RTSP paroli bor
+deploy/cameras_*.csv
+# talaba ro'yxatlari (PINFL — bolalarning shaxsiy raqami)
+deploy/*talabalar*.csv
+*_pinfl*.csv
 
 # Media / static (serverda volume)
 /media/
@@ -72,3 +80,6 @@ harakat.json
 .env.backup
 *.backup*.pyc
 deepstream_v3/engines/
+
+# Demo generatsiya qiladi (run_demo.sh:29 uni o'chiradi)
+deepstream/data/track_names.json
