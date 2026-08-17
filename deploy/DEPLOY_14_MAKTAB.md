@@ -140,6 +140,42 @@ docker run --rm --gpus all --entrypoint nvidia-smi school_ai_ds3:latest
 ```
 Oxirgi buyruqda `--entrypoint` shart — image'ning ENTRYPOINT'i `main.py`.
 
+## 3b. TensorRT engine — serverda QURILISHI SHART
+
+`deepstream_v3/engines/` `.gitignore` da (82-qator), ya'ni GitHub dan KELMAYDI.
+Engine GPU arxitekturasiga bog'langan (RTX 5080 = sm_120), boshqa mashinadan
+nusxa ko'chirish ishonchsiz.
+
+Muhimi: `configs/pgie_det10g_1280.txt` da faqat `model-engine-file=` bor,
+**`onnx-file=` YO'Q** — ya'ni engine bo'lmasa `nvinfer` uni O'ZI QURA OLMAYDI,
+pipeline umuman ishga tushmaydi.
+
+```bash
+bash deploy/build_engines.sh
+```
+
+Sinovdan o'tgan (2026-08-17, noldan): **42 soniya**, natija
+`det_10g_1280_fp16.engine` 11.2 MB, keyin pipeline'da tasdiqlandi —
+`frame#600 -> 25 track | 31 fps`.
+
+Skript ikki konteynerni birlashtiradi (vositalar bo'lingan):
+| Konteyner | Nima bor | Nima qiladi |
+|---|---|---|
+| `school_ai:latest` | `onnx` paketi (trtexec yo'q) | `make_input_size.py` bilan det_10g.onnx dan 1280 lik ONNX |
+| `school_ai_ds3:latest` | `trtexec` (onnx paketi yo'q) | FP16 engine |
+
+InsightFace modellari (`buffalo_l`, ~325 MB) volume'da bo'lmasa, skript ularni
+o'zi yuklab oladi (internet kerak).
+
+**Tuzoq:** `make_input_size.py` STATIK shape li ONNX yasaydi
+(`[1,3,1280,1280]`). Statik ONNX ga `trtexec --minShapes/--optShapes/--maxShapes`
+BERILMAYDI — aks holda `Network And Config setup failed`. Eski 640 lik ONNX
+dynamic edi (`[1,3,?,?]`) va shape talab qilardi — chalkashlik shundan.
+Skript buni to'g'ri qiladi, qo'lda `trtexec` yozsangiz e'tibor bering.
+
+ArcFace uchun engine KERAK EMAS — v3 da `w600k_r50.onnx` to'g'ridan ONNX Runtime
+GPU bilan ishlaydi (`deepstream_v3/pipeline/arcface_runner.py`).
+
 ## 4. Toza bazadan ko'tarish (tanlangan strategiya)
 
 Quyidagi tartib toza bazada TO'LIQ ishlatib ko'rilgan (2026-08-17). Qadamlar
