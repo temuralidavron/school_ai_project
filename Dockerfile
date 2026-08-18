@@ -55,7 +55,15 @@ RUN python3.14 -m pip install --upgrade pip setuptools wheel \
 # django-cors-headers — settings.py da kerak, alohida qatorda (yuqoridagi
 # og'ir pip qatlami keshda qolsin, qayta 1 soat yuklab olmasin).
 # TODO: keyinroq requirements.txt ga ko'chirilsin.
-RUN python3.14 -m pip install --ignore-installed django-cors-headers==4.9.0
+#
+# --no-deps SHART: bu paket "Requires: asgiref, django" ni versiyasiz talab
+# qiladi, --ignore-installed bilan birga pip Django ni QAYTA o'rnatib eng
+# yangisini tortadi va requirements.txt dagi Django==6.0.4 pin'ini bekor qiladi.
+# 2026-08-17 da 14-maktab serverida shu sabab build buzildi:
+#   ImportError: cannot import name 'cc_delim_re' from 'django.utils.cache'
+# (yangi Django da olib tashlangan, DRF 3.17.1 esa uni chaqiradi).
+# asgiref alohida kerak emas — u Django bilan birga keladi.
+RUN python3.14 -m pip install --ignore-installed --no-deps django-cors-headers==4.9.0
 
 # ─── Loyiha kodi ──────────────────────────────────────────────────────────────
 COPY . .
