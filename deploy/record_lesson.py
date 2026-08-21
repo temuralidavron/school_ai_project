@@ -92,10 +92,22 @@ def record_mjpeg(url, out_path, duration, fps):
         _log(f"XATO: MJPEG ochilmadi — {e}")
         return 1
 
-    writer = None
+    # Chiqish fps ni BOSHIDA aniqlab bo'lmaydi: pipeline dastlab buferdan tez
+    # beradi (o'lchangan 31 fps), keyin haqiqiy tezligiga tushadi (~10 fps).
+    # Boshiga qarab fps qo'ysak video bir necha barobar tez ko'rinadi
+    # (2026-08-20: AI tasvir asl videodan 3x ilgarilab ketgan edi).
+    #
+    # Shuning uchun: kadrlarni JPEG holida diskka yozib boramiz, oxirida
+    # HAQIQIY davomiylik bo'yicha fps = kadr/vaqt hisoblab videoga yig'amiz.
+    # Disk sarfi kichik (JPEG ~100 KB), RAM da 1000+ kadr saqlashdan xavfsizroq.
+    import shutil
+    import tempfile
+
+    tmpdir = tempfile.mkdtemp(prefix="ai_frames_", dir=os.path.dirname(out_path) or ".")
     buf = b""
     t0, n = time.time(), 0
-    out_fps = fps or 12          # VIS_EVERY=2 da pipeline ~12-15 kadr/s beradi
+    t_first = None
+    size_wh = None
 
     for chunk in r.iter_content(chunk_size=8192):
         if _stop or (time.time() - t0) >= duration:
@@ -109,25 +121,53 @@ def record_mjpeg(url, out_path, duration, fps):
             if a == -1 or b == -1:
                 break
             jpg, buf = buf[a:b + 2], buf[b + 2:]
-            frame = cv2.imdecode(np.frombuffer(jpg, np.uint8), cv2.IMREAD_COLOR)
-            if frame is None:
-                continue
-            if writer is None:
-                h, w = frame.shape[:2]
-                _log(f"ai: {w}x{h} @ {out_fps} fps -> {out_path}")
-                writer = cv2.VideoWriter(out_path, cv2.VideoWriter_fourcc(*"mp4v"),
-                                         out_fps, (w, h))
-            writer.write(frame)
+            if t_first is None:
+                t_first = time.time()
+                # o'lchamni bir marta aniqlaymiz (dekodlash faqat shu yerda)
+                fr0 = cv2.imdecode(np.frombuffer(jpg, np.uint8), cv2.IMREAD_COLOR)
+                if fr0 is None:
+                    t_first = None
+                    continue
+                size_wh = (fr0.shape[1], fr0.shape[0])
+                _log(f"ai: {size_wh[0]}x{size_wh[1]} — kadrlar yig'ilmoqda...")
+
+            # JPEG ni o'zgartirmasdan saqlaymiz — dekod/enkod qilmaymiz
+            with open(os.path.join(tmpdir, f"{n:07d}.jpg"), "wb") as fh:
+                fh.write(jpg)
             n += 1
             if n % 300 == 0:
                 _log(f"ai: {n} kadr ({int(time.time()-t0)}s)")
         if len(buf) > 8_000_000:     # buzuq oqimda xotira o'smasin
             buf = b""
 
-    if writer is not None:
-        writer.release()
-    _log(f"ai TUGADI: {n} kadr, {int(time.time()-t0)}s -> {out_path}")
-    return 0 if n else 1
+    # ── Yig'ish: HAQIQIY davomiylik bo'yicha fps ─────────────────────────────
+    # Endi kadr soni ham, o'tgan vaqt ham aniq ma'lum — taxmin qilmaymiz.
+    elapsed = (time.time() - t_first) if t_first else 0
+    if n == 0 or elapsed <= 0 or size_wh is None:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+        _log("ai: kadr olinmadi")
+        return 1
+
+    real_fps = round(n / elapsed, 2)
+    real_fps = min(max(real_fps, 1.0), 60.0)
+    _log(f"ai: {n} kadr / {elapsed:.1f}s -> {real_fps} fps (haqiqiy) — video yig'ilmoqda...")
+
+    writer = cv2.VideoWriter(out_path, cv2.VideoWriter_fourcc(*"mp4v"),
+                             real_fps, size_wh)
+    written = 0
+    for name in sorted(os.listdir(tmpdir)):
+        fr = cv2.imread(os.path.join(tmpdir, name), cv2.IMREAD_COLOR)
+        if fr is None:
+            continue
+        if (fr.shape[1], fr.shape[0]) != size_wh:
+            fr = cv2.resize(fr, size_wh)
+        writer.write(fr)
+        written += 1
+    writer.release()
+    shutil.rmtree(tmpdir, ignore_errors=True)
+
+    _log(f"ai TUGADI: {written} kadr @ {real_fps} fps = {written/real_fps:.1f}s -> {out_path}")
+    return 0 if written else 1
 
 
 def main():

@@ -24,6 +24,7 @@ set -u
 cd "$(dirname "$0")/.."
 
 CAMERA_ID=""; CLASS_NAME=""; SUBJECT="Tarix"; DURATION=45; ORG_ID=16
+ACCEPT=""; REVIEW=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --camera-id) CAMERA_ID="$2"; shift 2 ;;
@@ -31,6 +32,8 @@ while [ $# -gt 0 ]; do
     --subject)   SUBJECT="$2"; shift 2 ;;
     --duration)  DURATION="$2"; shift 2 ;;
     --org-id)    ORG_ID="$2"; shift 2 ;;
+    --threshold) ACCEPT="$2"; shift 2 ;;   # qabul chegarasi (.env: 0.50)
+    --review)    REVIEW="$2"; shift 2 ;;   # review chegarasi (.env: 0.45)
     *) echo "Noma'lum argument: $1"; exit 1 ;;
   esac
 done
@@ -48,9 +51,42 @@ RUN="school_ai_ds3_run"
 echo "============================================================"
 echo " JONLI DARS SINOVI"
 echo "   sinf=$CLASS_NAME  fan=$SUBJECT  kamera=$CAMERA_ID  davomiylik=${DURATION}daq"
+[ -n "$ACCEPT$REVIEW" ] && echo "   threshold: accept=${ACCEPT:-.env} review=${REVIEW:-.env}"
 echo "   natijalar: $OUT/"
 echo "============================================================"
 echo
+
+# ─── Threshold override (ixtiyoriy) ──────────────────────────────────────────
+# Tanish qarori kafka_consumer da qabul qilinadi, shuning uchun chegara o'sha
+# konteynerga berilishi kerak. Vaqtinchalik compose qatlami yaratamiz —
+# .env ga TEGMAYMIZ (u prod sozlama). Izolyatsiya qatlami ham saqlanadi.
+THR_LAYER=""
+if [ -n "$ACCEPT$REVIEW" ]; then
+  THR_FILE=".lesson_threshold.override.yml"
+  {
+    echo "services:"
+    echo "  kafka_consumer:"
+    echo "    environment:"
+    [ -n "$ACCEPT" ] && echo "      AI_ACCEPT_THRESHOLD: \"$ACCEPT\""
+    [ -n "$REVIEW" ] && echo "      AI_REVIEW_THRESHOLD: \"$REVIEW\""
+  } > "$THR_FILE"
+  THR_LAYER="-f $THR_FILE"
+
+  # Izolyatsiya faol bo'lsa uni ham qo'shamiz, aks holda prod ga sizadi
+  ISO_LAYER=""
+  CUR=$(docker inspect school_ai_kafka_consumer \
+        --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null \
+        | grep '^SKUD_API_BASE_URL=' | tail -1 | cut -d= -f2-)
+  [ "$CUR" = "http://127.0.0.1:9" ] && ISO_LAYER="-f docker-compose.demo-isolated.yml"
+
+  echo "[0/5] Threshold qo'llanmoqda (consumer qayta yaratilmoqda)..."
+  docker compose -f docker-compose.yml $ISO_LAYER $THR_LAYER --profile deepstream \
+      up -d --force-recreate kafka_consumer >/dev/null 2>&1
+  sleep 6
+  docker inspect school_ai_kafka_consumer --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null \
+    | grep -E "AI_(ACCEPT|REVIEW)_THRESHOLD|SKUD_API_BASE_URL" | sed 's/^/    /'
+  echo
+fi
 
 # ─── 1. Dars yozuvi ──────────────────────────────────────────────────────────
 echo "[1/5] Vaqtinchalik dars yaratilmoqda..."
@@ -67,7 +103,7 @@ echo "[2/5] Kamera manbasi tayyorlanmoqda..."
 $DC exec -T web python3.14 manage.py export_ds_sources \
     --camera-id "$CAMERA_ID" --out /app/logs/sources_test.json >/dev/null 2>&1
 cp logs/sources_test.json deepstream_v3/configs/sources.json 2>/dev/null
-SRC_URL=$(grep -oE 'https?://[^"]+|rtsp://[^"]+' deepstream_v3/configs/sources.json | head -1)
+SRC_URL=$(grep -oE 'https?://[^"]+|rtsps?://[^"]+|file://[^"]+' deepstream_v3/configs/sources.json | head -1)
 echo "    manba: $SRC_URL"
 [ -z "$SRC_URL" ] && { echo "  XATO: kamera stream_url bo'sh. Camera jadvalini tekshiring."; exit 1; }
 echo
@@ -75,6 +111,19 @@ echo
 # ─── 3. Pipeline ─────────────────────────────────────────────────────────────
 echo "[3/5] AI pipeline ishga tushmoqda..."
 docker rm -f "$RUN" >/dev/null 2>&1
+# MUHIM: REALTIME throttle (identity sync=true) FAQAT --video yo'lida qo'shiladi
+# (main.py:403). sources.json/--uri yo'li nvurisrcbin dan boradi va u yerda
+# throttle YO'Q — video "qancha tez bo'lsa shuncha" o'ynaydi (o'lchangan: 224 fps,
+# 92 soniyalik video ~25 soniyada tugaydi va davomat kam chiqadi).
+# Shuning uchun file:// manba uchun --video rejimi ishlatiladi.
+if [ "${SRC_URL#file://}" != "$SRC_URL" ]; then
+  VIDEO_ARG="--video ${SRC_URL#file://}"
+  echo "    rejim: --video (REALTIME throttle yoqiladi, asl tezlik)"
+else
+  VIDEO_ARG=""
+  echo "    rejim: sources.json (jonli manba)"
+fi
+
 docker run -d --name "$RUN" --gpus all \
   --network school_ai_project_default -p 8554:8554 \
   -e KAFKA_BOOTSTRAP=kafka:9092 -e CAMERA_IDS="$CAMERA_ID" \
@@ -83,7 +132,8 @@ docker run -d --name "$RUN" --gpus all \
   -v school_ai_project_insightface_models:/root/.insightface:ro \
   -v "$(pwd)/deepstream_v3/engines:/engines:ro" \
   -v "$(pwd)/deepstream_v3/configs:/ds3/configs:ro" \
-  school_ai_ds3:latest >/dev/null 2>&1
+  -v "$(pwd)/deepstream/data:/data:ro" \
+  school_ai_ds3:latest $VIDEO_ARG >/dev/null 2>&1
 sleep 25
 if ! docker ps --format '{{.Names}}' | grep -q "^${RUN}$"; then
   echo "  XATO: pipeline ko'tarilmadi. Loglar:"
@@ -95,8 +145,10 @@ echo
 
 # ─── 4. Video yozish (xom + AI) ──────────────────────────────────────────────
 echo "[4/5] Video yozish boshlandi (xom + AI)..."
+# file:// manba (video sinovi) uchun /data ham kerak — aks holda ochilmaydi
 docker run -d --name lesson_rec_raw --network school_ai_project_default \
   -v "$(pwd)/$OUT":/out -v "$(pwd)/deploy":/scripts:ro \
+  -v "$(pwd)/deepstream/data":/data:ro \
   --entrypoint python3.14 school_ai:latest \
   /scripts/record_lesson.py --mode raw --url "$SRC_URL" \
   --out /out/xom_video.mp4 --duration "$SEC" >/dev/null 2>&1
@@ -120,16 +172,33 @@ echo
 finish() {
   echo
   echo "[5/5] To'xtatilmoqda va hisobot tayyorlanmoqda..."
-  docker stop lesson_rec_raw lesson_rec_ai >/dev/null 2>&1
-  sleep 3
+  # -t 25: SIGTERM dan keyin yozuvchiga video faylni YOPISH uchun vaqt beriladi.
+  # Default 10s yetmasa konteyner SIGKILL bo'ladi va mp4 'moov atom' siz qoladi
+  # (2026-08-20 da shu sababli bitta AI video ochilmaydigan bo'lgan edi).
+  docker stop -t 25 lesson_rec_raw lesson_rec_ai >/dev/null 2>&1
+  sleep 2
   docker logs lesson_rec_raw 2>&1 | tail -2 | sed 's/^/    /'
   docker logs lesson_rec_ai  2>&1 | tail -2 | sed 's/^/    /'
   docker rm -f lesson_rec_raw lesson_rec_ai >/dev/null 2>&1
+  rm -f .lesson_threshold.override.yml
   docker rm -f "$RUN" >/dev/null 2>&1
 
-  echo "    SKUD navbatidagilar yuborilmoqda..."
-  $DC exec -T web python3.14 manage.py retry_skud_push --org-id "$ORG_ID" --limit 500 2>&1 \
-    | tail -3 | sed 's/^/      /'
+  # DIQQAT: retry_skud_push WEB konteynerda ishlaydi va u .env dan PROD URL
+  # o'qiydi. Consumer izolyatsiyada bo'lsa ham, bu buyruq davomatni HAQIQIY
+  # edu.devel.uz ga yuboradi. 2026-08-20 da shu sababli 9-V ning 12 bolasi
+  # uchun 72 ta yolg'on davomat prod ga ketdi (SKUD push-only, qaytarilmaydi).
+  # Shuning uchun: consumer izolyatsiyada bo'lsa retry O'TKAZIB YUBORILADI.
+  CONS_URL=$(docker inspect school_ai_kafka_consumer \
+    --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null \
+    | grep '^SKUD_API_BASE_URL=' | tail -1 | cut -d= -f2-)
+  if [ "$CONS_URL" = "http://127.0.0.1:9" ]; then
+    echo "    SKUD: consumer IZOLYATSIYADA — retry_skud_push O'TKAZIB YUBORILDI"
+    echo "          (aks holda web konteyner prod ga yuborardi)"
+  else
+    echo "    SKUD navbatidagilar yuborilmoqda (PROD)..."
+    $DC exec -T web python3.14 manage.py retry_skud_push --org-id "$ORG_ID" --limit 500 2>&1 \
+      | tail -3 | sed 's/^/      /'
+  fi
 
   $DC exec -T web python3.14 manage.py lesson_report \
       --schedule-id "$SCHED_ID" --subject "$SUBJECT" \

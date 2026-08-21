@@ -298,3 +298,19 @@ LOGGING = {
         },
     },
 }
+
+
+# ─── Jonli sahifa: kamera -> video fayl va MJPEG manba indeksi ────────────────
+# apps/monitoring/live_views.py bu ikkisini settings dan o'qiydi (yo'q bo'lsa
+# o'zining default'ini ishlatadi) — ya'ni bu mo'ljallangan kengaytirish nuqtasi.
+#   LIVE_VIDEO_MAP      camera_id -> asl video fayl (konteyner ichidagi yo'l)
+#   LIVE_AI_SOURCE_MAP  camera_id -> DeepStream manba indeksi (/mjpeg/<index>)
+# DIQQAT: pipeline bitta manba bilan yurganda indeks HAR DOIM 0 bo'ladi,
+# camera_id qanday bo'lishidan qat'i nazar (default 'camera_id-1' shu sababli
+# 4-kamera uchun /mjpeg/3 ga qarab bo'sh chiqargan edi).
+LIVE_VIDEO_MAP = {
+    1: "/app/deepstream_data/sinf.mp4",
+    2: "/app/deepstream_data/11g.mp4",
+    4: "/app/deepstream_data/dars_9v_h264.mp4",   # 9-V Tarix sinovi
+}
+LIVE_AI_SOURCE_MAP = {1: 0, 2: 1, 4: 0}

@@ -1,0 +1,21 @@
+# Jonli sahifani LOKAL TARMOQQA ochish — namoyish/hisobot uchun.
+#
+# Asosiy docker-compose.yml da web porti 127.0.0.1:8000 ga bog'langan (ataylab —
+# panel tashqariga ochilmasin). Rahbariyat boshqa kompyuterdan ko'rishi kerak
+# bo'lganda shu override qatlam bilan vaqtinchalik ochiladi.
+#
+# `!override` SHART: Compose sukut bo'yicha `ports` ro'yxatini BIRLASHTIRADI,
+# ya'ni 127.0.0.1:8000 va 0.0.0.0:8000 ikkalasi qoladi va bir-biri bilan
+# to'qnashadi ("address already in use"). !override eski ro'yxatni almashtiradi.
+#
+# Yoqish:
+#   docker compose -f docker-compose.yml -f docker-compose.share.yml up -d web
+# O'chirish (namoyish tugagach SHART):
+#   docker compose up -d --force-recreate web
+#
+# DIQQAT: DEBUG=True va ALLOWED_HOSTS=* holatida panel ichki tarmoqdagi
+# hammaga ochiq bo'ladi. Faqat namoyish vaqtida yoqing.
+services:
+  web:
+    ports: !override
+      - "0.0.0.0:8000:8000"

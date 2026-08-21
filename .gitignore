@@ -83,3 +83,9 @@ deepstream_v3/engines/
 
 # Demo generatsiya qiladi (run_demo.sh:29 uni o'chiradi)
 deepstream/data/track_names.json
+
+# run_lesson_test.sh vaqtinchalik threshold qatlami
+.lesson_threshold.override.yml
+
+# export_ds_sources generatsiya qiladi (kameraga qarab o'zgaradi)
+deepstream_v3/configs/sources.json
