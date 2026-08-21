@@ -33,7 +33,10 @@ services:
       - minio_data:/data
     ports:
       - "127.0.0.1:9000:9000"   # API (Django ishlatadi)
-      - "0.0.0.0:9001:9001"      # Web UI (brauzerdan kirish uchun)
+      # 2026-08-20: 0.0.0.0 dan 127.0.0.1 ga yopildi — bu konsolda TALABA
+      # RASMLARI ko'rinadi va paroli .env dagi minioadmin/minioadmin123.
+      # Kerak bo'lsa SSH tunnel: ssh -L 9001:127.0.0.1:9001 user@server
+      - "127.0.0.1:9001:9001"    # Web UI (faqat serverning o'zidan)
     healthcheck:
       test: ["CMD", "mc", "ready", "local"]
       interval: 30s
@@ -90,11 +93,25 @@ services:
               count: all
               capabilities: [gpu]
 
-  # ─── Kamera stream (yuz tanish + davomat) ───────────────────────────────────
+  # ─── Kamera stream — ESKI YO'L (OpenCV + InsightFace, ~14 fps) ──────────────
+  # DeepStream (ds3 + kafka_consumer) uni almashtirdi — JAMI_2.md "F5: eski
+  # CameraStreamService pensiyasi". 2026-08-20 da PROFIL ostiga olindi.
+  #
+  # Nega: ikkalasi bir vaqtda ishlaganda
+  #   - bitta kameraga IKKI ulanish ochiladi (kamera 2-4 ulanishni ko'taradi;
+  #     ortiqcha ulanish + qayta ulanish halqasi uzilishga olib keladi)
+  #   - GPU da InsightFace IKKI nusxa yuklanadi (~2-4 GB behuda)
+  #   - ikkalasi ham LiveFrameProcessorService ni chaqiradi -> dublikat davomat
+  #   - har sozlama ikki joyda to'g'rilanadi (threshold chalkashligi shundan)
+  # 10 kamerada eski yo'l baribir yetmaydi: 14 fps / 10 = 1.4 fps har kameraga.
+  #
+  # Kerak bo'lsa (DeepStream ishlamay qolsa, bitta kamera bilan tekshiruv):
+  #   docker compose --profile legacy up -d cameras
   cameras:
     image: school_ai:latest
     container_name: school_ai_cameras
     restart: unless-stopped
+    profiles: ["legacy"]
     command: ["./docker/entrypoint-cameras.sh"]
     env_file: .env
     environment:
@@ -216,13 +233,18 @@ services:
       timeout: 10s
       retries: 10
 
+  # Kafka UI — faqat DIAGNOSTIKA uchun (navbat, lag, xabarlar ko'rish).
+  # 2026-08-20: "debug" profiliga ko'chirildi va port 127.0.0.1 ga yopildi —
+  # avval 0.0.0.0:8080 da edi, ya'ni ichki tarmoqdagi har kim consumer group,
+  # lag va xabar mazmunini ko'ra olardi (autentifikatsiyasiz).
+  # Kerak bo'lsa: docker compose --profile debug up -d kafka-ui
   kafka-ui:
     image: ghcr.io/kafbat/kafka-ui:latest
     container_name: school_ai_kafka_ui
     restart: unless-stopped
-    profiles: ["deepstream", "deepstream-v2"]
+    profiles: ["debug"]
     ports:
-      - "0.0.0.0:8080:8080"
+      - "127.0.0.1:8080:8080"
     environment:
       KAFKA_CLUSTERS_0_NAME: school-deepstream
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
@@ -232,6 +254,10 @@ services:
 
   # Face detection pipeline (InsightFace GPU + Kafka producer)
   # NGC auth va nvinfer model fayli kerak emas
+  # ESKI DeepStream v1 (7.1). deepstream_v3 uni almashtirdi.
+  # 2026-08-20: "deepstream" profilidan chiqarildi — aks holda yangi yo'lni
+  # ko'targanda bu ham ko'tarilib, GPU va kameraga ortiqcha yuk berardi.
+  # Kerak bo'lsa: docker compose --profile legacy-v1 up -d deepstream
   deepstream:
     build:
       context: ./deepstream/pipeline
@@ -239,7 +265,7 @@ services:
     image: school_ai_deepstream:latest
     container_name: school_ai_deepstream
     restart: unless-stopped
-    profiles: ["deepstream"]
+    profiles: ["legacy-v1"]
     deploy:
       resources:
         reservations:
@@ -322,7 +348,10 @@ services:
       kafka:
         condition: service_healthy
     ports:
-      - "8554:8554"                             # MJPEG jonli ko'rish
+      # 2026-08-20: 0.0.0.0 dan 127.0.0.1 ga yopildi — bu jonli video oqim
+      # (sinfdagi bolalar). Rahbariyatga ko'rsatish kerak bo'lsa vaqtincha:
+      #   docker compose -f docker-compose.yml -f docker-compose.share.yml up -d ds3
+      - "127.0.0.1:8554:8554"                   # MJPEG jonli ko'rish
     volumes:
       - insightface_models:/root/.insightface:ro
       - ./deepstream_v3/engines:/engines:ro

@@ -30,8 +30,8 @@ PY
 # yuklansa kech qoladi, shell export esa kafolatli.
 export OPENCV_FFMPEG_CAPTURE_OPTIONS="rtsp_transport;tcp|timeout;8000000"
 
-ACCEPT="${AI_ACCEPT_THRESHOLD:-0.55}"
-REVIEW="${AI_REVIEW_THRESHOLD:-0.42}"
+ACCEPT="${AI_ACCEPT_THRESHOLD:-0.50}"
+REVIEW="${AI_REVIEW_THRESHOLD:-0.45}"
 INTERVAL="${AI_FRAME_INTERVAL:-1.0}"
 
 echo "[cameras] Stream boshlanmoqda  accept=$ACCEPT review=$REVIEW interval=$INTERVAL"

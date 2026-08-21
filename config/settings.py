@@ -136,15 +136,23 @@ TELEGRAM_GROUP_CHAT_ID = config('TELEGRAM_GROUP_CHAT_ID', default='')
 BOT_ORG_ID             = config('BOT_ORG_ID',             default=16,   cast=int)
 
 # ─── AI / InsightFace ─────────────────────────────────────────────────────────
+# DIQQAT: default'lar .env dagi JORIY qiymatlar bilan mos bo'lishi shart.
+# 2026-08-20 gacha mos emas edi va bu jimgina xulq o'zgarishiga olib kelardi:
+#   AI_GPU_ID  default -1 (CPU!)  — .env yo'qolsa tizim CPU ga tushib ~20x sekin
+#   AI_DET_SIZE default 640       — .env 1280; JAMI_2.md 5-bo'lim "web
+#                                   det_size=640 da ishlayapti" kashfiyoti shundan
+#   threshold  default 0.55/0.42  — .env 0.50/0.45; davomat soni farq qilardi
+# Qiymatni o'zgartirmoqchi bo'lsangiz .env da o'zgartiring, bu yerda EMAS.
+#
 # GPU ID: -1=CPU, 0=birinchi GPU (RTX 5080 / Jetson Orin)
-AI_GPU_ID            = config('AI_GPU_ID',            default=-1,   cast=int)
-# Det window: 640 CPU uchun, 1280 GPU uchun (8MP kamera)
-AI_DET_SIZE          = config('AI_DET_SIZE',          default=640,  cast=int)
-# Kadr qayta ishlash o'lchami (max_dim): 640 CPU, 1280 GPU
-AI_FRAME_MAX_DIM     = config('AI_FRAME_MAX_DIM',     default=640,  cast=int)
-# Tanish chegaralari
-AI_ACCEPT_THRESHOLD  = config('AI_ACCEPT_THRESHOLD',  default=0.55, cast=float)
-AI_REVIEW_THRESHOLD  = config('AI_REVIEW_THRESHOLD',  default=0.42, cast=float)
+AI_GPU_ID            = config('AI_GPU_ID',            default=0,    cast=int)
+# Det window: 640 CPU/enrollment uchun, 1280 jonli detection uchun (evrika: +53%)
+AI_DET_SIZE          = config('AI_DET_SIZE',          default=1280, cast=int)
+# Kadr qayta ishlash o'lchami (max_dim)
+AI_FRAME_MAX_DIM     = config('AI_FRAME_MAX_DIM',     default=1280, cast=int)
+# Tanish chegaralari (2026-08-20 o'lchovi: 0.50 -> 12 bola, 0.55 -> 11, 0.65 -> 5)
+AI_ACCEPT_THRESHOLD  = config('AI_ACCEPT_THRESHOLD',  default=0.50, cast=float)
+AI_REVIEW_THRESHOLD  = config('AI_REVIEW_THRESHOLD',  default=0.45, cast=float)
 # Kamera stream oralig'i (soniya)
 AI_FRAME_INTERVAL    = config('AI_FRAME_INTERVAL',    default=2.0,  cast=float)
 

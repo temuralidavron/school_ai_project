@@ -1,8 +1,8 @@
-# Jonli sahifani LOKAL TARMOQQA ochish — namoyish/hisobot uchun.
+# Jonli sahifani va AI oqimini LOKAL TARMOQQA ochish — namoyish/hisobot uchun.
 #
-# Asosiy docker-compose.yml da web porti 127.0.0.1:8000 ga bog'langan (ataylab —
-# panel tashqariga ochilmasin). Rahbariyat boshqa kompyuterdan ko'rishi kerak
-# bo'lganda shu override qatlam bilan vaqtinchalik ochiladi.
+# Asosiy docker-compose.yml da portlar 127.0.0.1 ga bog'langan (ataylab —
+# panel ham, video oqim ham tashqariga chiqmasin). Rahbariyat boshqa
+# kompyuterdan ko'rishi kerak bo'lganda shu qatlam bilan VAQTINCHA ochiladi.
 #
 # `!override` SHART: Compose sukut bo'yicha `ports` ro'yxatini BIRLASHTIRADI,
 # ya'ni 127.0.0.1:8000 va 0.0.0.0:8000 ikkalasi qoladi va bir-biri bilan
@@ -10,12 +10,19 @@
 #
 # Yoqish:
 #   docker compose -f docker-compose.yml -f docker-compose.share.yml up -d web
+#   docker compose -f docker-compose.yml -f docker-compose.share.yml --profile deepstream up -d ds3
+#
 # O'chirish (namoyish tugagach SHART):
 #   docker compose up -d --force-recreate web
+#   docker compose --profile deepstream up -d --force-recreate ds3
 #
-# DIQQAT: DEBUG=True va ALLOWED_HOSTS=* holatida panel ichki tarmoqdagi
-# hammaga ochiq bo'ladi. Faqat namoyish vaqtida yoqing.
+# DIQQAT: ochilganda panel (davomat, talaba rasmlari) va jonli video oqim
+# ichki tarmoqdagi hammaga ko'rinadi. Faqat namoyish vaqtida yoqing.
 services:
   web:
     ports: !override
       - "0.0.0.0:8000:8000"
+
+  ds3:
+    ports: !override
+      - "0.0.0.0:8554:8554"
