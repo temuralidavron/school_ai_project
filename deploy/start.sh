@@ -36,7 +36,7 @@ MODE="${1:-}"; shift 2>/dev/null || true
 # RTSP_PATH: maktab kameralari Hikvision — 101 asosiy oqim (1080p).
 # 102 (kichik oqim) yuz tanish uchun YARAMAYDI.
 ORG_ID=16; CAMERAS=""; INTERVAL=""; RTSP_PATH="/Streaming/Channels/101"; IP_MAP=""
-RTSP_USER="admin"; RTSP_PASS="admin"; DRY=0
+RTSP_USER="admin"; RTSP_PASS="admin"; RTSP_PORT_DEF=554; DRY=0
 ACCEPT=""; REVIEW=""; SKUD_REAL=""; URLS=""
 
 while [ $# -gt 0 ]; do
@@ -136,14 +136,31 @@ else
 fi
 rm -f /tmp/_gpu
 
-# 0c. TensorRT engine — yo'q bo'lsa pipeline 20 daqiqa build qiladi va
-# darsni o'tkazib yuboradi. Oldindan tekshiramiz.
+# 0c. Docker image'lar — yangi serverda yo'q bo'ladi, O'ZI build qiladi.
+# Bu bir martalik: keyingi ishga tushirishlarda sekundlarda o'tadi.
+if ! docker image inspect school_ai:latest >/dev/null 2>&1; then
+  echo "    school_ai image YO'Q — build boshlanmoqda (~20-30 daqiqa, bir martalik)..."
+  $DC build web 2>&1 | tail -3 | sed 's/^/      /'
+  docker image inspect school_ai:latest >/dev/null 2>&1 || { echo "      XATO: build o'tmadi"; XATO=1; }
+else
+  echo "    school_ai image: bor  OK"
+fi
+if ! docker image inspect school_ai_ds3:latest >/dev/null 2>&1; then
+  echo "    ds3 image YO'Q — build boshlanmoqda (~10-20 daqiqa, bir martalik)..."
+  $DC --profile deepstream build ds3 2>&1 | tail -3 | sed 's/^/      /'
+  docker image inspect school_ai_ds3:latest >/dev/null 2>&1 || { echo "      XATO: build o'tmadi"; XATO=1; }
+else
+  echo "    ds3 image: bor  OK"
+fi
+
+# 0c2. TensorRT engine — yo'q bo'lsa O'ZI build qiladi (~15 daq, bir martalik).
+# Engine GPU ga bog'liq: boshqa GPU li serverda qaytadan build bo'lishi normal.
 if ls deepstream_v3/engines/*.engine >/dev/null 2>&1; then
   echo "    engine: $(ls deepstream_v3/engines/*.engine | wc -l) ta  OK"
 else
-  echo "    XATO: TensorRT engine yo'q (deepstream_v3/engines/)"
-  echo "          Yechim: bash deploy/build_engines.sh  (~15 daqiqa)"
-  XATO=1
+  echo "    TensorRT engine YO'Q — build boshlanmoqda (~15 daqiqa, bir martalik)..."
+  bash deploy/build_engines.sh 2>&1 | tail -4 | sed 's/^/      /'
+  ls deepstream_v3/engines/*.engine >/dev/null 2>&1 || { echo "      XATO: engine build o'tmadi"; XATO=1; }
 fi
 
 # 0d. Asosiy servislar
@@ -272,6 +289,36 @@ elif [ "$MODE" = "rtsp" ]; then
       --org-id "$ORG_ID" $CAM_ARGS --rtsp-user "$RTSP_USER" --rtsp-pass "$RTSP_PASS" \
       --rtsp-path "$RTSP_PATH" $IPMAP_ARG --out /app/logs/sources_new.json 2>&1 \
     | sed 's/^/    /'
+
+  # ZAXIRA YO'L: web image eski bo'lsa (--mode rtsp ni bilmaydi) yoki web
+  # umuman ko'tarilmagan bo'lsa — sources.json ni HOST da CSV dan yig'amiz.
+  # Bazasiz ishlaydi: kamera IP lar camera_ips.csv da, login admin/admin.
+  if [ ! -s logs/sources_new.json ] && [ -n "$IP_MAP" ]; then
+    echo "    web orqali bo'lmadi — host'da CSV dan yig'ilmoqda (zaxira yo'l)"
+    python3 - "$IP_MAP" "$RTSP_USER" "$RTSP_PASS" "$RTSP_PORT_DEF" "$RTSP_PATH" "$CAMERAS" <<'PY'
+import json, sys
+csv, user, pwd, port, path, cams = sys.argv[1:7]
+istalgan = set(cams.replace(",", " ").split()) if cams.strip() else None
+if not path.startswith("/"):
+    path = "/" + path
+data = {}
+for line in open(csv, encoding="utf-8"):
+    line = line.strip()
+    if not line or line.startswith("#"):
+        continue
+    parts = [p.strip() for p in line.replace(",", ";").split(";") if p.strip()]
+    if len(parts) < 2:
+        continue
+    cid, ip = parts[0], parts[-1]
+    if istalgan and cid not in istalgan:
+        continue
+    data[cid] = f"rtsp://{user}:{pwd}@{ip}:{port}{path}"
+if data:
+    json.dump(data, open("logs/sources_new.json", "w"), indent=2)
+    for cid in data:
+        print(f"      cam {cid}: rtsp://{user}:***@...{path}")
+PY
+  fi
 else
   $DC exec -T web python3.14 manage.py export_ds_sources \
       --org-id "$ORG_ID" $CAM_ARGS --out /app/logs/sources_new.json 2>&1 \
