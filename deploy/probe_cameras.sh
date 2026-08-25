@@ -16,27 +16,36 @@ set -u
 
 USER_="admin"
 PASS_="${CAMERA_PASSWORD:-admin}"
+CSV=""; OUT_NAME="cameras_rtsp"
 while [ $# -gt 0 ]; do
   case "$1" in
     --user) USER_="$2"; shift 2 ;;
     --password) PASS_="$2"; shift 2 ;;
+    --csv) CSV="$2"; shift 2 ;;         # name;...;IP formatidagi mavjud CSV
+    --out-name) OUT_NAME="$2"; shift 2 ;;
     *) echo "Noma'lum argument: $1"; exit 1 ;;
   esac
 done
 
-# SKUD org 59 dan olingan: classRoomName;deviceId
-CAMS="A5-xona;10.144.10.10
+if [ -n "$CSV" ]; then
+  # Mavjud CSV dan (masalan deploy/cameras_225.csv): 1-ustun nom, oxirgisi IP.
+  # 225-maktab: bash deploy/probe_cameras.sh --csv deploy/cameras_225.csv --user admin --password admin
+  CAMS=$(grep -v '^#' "$CSV" | awk -F';' 'NF>=2 {print $1";"$NF}')
+else
+  # Default: 14-maktab (SKUD org 59 deviceId ro'yxati)
+  CAMS="A5-xona;10.144.10.10
 B5-xona;10.144.10.11
 A4-xona;10.144.10.12
 A6-xona;10.144.10.13
 A7-xona;10.144.10.14
 B11-xona;10.144.10.15
 A8-xona;10.144.10.16"
+fi
 
-OUT="deploy/cameras_14.csv"
+OUT="deploy/${OUT_NAME}.csv"
 TMP=$(mktemp)
 
-echo "=== 14-maktab kameralarini zondlash ==="
+echo "=== Kameralarni RTSP zondlash ==="
 echo "  user=$USER_"
 MYIP=$(ip -4 addr show 2>/dev/null | grep -oE 'inet 10\.144\.[0-9.]+' | head -1 | awk '{print $2}')
 if [ -n "$MYIP" ]; then

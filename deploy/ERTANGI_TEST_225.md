@@ -234,6 +234,50 @@ docker compose exec -T web python3.14 manage.py setup_test_lesson \
 
 ---
 
+## 9-QADAM (asosiy test O'TGANDAN KEYIN): RTSP va PTZ
+
+Kamera paroli admin/admin bo'lsa — RTSP ham, PTZ ham ochiladi.
+**Bu qadamlarni faqat 8-qadam muvaffaqiyatli o'tgach bajaring** — asosiy
+test HLS bilan, chunki u sinalgan.
+
+### 9a. RTSP manzillarini topish (~5 daqiqa)
+
+```bash
+bash deploy/probe_cameras.sh --csv deploy/cameras_225.csv \
+    --user admin --password admin --out-name cameras_225_rtsp
+```
+
+Skript har kamerada (10.144.4.x): ping -> 554-port -> 8 xil RTSP path'ni
+HAQIQIY kadr o'qib sinaydi. **KUTILGAN:** `N / 10 kamera ishladi` va
+`deploy/cameras_225_rtsp.csv` yoziladi.
+
+Hech biri ishlamasa: parol boshqa — kamera web UI ga kiring
+(brauzerda `http://10.144.4.5`), u yerda RTSP manzili ko'rsatilgan.
+
+**Nega RTSP kerak (keyingi bosqich uchun):** server maktab ichida — HLS da
+video internetga chiqib qaytadi; RTSP lokal, proxy'siz, gap.mp4 bug'isiz.
+RTSP topilgach kameralarni unga o'tkazish ALOHIDA kun ishi — test kuni emas.
+
+### 9b. PTZ sinovi (~5 daqiqa, bitta kamerada)
+
+Kod tayyor (iyulda 225 da ishlatilgan — test_ptz_cgi docstring'ida
+10.144.4.2 misoli bor):
+
+```bash
+# Kamera web UI da jonli video ochiq tursin — qaysi format burashini ko'rasiz
+docker compose exec -T web python3.14 manage.py test_ptz_cgi \
+    --ip 10.144.4.2 --user admin --password admin
+```
+
+**KUTILGAN:** formatlardan biri (hi3510/dahua/axis/foscam) kamerani CHAPGA
+buradi — skript qaysi format ishlaganini aytadi.
+
+Format topilgach preset saqlash va patrul (DEPLOY.md 4b-bo'lim):
+```bash
+docker compose exec -T web python3.14 manage.py lock_cameras --camera-id <ID> --list-presets
+# .env: PATROL_MODE=sweep yoki preset  (hozircha off qoldiring — alohida kun ishi)
+```
+
 ## AGAR HAMMASI YOMON KETSA — zaxira yo'l
 
 Eski OpenCV yo'li saqlangan (bitta-ikki kamera uchun yetadi):
