@@ -146,7 +146,8 @@ KAFKA_GROUP_ID=attendance-consumer
 
 ## Bog'liq fayllar
 
-- [JAMI_3.md](JAMI_3.md) — **ENG YANGI holat (avgust-2026): 225-maktab serveriga deploy, 6 ta topilgan bug, jonli dars sinovi. BIRINCHI SHUNI O'QI**
+- [MACOS_DAVOM.md](MACOS_DAVOM.md) — **ENG YANGI (2026-08-25): bir buyruq start.sh, threshold, RTSP holati, ertangi 10-V test. BIRINCHI SHUNI O'QI**
+- [JAMI_3.md](JAMI_3.md) — avgust-2026 holat: 225-maktab serveriga deploy, 6 ta topilgan bug, jonli dars sinovi
 - [deploy/SINOV_QOLLANMA.md](deploy/SINOV_QOLLANMA.md) — maktabda jonli dars sinovi: tayyorgarlik, sinf/kamera tanlash, ishga tushirish, natijalar
 - [JAMI_2.md](JAMI_2.md) — iyul-2026 holati: 1280 detection, B5 margin, realtime, F0-F5 reja (bu CLAUDE.md ning ba'zi qismlari eskirgan)
 - [LOYIHA.md](LOYIHA.md) — to'liq loyiha tafsilotlari

@@ -1,12 +1,22 @@
 # MinIO + PostgreSQL + Django (web) + kamera stream (cameras).
 # web/cameras GPU dan foydalanadi → hostda nvidia-container-toolkit kerak.
 
+# Log rotation — 2026-08-25. Busiz konteyner loglari CHEKSIZ o'sadi:
+# ds3 har kadrda yozadi (~2-4 GB/kun), disk to'lsa Postgres read-only ga
+# o'tadi va davomat yo'qoladi. 3 fayl x 100 MB = servis boshiga max 300 MB.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "100m"
+    max-file: "3"
+
 services:
 
   db:
     image: pgvector/pgvector:pg16
     container_name: school_ai_db
     restart: unless-stopped
+    logging: *default-logging
     environment:
       POSTGRES_DB: ${DB_NAME:-school_ai}
       POSTGRES_USER: ${DB_USER:-postgres}
@@ -25,6 +35,7 @@ services:
     image: minio/minio:latest
     container_name: school_ai_minio
     restart: unless-stopped
+    logging: *default-logging
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
@@ -67,6 +78,7 @@ services:
     image: school_ai:latest
     container_name: school_ai_web
     restart: unless-stopped
+    logging: *default-logging
     command: ["./docker/entrypoint-web.sh"]
     env_file: .env
     environment:
@@ -111,6 +123,7 @@ services:
     image: school_ai:latest
     container_name: school_ai_cameras
     restart: unless-stopped
+    logging: *default-logging
     profiles: ["legacy"]
     command: ["./docker/entrypoint-cameras.sh"]
     env_file: .env
@@ -141,6 +154,7 @@ services:
     image: school_ai:latest
     container_name: school_ai_patrol
     restart: unless-stopped
+    logging: *default-logging
     profiles: ["patrol"]
     command: ["python3.14", "manage.py", "run_camera_patrol", "--all"]
     env_file: .env
@@ -160,6 +174,7 @@ services:
     image: school_ai:latest
     container_name: school_ai_cron
     restart: unless-stopped
+    logging: *default-logging
     command: ["./docker/entrypoint-cron.sh"]
     env_file: .env
     environment:
@@ -181,6 +196,7 @@ services:
     image: school_ai:latest
     container_name: school_ai_bot
     restart: unless-stopped
+    logging: *default-logging
     # TELEGRAM_BOT_TOKEN yo'qligi sabab restart-loop edi — opt-in qilindi.
     # Yoqish: TOKEN qo'shib `docker compose --profile bot up -d bot`
     profiles: ["bot"]
@@ -209,6 +225,7 @@ services:
     image: apache/kafka:latest
     container_name: school_ai_kafka
     restart: unless-stopped
+    logging: *default-logging
     profiles: ["deepstream", "deepstream-v2"]
     ports:
       - "127.0.0.1:9092:9092"
@@ -242,6 +259,7 @@ services:
     image: ghcr.io/kafbat/kafka-ui:latest
     container_name: school_ai_kafka_ui
     restart: unless-stopped
+    logging: *default-logging
     profiles: ["debug"]
     ports:
       - "127.0.0.1:8080:8080"
@@ -265,6 +283,7 @@ services:
     image: school_ai_deepstream:latest
     container_name: school_ai_deepstream
     restart: unless-stopped
+    logging: *default-logging
     profiles: ["legacy-v1"]
     deploy:
       resources:
@@ -296,6 +315,7 @@ services:
     image: school_ai:latest
     container_name: school_ai_kafka_consumer
     restart: unless-stopped
+    logging: *default-logging
     profiles: ["deepstream"]
     command: ["python3.14", "manage.py", "kafka_consumer"]
     env_file: .env
@@ -334,6 +354,7 @@ services:
     image: school_ai_ds3:latest
     container_name: school_ai_ds3
     restart: unless-stopped
+    logging: *default-logging
     profiles: ["deepstream"]
     environment:
       KAFKA_BOOTSTRAP: kafka:9092
@@ -388,6 +409,7 @@ services:
     image: school_ai_deepstream_v2:latest
     container_name: school_ai_deepstream_v2
     restart: unless-stopped
+    logging: *default-logging
     profiles: ["deepstream-v2"]
     deploy:
       resources:

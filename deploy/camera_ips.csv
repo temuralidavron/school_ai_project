@@ -1,0 +1,23 @@
+# RTSP rejimi uchun kamera IP jadvali.
+#
+#   bash deploy/start.sh rtsp --ip-map deploy/camera_ips.csv
+#
+# Format:  camera_id;IP     yoki    kamera_nomi;IP
+# Izohlar '#' bilan. Bo'sh qatorlar e'tiborsiz.
+#
+# Camera.ip_address bazada to'ldirilgan bo'lsa BU FAYL KERAK EMAS —
+# baza ustuvor. Bu faqat IP bazada yo'q bo'lganda ishlatiladi.
+#
+# 225-maktab (org 16) — IP lar bazada yo'q, maktab tarmog'idan to'ldiring.
+# Kamera web UI orqali yoki router DHCP ro'yxatidan oling.
+#
+# 5;192.168.1.101      # 1-xona
+# 6;192.168.1.102      # 2-xona
+# 8;192.168.1.109      # 9-xona
+# 9;192.168.1.110      # 10-xona
+# 10;192.168.1.111     # 11-xona
+# 11;192.168.1.113     # 13-xona
+# 12;192.168.1.104     # 4-xona
+# 13;192.168.1.103     # 3-xona
+# 14;192.168.1.203     # 3a-xona
+# 15;192.168.1.112     # 12-xona
