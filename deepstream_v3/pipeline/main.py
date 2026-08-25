@@ -487,6 +487,15 @@ def build_pipeline(sources: list):
     pgie = Gst.ElementFactory.make("nvinfer", "pgie")
     pgie.set_property("config-file-path", PGIE_CFG)
     # Engine qat'iy batch=1 (SCRFD) — nvinfer muxed batch kadrlarini ketma-ket ishlaydi
+    # DS_INTERVAL: har (N+1)-kadrda detection, oradagi kadrlarni tracker davom
+    # ettiradi. Berilmasa configdagi qiymat ishlaydi (hozir 0 = har kadr).
+    # Hisob (2026-08-21): engine 1280 da 224 fps; 10 kamera x 25 fps = 250 fps
+    # kerak -> interval=0 da GPU YETMAYDI. DS_INTERVAL=2 -> 83 fps, bemalol.
+    # Davomatga ta'sir qilmaydi: TRACK_SEND_COOLDOWN baribir bola boshiga 3s.
+    _interval = os.getenv("DS_INTERVAL", "").strip()
+    if _interval:
+        pgie.set_property("interval", int(_interval))
+        log.info("nvinfer interval=%s (DS_INTERVAL env)", _interval)
 
     tracker = Gst.ElementFactory.make("nvtracker", "tracker")
     tracker.set_property("ll-lib-file", TRACKER_LIB)
