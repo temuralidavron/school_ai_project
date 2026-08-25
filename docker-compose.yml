@@ -344,6 +344,11 @@ services:
       VIS_EVERY: "2"
       TRACK_SEND_COOLDOWN: "3"
       SOURCE_STALE_SEC: "30"
+      # Detection oralig'i: bo'sh = configdagi (har kadr). 10 kamera bilan
+      # DS_INTERVAL=2 SHART: engine 224 fps, 10x25=250 kerak (interval=0 da
+      # yetmaydi), interval=2 da 83 fps — 2.7x zaxira. Host'dan beriladi:
+      #   DS_INTERVAL=2 docker compose --profile deepstream up -d ds3
+      DS_INTERVAL: "${DS_INTERVAL:-}"
     depends_on:
       kafka:
         condition: service_healthy
