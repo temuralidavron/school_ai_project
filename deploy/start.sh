@@ -33,7 +33,9 @@ set -u
 cd "$(dirname "$0")/.."
 
 MODE="${1:-}"; shift 2>/dev/null || true
-ORG_ID=16; CAMERAS=""; INTERVAL=""; RTSP_PATH="/stream1"; IP_MAP=""
+# RTSP_PATH: maktab kameralari Hikvision — 101 asosiy oqim (1080p).
+# 102 (kichik oqim) yuz tanish uchun YARAMAYDI.
+ORG_ID=16; CAMERAS=""; INTERVAL=""; RTSP_PATH="/Streaming/Channels/101"; IP_MAP=""
 RTSP_USER="admin"; RTSP_PASS="admin"; DRY=0
 ACCEPT=""; REVIEW=""; SKUD_REAL=""; URLS=""
 
@@ -255,8 +257,17 @@ for cid, u in data.items():
 PY
   [ -z "$CAMERAS" ] && echo "    DIQQAT: --cameras berilmadi, davomat cam 9 (10-xona) nomiga yoziladi"
 elif [ "$MODE" = "rtsp" ]; then
+  # --ip-map berilmasa deploy/camera_ips.csv avtomatik olinadi (to'ldirilgan bo'lsa)
+  if [ -z "$IP_MAP" ] && grep -qE '^[^#]' deploy/camera_ips.csv 2>/dev/null; then
+    IP_MAP="deploy/camera_ips.csv"
+    echo "    ip-map: deploy/camera_ips.csv (avtomatik)"
+  fi
   IPMAP_ARG=""
-  [ -n "$IP_MAP" ] && IPMAP_ARG="--ip-map /app/$IP_MAP"
+  if [ -n "$IP_MAP" ]; then
+    # web konteyner deploy/ ni ko'rmaydi — mount qilingan logs/ orqali beramiz
+    cp "$IP_MAP" logs/_camera_ips.csv
+    IPMAP_ARG="--ip-map /app/logs/_camera_ips.csv"
+  fi
   $DC exec -T web python3.14 manage.py export_ds_sources --mode rtsp \
       --org-id "$ORG_ID" $CAM_ARGS --rtsp-user "$RTSP_USER" --rtsp-pass "$RTSP_PASS" \
       --rtsp-path "$RTSP_PATH" $IPMAP_ARG --out /app/logs/sources_new.json 2>&1 \
