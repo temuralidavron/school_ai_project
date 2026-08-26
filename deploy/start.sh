@@ -361,11 +361,15 @@ RTSP_YOQ=""
 while IFS=$'\t' read -r cid uri; do
   [ -z "$cid" ] && continue
   if [ "${uri#rtsp}" != "$uri" ]; then
-    HOST=$(echo "$uri" | sed -E 's|.*@([^:/]+).*|\1|')
-    if timeout 5 bash -c "echo > /dev/tcp/$HOST/554" 2>/dev/null; then
-      echo "1|$HOST:554 ochiq" > "$TMP/$cid"
+    # host:port ni to'g'ri ajratamiz (parolsiz yoki 554 bo'lmagan port ham bo'ladi)
+    read -r HOST PORT < <(python3 -c "
+from urllib.parse import urlparse
+u = urlparse('$uri')
+print(u.hostname or '-', u.port or 554)")
+    if timeout 5 bash -c "echo > /dev/tcp/$HOST/$PORT" 2>/dev/null; then
+      echo "1|$HOST:$PORT ochiq" > "$TMP/$cid"
     else
-      echo "0|$HOST:554 YOPIQ" > "$TMP/$cid"
+      echo "0|$HOST:$PORT YOPIQ" > "$TMP/$cid"
     fi
     continue
   fi
