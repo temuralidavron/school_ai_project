@@ -113,7 +113,7 @@
         <span class="cam-label">Asl tasvir</span>
         <div class="cam-dot dot-green"></div>
         <video id="original-video" autoplay muted playsinline controls
-               src="/monitoring/video-file/"
+               
                style="width:100%;height:100%;object-fit:cover;"></video>
       </div>
 
@@ -425,7 +425,7 @@ setInterval(fetchAttendance, 3000);
   const txt = document.getElementById('mjpeg-retry-txt');
   const dot = document.getElementById('mjpeg-dot');
   if (!img) return;
-  const url = `http://${location.hostname}:8554/mjpeg`;
+  const url = '/monitoring/room/' + CAMERA_ID + '/mjpeg/';
   if (txt) txt.textContent = url;
   img.src = url;
   // MJPEG uchun onload ishonchsiz — src qo'yilgandan keyin darhol ko'rsatamiz
@@ -437,7 +437,7 @@ setInterval(fetchAttendance, 3000);
   const img = document.getElementById('mjpeg-stream');
   if (!img) return;
   setInterval(() => {
-    const base = `http://${location.hostname}:8554/mjpeg`;
+    const base = '/monitoring/room/' + CAMERA_ID + '/mjpeg/';
     img.src = base + '?t=' + Date.now();
   }, 10000);
 })();

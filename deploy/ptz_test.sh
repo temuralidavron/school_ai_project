@@ -2,14 +2,14 @@
 # =============================================================================
 # PTZ SINOV — kamera to'g'ridan (RTSP tarmog'ida, VPN yoki lokal).
 #
-#   bash deploy/ptz_test.sh 10.144.0.42                    # admin/admin
-#   bash deploy/ptz_test.sh 10.144.0.42 admin PAROL
+#   bash deploy/ptz_test.sh 10.144.4.5                    # admin/admin
+#   bash deploy/ptz_test.sh 10.144.4.5 admin PAROL
 #
 # Kamera web UI da jonli video ochiq tursin — qaysi format kamerani
 # BURSA, o'sha to'g'ri. Skript har formatni: chapga 1s -> stop qiladi.
 #
 # DIQQAT: kamera IP ga TO'G'RIDAN ulanadi (proxy emas). Ya'ni bu mashina
-# kamera tarmog'ida (10.144.0.x) bo'lishi SHART — VPN yoki lokal.
+# kamera tarmog'ida (10.144.4.x) bo'lishi SHART — VPN yoki lokal.
 # Proxy (edu-api) orqali PTZ O'TMAYDI (2026-08-25 da isbotlandi: proxy
 # CGI so'rovga o'z HTML sahifasini qaytaradi, buyruq kameraga yetmaydi).
 # =============================================================================
@@ -24,7 +24,7 @@ echo
 echo "[0] Yetib boradimi..."
 if ! timeout 3 bash -c "echo > /dev/tcp/$IP/80" 2>/dev/null; then
   echo "  XATO: $IP:80 yopiq — kamera ko'rinmayapti."
-  echo "  Bu mashina 10.144.0.x tarmog'idami? (VPN ulanganmi?)  ip a | grep 10.144"
+  echo "  Bu mashina 10.144.4.x tarmog'idami? (VPN ulanganmi?)  ip a | grep 10.144"
   exit 1
 fi
 echo "  OK: kamera javob beryapti"

@@ -249,6 +249,19 @@ def _display_crop_b64(frame_bgr, l, t, w, h, pad_ratio=0.4,
     return base64.b64encode(jpg).decode("ascii") if ok else ""
 
 
+def _frame_kopiya(buf, batch_id):
+    """Kadr surface'ini map -> BGR nusxa -> DARHOL unmap.
+
+    dGPU da (nvbuf-memory-type=3) unmap qilinmasa map'lar to'planib buffer
+    pool tugaydi va pipeline JIM QOTADI: xato ham, EOS ham yo'q, hamma manba
+    bir zumda to'xtaydi (2026-08-26 da o'lchandi — ~40s / ~7000 kadr).
+    """
+    rgba = pyds.get_nvds_buf_surface(hash(buf), batch_id)
+    bgr = np.ascontiguousarray(rgba[:, :, 2::-1])
+    pyds.unmap_nvds_buf_surface(hash(buf), batch_id)
+    return bgr
+
+
 def _recog_probe(pad, info, _u):
     """Probe C: RGBA kadr + tracked obj -> align -> ArcFace -> Kafka."""
     buf = info.get_buffer()
@@ -283,9 +296,7 @@ def _recog_probe(pad, info, _u):
                     kps = np.asarray(d["kps"], dtype=np.float32)
                     if _is_frontal(kps):
                         if frame_bgr is None:
-                            rgba = pyds.get_nvds_buf_surface(
-                                hash(buf), frame_meta.batch_id)
-                            frame_bgr = np.ascontiguousarray(rgba[:, :, 2::-1])
+                            frame_bgr = _frame_kopiya(buf, frame_meta.batch_id)
                         aligned = align(frame_bgr, kps)
                         buf_list = _emb_buffer.setdefault(key, [])
                         buf_list.append(aligned)
@@ -335,8 +346,7 @@ def _recog_probe(pad, info, _u):
         # ── MJPEG vizualizatsiya (har manba uchun, har VIS_EVERY-kadrda) ─────
         if VIS_EVERY > 0 and f % VIS_EVERY == 0:
             if frame_bgr is None:
-                rgba = pyds.get_nvds_buf_surface(hash(buf), frame_meta.batch_id)
-                frame_bgr = np.ascontiguousarray(rgba[:, :, 2::-1])
+                frame_bgr = _frame_kopiya(buf, frame_meta.batch_id)
             _load_names()
             vis = frame_bgr.copy()
             l_obj = frame_meta.obj_meta_list
@@ -552,7 +562,19 @@ def build_pipeline(sources: list):
                 log.warning("EOS (live rejim, e'tiborsiz): %s", src_name)
         elif t == Gst.MessageType.ERROR:
             err, dbg = msg.parse_error()
-            from_source = src_name.startswith(("src-", "source-bin"))
+            # DIQQAT: xato ko'pincha manba bin'ining ICHKI elementidan keladi
+            # (masalan HLS 404 da GstSoupHTTPSrc, nomi "source") — shuning
+            # uchun nomni emas, OTA zanjirini tekshiramiz. Aks holda bitta
+            # o'lik kamera butun pipeline'ni o'ldiradi (2026-08-26 da 10
+            # kameralik oqim cam 2 ning 404 idan crash-loop bo'lgan).
+            from_source = False
+            obj = msg.src
+            while obj is not None:
+                nomi = obj.get_name() or ""
+                if nomi.startswith(("src-", "source-bin")):
+                    from_source = True
+                    break
+                obj = obj.get_parent()
             if has_live and from_source:
                 # bitta kamera xatosi qolgan kameralarni o'ldirmasin
                 log.error("SOURCE DOWN %s: %s — %s (davom etilmoqda)",
@@ -577,7 +599,42 @@ def build_pipeline(sources: list):
                 pass
         elif last:
             log.warning("WATCHDOG: %.0fs dan beri kadr yo'q", time.time() - last)
+        # O'ZINI TIKLASH. Docker healthcheck unhealthy konteynerni O'ZI qayta
+        # ko'tarmaydi (compose'da autoheal yo'q) — qotgan pipeline abadiy
+        # qotib qoladi. Shuning uchun jarayon o'zi chiqadi, restart policy
+        # qayta ko'taradi. Sabab (gdb, 2026-08-26): nvurisrcbin + hlsdemux2
+        # gst_bus_post mutex deadlock (DS 8.0, faqat HLS yo'lida) — jarayon
+        # ichida davolab bo'lmaydi. RTSP bu yo'ldan o'tmaydi.
+        # Faqat jonli manbada: file:// da video tugagach kadr kelmasligi
+        # normal — SELF-RESTART otilsa cheksiz replay aylanishi bo'lardi.
+        if _state.get("has_live"):
+            hozir = time.time()
+            stale_limit = max(SOURCE_STALE_SEC * 3, 90)
+            if last and hozir - last > stale_limit:
+                log.critical("SELF-RESTART: %.0fs kadr yo'q — jarayon chiqadi",
+                             hozir - last)
+                os._exit(42)
+            if not last and _state.get("t_start", 0.0) \
+                    and hozir - _state["t_start"] > 180:
+                log.critical("SELF-RESTART: 180s ichida birinchi kadr kelmadi")
+                os._exit(42)
+        # Tugagan track'lar _emb_buffer/_last_sent da abadiy qolmasin —
+        # kun bo'yi ishlashda minglab track yig'ilib xotira o'sib boradi.
+        # DIQQAT: streaming thread parallel yozadi — dict ustidan to'g'ridan
+        # iteratsiya RuntimeError beradi, avval list() bilan nusxa olinadi.
+        # Bo'sh bo'lmagan pool (aktiv track yig'ayotgan kadrlar) o'chirilmaydi.
+        if len(_emb_buffer) > 4096:
+            cutoff = time.time() - 600
+            eski = [k for k in list(_emb_buffer)
+                    if _last_sent.get(k, 0.0) < cutoff and not _emb_buffer.get(k)]
+            for k in eski:
+                _emb_buffer.pop(k, None)
+                _last_sent.pop(k, None)
+            if eski:
+                log.info("emb_buffer tozalandi: %d eski track", len(eski))
         return True
+    _state["t_start"] = time.time()
+    _state["has_live"] = has_live
     GLib.timeout_add_seconds(5, _health_tick)
 
     return pipeline, loop

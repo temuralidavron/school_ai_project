@@ -33,9 +33,11 @@ set -u
 cd "$(dirname "$0")/.."
 
 MODE="${1:-}"; shift 2>/dev/null || true
-# RTSP_PATH: maktab kameralari Hikvision — 101 asosiy oqim (1080p).
-# 102 (kichik oqim) yuz tanish uchun YARAMAYDI.
-ORG_ID=16; CAMERAS=""; INTERVAL=""; RTSP_PATH="/Streaming/Channels/101"; IP_MAP=""
+# RTSP_PATH: 225-maktabda TASDIQLANGAN yo'l /stream1 (Aliyer, 2026-08-26:
+# rtsp://10.144.4.5:554/stream1 ... — jonli ishlagan havolalar).
+# Boshqa brend/maktabda yo'l boshqa bo'lsa: bash deploy/rtsp_tayyorla.sh
+# haqiqiy kadr o'qib topadi va Camera.path ga yozadi (baza bu defaultdan ustuvor).
+ORG_ID=16; CAMERAS=""; INTERVAL=""; RTSP_PATH="/stream1"; IP_MAP=""
 RTSP_USER="admin"; RTSP_PASS="admin"; RTSP_PORT_DEF=554; DRY=0
 ACCEPT=""; REVIEW=""; SKUD_REAL=""; URLS=""
 
@@ -214,8 +216,9 @@ esac
 if [ -n "$THR_LAYER" ] || [ -n "$SKUD_REAL" ]; then
   echo "[0b] Consumer sozlanmoqda (chegara / SKUD rejimi)..."
   if [ "$DRY" = "0" ]; then
+    # cron ham: retry_skud_push real URL da qolsa sinov davomatini prodga oqizadi
     docker compose -f docker-compose.yml $ISO_LAYER $THR_LAYER --profile deepstream \
-        up -d --force-recreate kafka_consumer >/dev/null 2>&1
+        up -d --force-recreate kafka_consumer cron >/dev/null 2>&1
     sleep 6
   fi
 fi
@@ -245,9 +248,18 @@ echo
 
 # ─── 1. Manbalar ─────────────────────────────────────────────────────────────
 echo "[1/5] Manbalar tayyorlanmoqda ($MODE)..."
+# logs/ konteyner (root) egaligida bo'lib qoladi — host'dagi rm/yozuvlar jim
+# yiqilib eski fayl ishlatilib ketardi (2026-08-26 auditda tasdiqlandi).
+# Web konteyner (root) orqali egalikni o'zimizga olamiz.
+$DC exec -T web chown -R "$(id -u):$(id -g)" /app/logs >/dev/null 2>&1 || true
 # Eskisini o'chiramiz: aks holda export yiqilsa oldingi ishga tushirishdan
 # qolgan fayl ishlatilib ketadi va rtsp so'raganda hls bilan ko'tarilardi.
 rm -f logs/sources_new.json
+if [ -e logs/sources_new.json ]; then
+  echo "    XATO: logs/sources_new.json o'chirilmadi (egalik muammosi) — eski"
+  echo "          manbalar bilan ko'tarilib ketmaslik uchun to'xtatildi."
+  exit 1
+fi
 CAM_ARGS=""
 if [ -n "$CAMERAS" ]; then
   for c in ${CAMERAS//,/ }; do CAM_ARGS="$CAM_ARGS --camera-id $c"; done
@@ -255,16 +267,21 @@ fi
 
 if [ -n "$URLS" ]; then
   # Tayyor link(lar) berilgan — baza umuman so'ralmaydi.
-  # Camera id sifatida --cameras dagi raqamlar olinadi (tartib bo'yicha);
-  # berilmasa 9 (10-xona) — davomat o'sha kameraga yoziladi.
+  # --cameras SHART: davomat qaysi kameraga yozilishini taxmin qilib bo'lmaydi
+  # (eski default cam 9 "10-xona" degan izoh ham noto'g'ri edi — 9 = 3a-xona).
+  if [ -z "$CAMERAS" ]; then
+    echo "    XATO: --url bilan --cameras ham SHART (davomat qaysi kameraga yozilsin?)"
+    echo "          Masalan: --url \"rtsp://...\" --cameras 4"
+    exit 1
+  fi
   python3 - "$CAMERAS" $URLS <<'PY'
 import json, sys
 ids = [i for i in sys.argv[1].replace(",", " ").split() if i]
 urls = sys.argv[2:]
-data = {}
-for n, u in enumerate(urls):
-    cid = ids[n] if n < len(ids) else str(9 + n)
-    data[cid] = u
+if len(ids) < len(urls):
+    print(f"    XATO: {len(urls)} url uchun {len(ids)} ta camera id berildi")
+    raise SystemExit(1)
+data = {ids[n]: u for n, u in enumerate(urls)}
 json.dump(data, open("logs/sources_new.json", "w"), indent=2)
 for cid, u in data.items():
     if "@" in u and "://" in u:
@@ -272,10 +289,12 @@ for cid, u in data.items():
         u = f"{sx}://{k.split(':', 1)[0]}:***@{h}"
     print(f"    cam {cid}: {u}")
 PY
-  [ -z "$CAMERAS" ] && echo "    DIQQAT: --cameras berilmadi, davomat cam 9 (10-xona) nomiga yoziladi"
+  [ -s logs/sources_new.json ] || exit 1
 elif [ "$MODE" = "rtsp" ]; then
-  # --ip-map berilmasa deploy/camera_ips.csv avtomatik olinadi (to'ldirilgan bo'lsa)
-  if [ -z "$IP_MAP" ] && grep -qE '^[^#]' deploy/camera_ips.csv 2>/dev/null; then
+  # --ip-map berilmasa deploy/camera_ips.csv avtomatik olinadi — FAQAT org 16:
+  # fayl 225-maktabning haqiqiy IP lari bilan commit qilingan, boshqa maktabda
+  # avtomatik olinsa noto'g'ri kameralarga ulanish xavfi bor.
+  if [ -z "$IP_MAP" ] && [ "$ORG_ID" = "16" ] && grep -qE '^[^#]' deploy/camera_ips.csv 2>/dev/null; then
     IP_MAP="deploy/camera_ips.csv"
     echo "    ip-map: deploy/camera_ips.csv (avtomatik)"
   fi
@@ -331,7 +350,7 @@ if [ ! -s logs/sources_new.json ]; then
     RTSP uchun kamera IP kerak. Ikki yo'l:
       1) Camera.ip_address ni to'ldiring
       2) CSV bering:  --ip-map deploy/camera_ips.csv
-         format:  camera_id;IP     masalan   9;10.144.0.42
+         format:  camera_id;IP     masalan   9;10.144.4.11
 EOF
   exit 1
 fi
@@ -430,6 +449,37 @@ if [ "$TIRIK" = "0" ]; then
   exit 1
 fi
 [ -n "$OLIK" ] && echo "    DIQQAT: o'lik kameralar:$OLIK — ular kadr bermaydi"
+
+# O'lik HLS (http) manbalar sources dan CHIQARIB TASHLANADI: 404/qotgan HTTP
+# manba butun pipeline'ni to'xtatadi (2026-08-26 da o'lchandi: cam 2 404 ->
+# frame#1 dan keyin 0 fps, hamma kamera qotdi). O'lik RTSP esa QOLADI —
+# nvurisrcbin o'zi qayta ulanadi va boshqalarga xalal bermaydi (o'lchangan).
+if [ -n "$OLIK" ]; then
+  # DIQQAT: logs/ papka konteyner (root) egaligida — host python u yerga yoza
+  # olmaydi. Shuning uchun filtr ham web konteyner ichida bajariladi.
+  if ! $DC exec -T -e DEAD_IDS="$OLIK" web python3.14 - <<'PYF'
+import json, os
+dead = set(os.environ.get("DEAD_IDS", "").split())
+p = "/app/logs/sources_new.json"
+d = json.load(open(p))
+drop = [k for k in d if k in dead and d[k].startswith("http")]
+for k in drop:
+    d.pop(k)
+    print(f"    cam {k}: o'lik HLS -> chiqarildi (pipeline'ni to'xtatardi)")
+if drop:
+    json.dump(d, open(p, "w"), indent=2)
+PYF
+  then
+    echo "    XATO: o'lik manba filtri ishlamadi (web exec yiqildi) — o'lik HLS"
+    echo "          manba pipeline'ni to'xtatib qo'ymasligi uchun to'xtatildi."
+    exit 1
+  fi
+  CNT=$(python3 -c "import json;print(len(json.load(open('logs/sources_new.json'))))")
+  if [ "$CNT" = "0" ]; then
+    echo "    XATO: tirik manba qolmadi."
+    exit 1
+  fi
+fi
 
 # ─── 3. Interval hisoblash ───────────────────────────────────────────────────
 # Engine ~224 fps. Har kamera 25 fps kerak. interval=N -> har (N+1)-kadrda

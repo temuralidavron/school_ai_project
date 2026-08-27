@@ -16,6 +16,42 @@ _DST = np.array([
 ], dtype=np.float32)
 
 
+def _umeyama(src: np.ndarray, dst: np.ndarray) -> np.ndarray:
+    """Umeyama similarity transform — InsightFace SimilarityTransform bilan
+    aynan bir xil natija (skimage ham shu algoritmni ishlatadi).
+
+    NEGA estimateAffinePartial2D EMAS: RANSAC tasodifiy namuna oladi va
+    5 nuqtaning bir qismini "chetlashgan" deb tashlashi mumkin — etalon
+    (InsightFace, aniq eng kichik kvadratlar) bilan solishtirganda embedding
+    kosinusi 0.82 gacha tushardi (40 rasmda o'lchangan, 2026-08-26).
+    Umeyama deterministik va etalon bilan kosinus 1.000 beradi.
+    """
+    src = np.asarray(src, dtype=np.float64)
+    dst = np.asarray(dst, dtype=np.float64)
+    src_mean, dst_mean = src.mean(axis=0), dst.mean(axis=0)
+    src_c, dst_c = src - src_mean, dst - dst_mean
+
+    A = dst_c.T @ src_c / src.shape[0]
+    d = np.ones(2)
+    if np.linalg.det(A) < 0:
+        d[1] = -1
+
+    U, S, Vt = np.linalg.svd(A)
+    if np.linalg.matrix_rank(A) == 1:
+        if np.linalg.det(U) * np.linalg.det(Vt) > 0:
+            R = U @ Vt
+        else:
+            R = U @ np.diag([1.0, -1.0]) @ Vt
+    else:
+        R = U @ np.diag(d) @ Vt
+
+    scale = (S @ d) / src_c.var(axis=0).sum()
+    M = np.eye(3)
+    M[:2, :2] = scale * R
+    M[:2, 2] = dst_mean - scale * R @ src_mean
+    return M[:2, :].astype(np.float32)
+
+
 def align(image: np.ndarray, kps: list | np.ndarray, size: int = 112) -> np.ndarray:
     """
     image: (H, W, 3) BGR uint8
@@ -25,8 +61,11 @@ def align(image: np.ndarray, kps: list | np.ndarray, size: int = 112) -> np.ndar
     src = np.array(kps, dtype=np.float32).reshape(5, 2)
     dst = _DST if size == 112 else _DST * (size / 112.0)
 
-    M, _ = cv2.estimateAffinePartial2D(src, dst, method=cv2.RANSAC, ransacReprojThreshold=5.0)
-    if M is None:
+    try:
+        M = _umeyama(src, dst)
+    except np.linalg.LinAlgError:
+        M = None
+    if M is None or not np.isfinite(M).all():
         # Fallback: bbox asosida oddiy resize
         x1 = max(0, int(src[:, 0].min()))
         y1 = max(0, int(src[:, 1].min()))

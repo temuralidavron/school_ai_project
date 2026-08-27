@@ -31,32 +31,30 @@ Asosiy klasslar va fayllar:
 - `apps/cameras/services.py`: `CameraStreamService` (eski OpenCV oqim)
 - `apps/integrations/services.py`: `SkudAttendancePushService`
 
-## DeepStream integratsiya (YANGI)
+## DeepStream integratsiya
 
-DeepStream — mavjud davomat pipeline'ga **qo'shimcha**. Faqat yuz topishni tezlashtiradi. Recognition/lock/DB/SKUD push — barchasi mavjud kodda.
+AI qism TO'LIQ DeepStream'da (`deepstream_v3/`, ds3 konteyner): NVDEC dekod →
+det_10g TensorRT FP16 @1280 (SCRFD) → NvDCF tracker → 5-nuqta align (Umeyama)
+→ ArcFace w600k_r50 ONNX Runtime GPU → **tayyor embedding** Kafka'ga.
+Django `kafka_consumer` AI qilmaydi — embedding'ni oladi, pgvector qidiruv,
+chegara qarori, lock, DB, SKUD push qiladi. Modellar buffalo_l niki bilan
+AYNAN bir xil — etalonlar mos, qayta hisoblash kerak emas.
 
 ```
-Video/RTSP → DeepStream pipeline → Kafka → kafka_consumer command
-                                              ↓
-                                       MAVJUD RecognitionEventService
-                                       MAVJUD AttendanceLockService
-                                       MAVJUD SkudClient
-                                              ↓
-                                       PostgreSQL + SKUD
+RTSP/HLS → ds3 (DeepStream 8: detect+track+align+embedding, GPU)
+              ↓ Kafka {track_id, bbox, embedding, face_crop}
+         kafka_consumer → MAVJUD RecognitionEventService
+                          MAVJUD AttendanceLockService
+                          MAVJUD SkudClient
+              ↓
+         PostgreSQL + SKUD
 ```
 
-Joylashuvi:
-```
-deepstream/
-├── pipeline/
-│   ├── main.py           DeepStream + Kafka producer
-│   ├── Dockerfile        DeepStream 7.1 image
-│   └── requirements.txt
-├── configs/              pgie, tracker, labels
-├── data/                 video (sinf.mp4)
-├── models/               TRT engine fayllar
-└── QO_LLANMA.txt
-```
+Joylashuvi: `deepstream_v3/` (pipeline/main.py, configs/, engines/ —
+gitignore'da, `deploy/build_engines.sh` quradi). Manbalar:
+`deepstream_v3/configs/sources.json` (`manage.py export_ds_sources`).
+`deepstream/` (v1, 7.1) va `deepstream_v2/` — ESKI, profillari
+`legacy-v1`/`deepstream-v2`, default ishga tushmaydi.
 
 Django consumer: [apps/cameras/management/commands/kafka_consumer.py](apps/cameras/management/commands/kafka_consumer.py)
 
@@ -93,21 +91,17 @@ DeepStream service'lar `profiles: ["deepstream"]` bilan opt-in — default ishga
 
 ## Bosqichlar (rivojlanish)
 
-**Phase 1 — TAYYOR (hozir):**
-- DeepStream face detection (FaceNet)
-- Face crop Kafka'ga base64 JPG
-- Django `kafka_consumer` buffalo_l ishlatadi
-- MAVJUD RecognitionEventService chaqiriladi
+**Phase 1 — TAYYOR:** DeepStream detection, face crop Kafka'ga (v1, eskirgan).
 
-**Phase 2 — keyingi (1-2 kun):**
-- `w600k_r50.onnx` (buffalo_l ichidagi recognition) → TensorRT engine
-- DeepStream SGIE sifatida qo'shish
-- Embedding to'g'ridan-to'g'ri Kafka'ga (face crop emas)
+**Phase 2 — TAYYOR (hozirgi kod, v3):**
+- w600k_r50 embedding ds3 ichida (ONNX Runtime GPU, batch)
+- Embedding to'g'ridan-to'g'ri Kafka'ga — consumer AI qilmaydi
+- 10 manba bitta DeepStream'da (nvstreammux batch, sources.json)
+- Eski `CameraStreamService` → `profiles: ["legacy"]` (default o'chiq)
 
-**Phase 3 — production (1+ oy):**
-- 10 ta RTSP source bitta DeepStream'da (nvstreammux batch)
+**Phase 3 — keyingi:**
 - Multi-worker Kafka consumer
-- Eski `CameraStreamService` o'rniga DeepStream
+- w600k_r50 ni ham TensorRT SGIE ga o'tkazish (hozir ORT GPU — yetarli)
 
 ## Sozlamalar (.env)
 

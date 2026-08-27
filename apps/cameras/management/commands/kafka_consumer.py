@@ -72,7 +72,10 @@ def _org_for_camera(camera_id):
             org = cr.organization.organization_id
     except Exception:
         pass
-    _org_cache[camera_id] = org
+    # None keshlanmaydi: consumer classroom sync'dan oldin ko'tarilgan bo'lsa
+    # keyingi xabarda qayta uriniladi (aks holda restart'gacha None qolardi)
+    if org is not None:
+        _org_cache[camera_id] = org
     return org
 
 

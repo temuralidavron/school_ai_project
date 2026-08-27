@@ -17,8 +17,8 @@ Ishlatish:
 
 ip-map CSV formati (nuqtali vergul, izohlar '#' bilan):
   camera_id;IP            yoki      kamera_nomi;IP
-  5;10.144.0.29
-  9-xona;10.144.0.42
+  5;10.144.4.4
+  9-xona;10.144.4.7
 """
 import json
 import os

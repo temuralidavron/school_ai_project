@@ -124,8 +124,14 @@ else
   echo "    rejim: sources.json (jonli manba)"
 fi
 
+# Compose tarmog'i papka nomiga bog'liq (school_ai_project_default) — clone
+# boshqa nomda bo'lsa hardcode ishlamaydi, jonli konteynerdan aniqlaymiz.
+DOCKER_NET=$(docker inspect school_ai_web \
+  --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' 2>/dev/null)
+DOCKER_NET="${DOCKER_NET:-school_ai_project_default}"
+
 docker run -d --name "$RUN" --gpus all \
-  --network school_ai_project_default -p 8554:8554 \
+  --network "$DOCKER_NET" -p 8554:8554 \
   -e KAFKA_BOOTSTRAP=kafka:9092 -e CAMERA_IDS="$CAMERA_ID" \
   -e PGIE_CONFIG=/ds3/configs/pgie_det10g_1280.txt -e DET_INPUT_SZ=1280 \
   -e REALTIME=1 -e VIS_EVERY=2 -e TRACK_SEND_COOLDOWN=3 \
@@ -146,14 +152,14 @@ echo
 # ─── 4. Video yozish (xom + AI) ──────────────────────────────────────────────
 echo "[4/5] Video yozish boshlandi (xom + AI)..."
 # file:// manba (video sinovi) uchun /data ham kerak — aks holda ochilmaydi
-docker run -d --name lesson_rec_raw --network school_ai_project_default \
+docker run -d --name lesson_rec_raw --network "$DOCKER_NET" \
   -v "$(pwd)/$OUT":/out -v "$(pwd)/deploy":/scripts:ro \
   -v "$(pwd)/deepstream/data":/data:ro \
   --entrypoint python3.14 school_ai:latest \
   /scripts/record_lesson.py --mode raw --url "$SRC_URL" \
   --out /out/xom_video.mp4 --duration "$SEC" >/dev/null 2>&1
 
-docker run -d --name lesson_rec_ai --network school_ai_project_default \
+docker run -d --name lesson_rec_ai --network "$DOCKER_NET" \
   -v "$(pwd)/$OUT":/out -v "$(pwd)/deploy":/scripts:ro \
   --entrypoint python3.14 school_ai:latest \
   /scripts/record_lesson.py --mode ai --url "http://${RUN}:8554/mjpeg/0" \

@@ -1,4 +1,4 @@
-# RTSP rejimi uchun kamera IP jadvali.
+# RTSP rejimi uchun kamera IP jadvali — 225-maktab (org 16).
 #
 #   bash deploy/start.sh rtsp          <- shu fayl avtomatik olinadi
 #
@@ -6,19 +6,25 @@
 # Izohlar '#' bilan. Bo'sh qatorlar e'tiborsiz.
 #
 # Camera.ip_address bazada to'ldirilgan bo'lsa BAZA USTUVOR — bu fayl
-# faqat IP bazada yo'q bo'lganda ishlatiladi.
+# faqat IP bazada yo'q bo'lganda ishlatiladi. 225-maktabda baza TO'G'RI
+# (SKUD deviceId = haqiqiy kamera IP, Aliyer 2026-08-26 da tasdiqladi).
 #
-# RTSP yo'li (Hikvision): /Streaming/Channels/101 = asosiy oqim (1080p).
-# 102 kichik oqim — yuz tanish uchun YARAMAYDI (yuz 30-40 px bo'lib qoladi).
+# RTSP yo'li: /stream1 (Aliyer tasdiqlagan, 2026-08-26). Kameralar:
+# admin/admin, 1920x1080, web paneli http://<IP>.
 #
-# Maktab kameralari (10.144.0.x, admin/admin) -> bazadagi kamera id'lariga:
-5;10.144.0.42
-6;10.144.0.44
-8;10.144.0.45
-9;10.144.0.46
-10;10.144.0.48
-11;10.144.0.53
-12;10.144.0.54
-13;10.144.0.55
-14;10.144.0.64
-15;10.144.0.72
+# 2026-08-26 TASDIQLANGAN xona -> kamera -> IP (10.144.4.x):
+1;10.144.4.5
+2;10.144.4.6
+3;10.144.4.7
+4;10.144.4.3
+5;10.144.4.4
+6;10.144.4.10
+7;10.144.4.9
+8;10.144.4.8
+9;10.144.4.11
+10;10.144.4.2
+#
+# ESKI (2026-08-25) yozuvlar — 10.144.0.x, NOTO'G'RI bo'lib chiqdi,
+# tarixiy ma'lumot sifatida qoldirildi:
+# 5;10.144.0.42  6;10.144.0.44  8;10.144.0.45  9;10.144.0.46  10;10.144.0.48
+# 11;10.144.0.53 12;10.144.0.54 13;10.144.0.55 14;10.144.0.64 15;10.144.0.72

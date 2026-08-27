@@ -9,3 +9,10 @@ services:
     environment:
       # 127.0.0.1:9 (discard) — ulanish darhol rad etiladi, push hech qayerga ketmaydi
       SKUD_API_BASE_URL: "http://127.0.0.1:9"
+  # CRON HAM IZOLYATSIYADA BO'LISHI SHART (2026-08-27 topildi): cron har 5
+  # daqiqada retry_skud_push qiladi — u real URL da qolsa, consumer'ning
+  # "failed" bo'lib qolgan sinov davomatlarini prodga OQIZIB YUBORADI.
+  # 2026-08-20 dagi 72 ta yolg'on yozuv ehtimol shu yo'ldan ketgan.
+  cron:
+    environment:
+      SKUD_API_BASE_URL: "http://127.0.0.1:9"

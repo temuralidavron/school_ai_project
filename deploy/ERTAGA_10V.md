@@ -44,20 +44,19 @@ bash deploy/start.sh hls --threshold reset             # .env dagiga qaytadi
 Chegara `.env` ga **yozilmaydi** — `.threshold.override.yml` qatlamiga
 tushadi va keyingi ishga tushirishlarda ham saqlanadi.
 
-### RTSP uchun kerak bo'ladigan narsa
+### RTSP uchun kerak bo'ladigan narsa (2026-08-26 YANGILANDI)
 
-225-maktab kameralarining IP lari bazada **yo'q** — RTSP shusiz ishlamaydi.
-Maktabda IP larni to'ldiring: [deploy/camera_ips.csv](camera_ips.csv) ichida
-namuna bor, izohni olib tashlab haqiqiy IP yozing. Yo'l brendga qarab
-farq qiladi:
+IP lar bazada allaqachon TO'G'RI (10.144.4.x, SKUD deviceId dan; Aliyer
+tasdiqladi), yo'l `/stream1`, login admin/admin. Tavsiya etilgan tartib:
 
 ```bash
---rtsp-path /stream1                              # umumiy
---rtsp-path "/cam/realmonitor?channel=1&subtype=0"  # Dahua
---rtsp-path /Streaming/Channels/101               # Hikvision
+bash deploy/rtsp_tayyorla.sh          # zondlash (hisobot)
+bash deploy/rtsp_tayyorla.sh --apply  # bazaga yozish
+bash deploy/start.sh rtsp --threshold 0.50
 ```
 
-Server kamera tarmog'ida bo'lishi shart (`ip a | grep 10.144` yoki `192.168`).
+To'liq: [RTSP_MAKTAB.md](RTSP_MAKTAB.md). Server kamera tarmog'ida
+bo'lishi shart (`ip a | grep 10.144`).
 
 ---
 
@@ -77,11 +76,13 @@ Ctrl+C — istalgan payt xavfsiz to'xtatadi, hisobot baribir chiqadi.
 
 | id | xona | id | xona |
 |---|---|---|---|
-| 5 | 1-xona | 11 | 13-xona |
-| 6 | 2-xona | 12 | 4-xona |
-| 8 | 9-xona | 13 | 3-xona |
-| 9 | 10-xona | 14 | 3a-xona |
-| 10 | 11-xona | 15 | 12-xona |
+| 1 | 1-xona | 6 | 13-xona |
+| 2 | 2-xona | 7 | 4-xona |
+| 3 | 9-xona | 8 | 3-xona |
+| 4 | 10-xona | 9 | 3a-xona |
+| 5 | 11-xona | 10 | 12-xona |
+
+(2026-08-26 to'g'rilandi — eski jadvaldagi 5-15 id lar noto'g'ri edi.)
 
 ---
 

@@ -76,8 +76,11 @@ harakat_*.json
 harakat.txt
 harakat.json
 
-# Backup
+# Backup — .env ning HAR QANDAY nusxasi sir saqlaydi
+.env.bak
 .env.backup
+.env.old
+.env.*.bak
 *.backup*.pyc
 deepstream_v3/engines/
 
@@ -92,3 +95,4 @@ deepstream_v3/configs/sources.json
 .threshold.override.yml
 *.bak_*
 docker-compose.yml.bak*
+dist_images/
