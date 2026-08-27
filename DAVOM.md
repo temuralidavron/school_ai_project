@@ -1,8 +1,48 @@
 # DAVOM — yangi Claude sessiyasi uchun to'liq kontekst
 
-Yozilgan: 2026-08-25 kech; **2026-08-26 yangilandi (yangi server, 4 ta tuzatish)**.
+Yozilgan: 2026-08-25; 2026-08-26 va **2026-08-27 (maktabga yo'l oldidan) yangilandi**.
 **Bu faylni yangi ochilgan har qanday Claude sessiyasi (maktab serveri,
 macOS, istalgan joy) BIRINCHI o'qisin.**
+
+---
+
+## 2026-08-27 ABED — MAKTABGA KETISH OLDIDAN. MACOS SESSIYASI, SHU YERDAN BOSHLA
+
+Aliyer maktabga ketdi, yonida macOS noutbuk. Sen ehtimol o'sha macOS'dasan.
+
+**1. Avval qayerdaligingni aniqla:** `uname -a` (Darwin = macOS noutbuk,
+Linux = server). macOS'da bo'lsang — docker/GPU/baza BU YERDA YO'Q, hamma
+ish buyruqlari MAKTAB SERVERIDA bajariladi: `ssh <user>@<server_ip>` orqali
+(server IP ni Aliyerdan so'ra, odatda kamera tarmog'ida yoki Mikrotik LAN da).
+Sen macOS'da faqat kod o'qiysan, maslahat berasan, buyruq tayyorlaysan —
+Aliyer ularni serverda bajaradi yoki ssh sessiyada o'zing bajarasan.
+
+**2. Bugungi holat (uy serverida qilib qo'yildi, hammasi GitHubda):**
+- GitHub `main` = `deepstream8-migration` = **948a4dc** — hamma narsa ichida.
+- **SKUD API v3 ga moslashuv TUGADI va jonli sinaldi** (yuqoridagi 5-band).
+- **Image chamadoni**: uy serverida `~/school_ai_project/dist_images/`
+  (35 GB, 8 arxiv, SHA256 OK). Maktab serveriga rsync qilingan bo'lishi
+  kerak — bo'lmasa Aliyerda USB nusxasi bo'lishi mumkin, so'ra.
+- Uy serverida ds3 HLS rejimda izolyatsiyada ishlab turgan edi (tegma).
+
+**3. Maktabdagi VAZIFA — qaysi server ekaniga qarab:**
+- **Yangi server (49-maktab, org 36):** [deploy/MAKTAB_49.md](deploy/MAKTAB_49.md) —
+  A-qism (uyda qancha tugagan bo'lsa davomidan) keyin B-qism (tarmoq, kamera,
+  start). org 36, INN 204903379, region=1, district=2. org 67 BOSHQA maktab!
+- **225-maktab serveri (org 16):** RTSP ga o'tish — [deploy/RTSP_MAKTAB.md](deploy/RTSP_MAKTAB.md).
+
+**4. Tez-tez kerak bo'ladigan raqamlar:**
+| Narsa | Qiymat |
+|---|---|
+| 49-maktab | org **36**, INN 204903379, region 1, district 2, 261 talaba (7 rasmsiz) |
+| 225-maktab | org **16**, kameralar 10.144.4.x, yo'l /stream1, admin/admin |
+| Chegara | accept 0.50, review 0.45 |
+| SKUD sync (v3) | `sync_organizations --region-id 1 --district-id 2 --check <org>` |
+| Enrollment | DOIM `AI_DET_SIZE=640` bilan |
+
+**5. QAT'IY esla:** sinov = `--skud izolyatsiya`. SKUD da haqiqiy jadval
+bo'lmagunча `--skud real` YO'Q. `.env` gitda yo'q — sirlarni Aliyer biladi.
+Git: faqat Aliyer aytsa commit/push.
 
 ---
 
