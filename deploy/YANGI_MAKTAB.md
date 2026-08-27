@@ -51,7 +51,7 @@ jim to'xtaydi. [RTSP_MAKTAB.md](RTSP_MAKTAB.md) 6b-bo'lim (netplan) —
 ## 4. Baza va SKUD sync (birinchi marta, internet kerak)
 
 ```bash
-docker compose up -d db minio web
+docker compose up -d db minio web && docker compose up minio_init
 docker compose exec web python3.14 manage.py migrate
 docker compose exec web python3.14 manage.py createsuperuser
 
@@ -67,7 +67,7 @@ docker compose exec web python3.14 manage.py sync_organizations --region-id <R> 
 docker compose exec web python3.14 manage.py sync_full --org-id <ORG_ID>
 
 # Rasmlar PARTIYALI (bir chaqiruv ~20 ta) — remaining_estimate 0 bo'lguncha:
-docker compose exec web python3.14 manage.py sync_all_organizations --org-id <ORG_ID> --with-photos
+docker compose exec web python3.14 manage.py sync_all_organizations --org-id <ORG_ID> --step photos
 ```
 
 ## 5. Embedding (etalon) yaratish

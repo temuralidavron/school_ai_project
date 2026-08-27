@@ -98,7 +98,7 @@ cp .env.example .env && chmod 600 .env
 #    To'ldiring: SECRET_KEY, DB/MinIO parollari, SKUD sirlari, BOT_ORG_ID=36
 
 # A5. Baza
-docker compose up -d db minio web
+docker compose up -d db minio web && docker compose up minio_init
 docker compose exec web python3.14 manage.py migrate
 docker compose exec web python3.14 manage.py createsuperuser
 
@@ -107,8 +107,9 @@ docker compose exec web python3.14 manage.py createsuperuser
 #     49-maktab: region=1 (Toshkent shahar), district=2 (Mirzo Ulug'bek tumani)
 docker compose exec web python3.14 manage.py sync_organizations --region-id 1 --district-id 2 --check 36
 docker compose exec web python3.14 manage.py sync_full --org-id 36
-docker compose exec web python3.14 manage.py sync_all_organizations --org-id 36 --with-photos
-#    (remaining_estimate 0 bo'lguncha qayta-qayta — ~254 rasm, partiyali)
+docker compose exec web python3.14 manage.py sync_all_organizations --org-id 36 --step photos
+#    (xato chiqmaguncha qayta-qayta; DIQQAT: bucket'lar kerak —
+#     avval: docker compose up minio_init)
 
 # A7. Etalonlar (enrollment DOIM 640 bilan!)
 docker compose exec -e AI_DET_SIZE=640 web python3.14 manage.py build_all_embeddings --org-id 36
