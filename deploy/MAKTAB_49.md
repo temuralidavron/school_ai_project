@@ -103,7 +103,9 @@ docker compose exec web python3.14 manage.py migrate
 docker compose exec web python3.14 manage.py createsuperuser
 
 # A6. SKUD ma'lumotlari (INN 204903379 chiqishi SHART):
-docker compose exec web python3.14 manage.py sync_organizations --check 36
+#     v3 API (2026-08-27): tashkilotlar endi viloyat/tuman bilan so'raladi.
+#     49-maktab: region=1 (Toshkent shahar), district=2 (Mirzo Ulug'bek tumani)
+docker compose exec web python3.14 manage.py sync_organizations --region-id 1 --district-id 2 --check 36
 docker compose exec web python3.14 manage.py sync_full --org-id 36
 docker compose exec web python3.14 manage.py sync_all_organizations --org-id 36 --with-photos
 #    (remaining_estimate 0 bo'lguncha qayta-qayta — ~254 rasm, partiyali)

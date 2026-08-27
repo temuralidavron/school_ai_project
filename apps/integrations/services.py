@@ -127,11 +127,58 @@ class SkudClient:
             "Connection": "close",
         }
 
-    def get_organizations(self):
-        url = f"{self.base_url}/api/skud-box/v1/organizations"
+    def get_regions(self):
+        # v3 (2026-08-27): viloyatlar ro'yxati
+        url = f"{self.base_url}/api/skud-box/v1/regions"
         response = self.session.get(url, headers=self.get_headers(), timeout=(20, 60))
         response.raise_for_status()
         return response.json().get("items", [])
+
+    def get_districts(self, region_id: int):
+        # v3 (2026-08-27): viloyat bo'yicha tumanlar
+        url = f"{self.base_url}/api/skud-box/v1/districts"
+        response = self.session.get(
+            url,
+            headers=self.get_headers(),
+            params={"regionId": region_id},
+            timeout=(20, 60),
+        )
+        response.raise_for_status()
+        return response.json().get("items", [])
+
+    def get_organizations(self, region_id: int | None = None,
+                          district_id: int | None = None):
+        # v3 (2026-08-27): endpoint endi regionId+districtId TALAB QILADI
+        # (paramsiz 400). Parametrsiz chaqiruv eski xatti-harakatni saqlaydi:
+        # barcha viloyat/tumanlarni aylanib to'liq ro'yxat yig'adi (~200 so'rov).
+        url = f"{self.base_url}/api/skud-box/v1/organizations"
+        if region_id is not None and district_id is not None:
+            response = self.session.get(
+                url,
+                headers=self.get_headers(),
+                params={"regionId": region_id, "districtId": district_id},
+                timeout=(20, 60),
+            )
+            response.raise_for_status()
+            return response.json().get("items", [])
+
+        hammasi, korilgan = [], set()
+        for reg in self.get_regions():
+            rid = reg.get("regionId")
+            if rid is None:
+                continue
+            for dst in self.get_districts(rid):
+                did = dst.get("districtId")
+                if did is None:
+                    continue
+                for item in self.get_organizations(rid, did):
+                    oid = item.get("organizationId")
+                    if oid in korilgan:
+                        continue
+                    korilgan.add(oid)
+                    item["regionId"], item["districtId"] = rid, did
+                    hammasi.append(item)
+        return hammasi
 
     def get_classes(self, organization_id: int):
         url = f"{self.base_url}/api/skud-box/v1/classes"
@@ -296,10 +343,13 @@ class SkudSyncService:
         return ContentFile(image_bytes, name=filename)
 
     @transaction.atomic
-    def sync_organizations(self):
+    def sync_organizations(self, region_id: int | None = None,
+                           district_id: int | None = None):
+        # region/district berilsa faqat shu tuman (v3 da tez yo'l);
+        # berilmasa to'liq ro'yxat (klient o'zi hamma tumanni aylanadi)
         t0 = time.monotonic()
         logger.info("SKUD sync: tashkilotlar yuklab olinmoqda...")
-        items = self.client.get_organizations()
+        items = self.client.get_organizations(region_id, district_id)
         results = []
 
         for item in items:

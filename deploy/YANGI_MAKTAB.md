@@ -55,8 +55,12 @@ docker compose up -d db minio web
 docker compose exec web python3.14 manage.py migrate
 docker compose exec web python3.14 manage.py createsuperuser
 
-# TOZA BAZADA ENG BIRINCHI SKUD QADAMI — busiz sync_full yiqiladi:
-docker compose exec web python3.14 manage.py sync_organizations --check <ORG_ID>
+# TOZA BAZADA ENG BIRINCHI SKUD QADAMI — busiz sync_full yiqiladi.
+# v3 API (2026-08-27): --region-id/--district-id bilan TEZ (1 so'rov);
+# ularsiz ham ishlaydi, lekin hamma tumanni aylanadi (~200 so'rov, 2-5 daq).
+# Viloyat/tuman raqamini bilish: quyida ularsiz ishga tushiring — sync
+# jarayonida topilgan maktab qaysi tumanda ekani logda ko'rinadi.
+docker compose exec web python3.14 manage.py sync_organizations --region-id <R> --district-id <D> --check <ORG_ID>
 #   -> "org_id=N: <maktab nomi> (INN ...)" chiqishi SHART. Chiqmasa org_id noto'g'ri!
 
 # Sinf -> xona -> talaba -> jadval:

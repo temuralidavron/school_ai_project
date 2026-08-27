@@ -21,11 +21,23 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("--check", type=int, default=None,
                             help="Sync dan keyin shu org_id borligini tekshiradi")
+        # v3 (2026-08-27): /organizations endi regionId+districtId talab qiladi.
+        # Berilsa faqat shu tuman sinxronlanadi (tez); berilmasa hamma
+        # viloyat/tuman aylanib chiqiladi (~200 so'rov, 2-5 daqiqa).
+        parser.add_argument("--region-id", type=int, default=None)
+        parser.add_argument("--district-id", type=int, default=None)
 
     def handle(self, *args, **options):
-        self.stdout.write("SKUD dan tashkilotlar yuklab olinmoqda...")
+        if options["region_id"] and options["district_id"]:
+            self.stdout.write(
+                f"SKUD dan tashkilotlar (region={options['region_id']}, "
+                f"district={options['district_id']})...")
+        else:
+            self.stdout.write(
+                "SKUD dan BARCHA tashkilotlar (v3: hamma tuman aylanadi, 2-5 daq)...")
         try:
-            SkudSyncService().sync_organizations()
+            SkudSyncService().sync_organizations(
+                options["region_id"], options["district_id"])
         except Exception as e:
             self.stderr.write(self.style.ERROR(f"FAIL: {e}"))
             return

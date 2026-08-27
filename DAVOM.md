@@ -66,7 +66,14 @@ Yana bilib tur:
    solishtirish, is_active_stream/stream_url ta'minlash), main.py (dict
    poyga, file:// restart sikli), kafka_consumer (None kesh), run_lesson_test
    (tarmoq nomi dinamik), ERTAGA_10V eski id jadvali.
-5. **49-maktab** = org 36 (INN 204903379; org 67 BOSHQA maktab — adashtirmang!):
+5. **SKUD API v3 (2026-08-27, JONLI):** /organizations endi regionId+districtId
+   TALAB QILADI (paramsiz 400 — eski sync_organizations buzilgan edi).
+   Yangi: /regions, /districts. Qolgan 8 endpoint AYNAN o'zgarishsiz.
+   Moslandi: SkudClient.get_regions/get_districts, get_organizations(region,
+   district) — parametrsiz eski xatti-harakat saqlanadi (hamma tumanni
+   aylanadi). sync_organizations --region-id/--district-id. Ikkala maktab ham:
+   region=1 (Toshkent sh.), district=2 (Mirzo Ulug'bek t.). Sinovdan o'tdi.
+6. **49-maktab** = org 36 (INN 204903379; org 67 BOSHQA maktab — adashtirmang!):
    261 talaba, 254 rasmli, 10 xona. deviceId IP EMAS (dev_49_XX) — kamera
    qadmlari boshqacha: [deploy/MAKTAB_49.md](deploy/MAKTAB_49.md).
    Yangi server tartibi: [deploy/YANGI_MAKTAB.md](deploy/YANGI_MAKTAB.md).
